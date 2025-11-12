@@ -15,10 +15,12 @@ import {
   ParamCategoryIdSchema,
   BetQuerySchema,
 } from "../../../core/validation/ValidationSchemas";
+import { EventGatewayClient } from "../../../services/events/EventGatewayClient";
 
 // Dependency injection setup
 const betRepository = new BetRepository(prisma);
-const betService = new BetService(betRepository);
+const eventGatewayClient = new EventGatewayClient();
+const betService = new BetService(betRepository, eventGatewayClient);
 const betController = new BetController(betService);
 
 const router = Router();

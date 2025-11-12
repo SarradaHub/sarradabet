@@ -10,13 +10,18 @@ import {
   ConflictError,
   BadRequestError,
 } from "../../../core/errors/AppError";
+import { EventGatewayClient } from "../../../services/events/EventGatewayClient";
+import { betMarketCreatedPayload } from "../../../services/events/EventFactory";
 
 export class BetService extends BaseService<
   BetWithOdds,
   CreateBetInput,
   UpdateBetInput
 > {
-  constructor(private readonly betRepository: BetRepository) {
+  constructor(
+    private readonly betRepository: BetRepository,
+    private readonly eventGateway: EventGatewayClient = new EventGatewayClient(),
+  ) {
     super(betRepository);
   }
 
@@ -54,6 +59,12 @@ export class BetService extends BaseService<
     await this.validateCategoryExists(data.categoryId);
 
     const bet = await this.betRepository.create(data);
+
+    await this.eventGateway.publish(
+      "betting.bet.market.created.v1",
+      betMarketCreatedPayload(bet),
+    ).catch(() => undefined);
+
     return this.executeBusinessLogic
       ? await this.executeBusinessLogic(bet)
       : bet;

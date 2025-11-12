@@ -3,18 +3,25 @@ import { BetController } from "../modules/bet/controllers/BetController";
 import { BetService } from "../modules/bet/services/BetService";
 import { BetRepository } from "../modules/bet/repositories/BetRepository";
 import { prisma } from "../config/db";
+import { validateRequest } from "../utils/validator";
+import {
+  CreateBetSchema,
+  UpdateBetSchema,
+  BetQuerySchema,
+} from "../types/bet.types";
+import { EventGatewayClient } from "../services/events/EventGatewayClient";
 import {
   validateBody,
   validateParams,
   validateQuery,
 } from "../core/middleware/ValidationMiddleware";
-import { CreateBetSchema, UpdateBetSchema, BetQuerySchema } from "../core/validation/ValidationSchemas";
 import {
   ParamIdSchema,
   ParamCategoryIdSchema,
 } from "../core/validation/ValidationSchemas";
 const betRepository = new BetRepository(prisma);
-const betService = new BetService(betRepository);
+const eventGatewayClient = new EventGatewayClient();
+const betService = new BetService(betRepository, eventGatewayClient);
 const betController = new BetController(betService);
 
 const router = Router();

@@ -15,6 +15,11 @@ const envSchema = z.object({
     .default("postgresql://postgres:postgres@localhost:5432/sarradabet_test"),
   API_KEY: z.string().optional(),
   JWT_SECRET: z.string().optional(),
+  EVENT_GATEWAY_URL: z.string().url().optional(),
+  EVENT_GATEWAY_API_KEY: z.string().optional(),
+  KAFKA_BROKERS: z.string().optional(),
+  KAFKA_CLIENT_ID: z.string().default("sarradabet-api"),
+  KAFKA_CONSUMER_GROUP: z.string().default("sarradabet-match-consumers"),
 });
 
 export const config = envSchema.parse(process.env);

@@ -2,6 +2,7 @@ import { app } from "./app";
 import { config } from "./config/env";
 import { logger } from "./utils/logger";
 import { prisma } from "./config/db";
+import { MatchEventConsumer } from "./services/events/MatchEventConsumer";
 
 const checkDatabaseConnection = async () => {
   try {
@@ -21,6 +22,11 @@ const startServer = async () => {
 
     const server = app.listen(PORT, () => {
       logger.info(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
+    });
+
+    const matchConsumer = new MatchEventConsumer();
+    matchConsumer.start().catch((error) => {
+      logger.error({ err: error }, "Failed to start match event consumer");
     });
 
     const shutdown = async () => {

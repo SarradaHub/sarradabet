@@ -28,6 +28,8 @@ model Bet {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   resolvedAt  DateTime? @map("resolved_at")
+  externalMatchId String? @map("external_match_id") @unique
+  metadata    Json?     @map("metadata")
 
   category Category @relation(fields: [categoryId], references: [id])
 

@@ -1,0 +1,49 @@
+name: Platform CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      - run: npm install
+      - run: npm run lint
+
+  unit-tests:
+    name: API Unit Tests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      - run: npm install
+      - run: npm run test:unit -- --runInBand
+
+  contracts:
+    name: Event Contracts
+    uses: LMafra/platform/platform/ci/workflows/contracts.yaml@main
+    with:
+      working-directory: apps/api
+      install-command: npm install
+      test-command: npm run contract:test
+      schema-glob: platform/contracts/schemas/betting/*.json

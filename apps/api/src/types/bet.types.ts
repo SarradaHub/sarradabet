@@ -16,6 +16,8 @@ export interface BetEntity {
   createdAt: Date;
   updatedAt: Date;
   resolvedAt: Date | null;
+  externalMatchId?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export type OddsEntity = OddEntity;
