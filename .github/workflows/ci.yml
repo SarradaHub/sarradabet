@@ -12,16 +12,8 @@ permissions:
   issues: read
 
 jobs:
-  contracts:
-    uses: LMafra/SarradaHub/platform/ci/workflows/contracts.yaml@main
-    with:
-      working-directory: apps/api
-      install-command: npm install
-      test-command: npm run test:unit -- --runInBand
-      schema-glob: platform/contracts/schemas/betting/*.json
-
-  monorepo-ci:
-    uses: LMafra/SarradaHub/platform/ci/workflows/node-monorepo-ci.yaml@main
+  ci:
+    uses: SarradaHub/platform/.github/workflows/node-monorepo-ci.yaml@main
     with:
       working-directory: .
       node-version: '20'

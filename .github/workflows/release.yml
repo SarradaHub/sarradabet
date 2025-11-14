@@ -11,113 +11,16 @@ on:
         required: true
         type: string
 
-env:
-  NODE_VERSION: '20'
-
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          # Get the previous tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "This is the first release"
-            CHANGELOG="## What's New\n\nThis is the first release of Sarradabet!"
-          else
-            echo "Previous tag: $PREVIOUS_TAG"
-            # Generate changelog from commits
-            CHANGELOG=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD | head -20)
-            if [ -z "$CHANGELOG" ]; then
-              CHANGELOG="## What's New\n\n- Bug fixes and improvements"
-            else
-              CHANGELOG="## What's New\n\n$CHANGELOG"
-            fi
-          fi
-          
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name || inputs.version }}
-          release_name: Release ${{ github.ref_name || inputs.version }}
-          body: ${{ steps.changelog.outputs.changelog }}
-          draft: false
-          prerelease: ${{ contains(github.ref_name || inputs.version, 'alpha') || contains(github.ref_name || inputs.version, 'beta') || contains(github.ref_name || inputs.version, 'rc') }}
-
-  build-and-upload:
-    needs: create-release
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [api, web]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        if: matrix.app == 'api'
-        run: npm run prisma:generate
-        working-directory: apps/api
-
-      - name: Build application
-        run: npm run build
-        working-directory: apps/${{ matrix.app }}
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.app }}-dist-${{ github.ref_name || inputs.version }}
-          path: apps/${{ matrix.app }}/dist
-
-  notify:
-    needs: [create-release, build-and-upload]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Notify Success
-        if: needs.create-release.result == 'success' && needs.build-and-upload.result == 'success'
-        run: |
-          echo "✅ Release ${{ github.ref_name || inputs.version }} created successfully!"
-          echo "📦 Assets uploaded to GitHub Releases"
-          echo "🔗 View release: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name || inputs.version }}"
-
-      - name: Notify Failure
-        if: needs.create-release.result == 'failure' || needs.build-and-upload.result == 'failure'
-        run: |
-          echo "❌ Release ${{ github.ref_name || inputs.version }} failed!"
-          echo "Please check the logs for more details."
+  release:
+    uses: SarradaHub/platform/.github/workflows/release.yaml@main
+    with:
+      node-version: '20'
+      working-directory: .
+      install-command: npm ci
+      build-command: npm run build
+      prisma-generate: true
+      prisma-working-directory: apps/api
+      build-paths: |
+        apps/api/dist
+        apps/web/dist

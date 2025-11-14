@@ -7,13 +7,8 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: write
-
-env:
-  NODE_VERSION: '20'
 
 jobs:
-  # Check if PR is ready for review
   pr-check:
     runs-on: ubuntu-latest
     steps:
@@ -25,99 +20,19 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            try {
-              const { data: files } = await github.rest.pulls.listFiles({
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            
+            const changedLines = files.reduce((acc, file) => acc + file.changes, 0);
+            
+            if (changedLines > 1000) {
+              await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                pull_number: context.issue.number,
+                issue_number: context.issue.number,
+                body: `⚠️ **Large PR Warning**\n\nThis PR has ${changedLines} changed lines. Consider breaking it into smaller, more manageable PRs for easier review.`
               });
-              
-              const changedLines = files.reduce((acc, file) => acc + file.changes, 0);
-              
-              if (changedLines > 1000) {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  body: `⚠️ **Large PR Warning**\n\nThis PR has ${changedLines} changed lines. Consider breaking it into smaller, more manageable PRs for easier review.`
-                });
-              }
-            } catch (error) {
-              console.log('Error checking PR size:', error.message);
             }
-
-  # Run tests on PR
-  test-pr:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_DB: sarradabet_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npm run prisma:generate
-        working-directory: apps/api
-
-      - name: Setup test database
-        run: |
-          npm run prisma:migrate:deploy
-          npm run db:seed:simple
-        working-directory: apps/api
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-
-      - name: Run tests
-        run: npm test
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-          NODE_ENV: test
-
-  # Build check
-  build-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npm run prisma:generate
-        working-directory: apps/api
-
-      - name: Build applications
-        run: npm run build
-
-      # Keep output concise; no PR comments
