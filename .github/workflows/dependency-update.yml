@@ -2,57 +2,12 @@ name: Dependency Update
 
 on:
   schedule:
-    # Run every Monday at 9 AM UTC
     - cron: '0 9 * * 1'
   workflow_dispatch:
 
-env:
-  NODE_VERSION: '20'
-
 jobs:
-  update-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Update dependencies
-        run: |
-          npm update
-          npm audit fix --audit-level moderate || true
-
-      - name: Check for changes
-        id: changes
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Pull Request
-        if: steps.changes.outputs.changes == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update dependencies'
-          title: 'chore: update dependencies'
-          body: |
-            This PR updates project dependencies to their latest versions.
-            
-            ## Changes
-            - Updated npm dependencies
-            - Applied security fixes where possible
-            
-            ## Testing
-            Please review the changes and ensure all tests pass before merging.
-          branch: dependency-update
-          delete-branch: true
+  update:
+    uses: SarradaHub/platform/.github/workflows/dependency-update.yaml@main
+    with:
+      node-version: '20'
+      working-directory: .
