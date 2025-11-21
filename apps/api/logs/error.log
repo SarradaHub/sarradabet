@@ -46,3 +46,27 @@ Please make sure your database server is running at `localhost:5433`.
 2025-11-19 17:36:44 [[31merror[39m] Failed to deregister from Consul: not found
 2025-11-19 17:57:16 [[31merror[39m] Failed to deregister from Consul: not found
 2025-11-21 10:18:06 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-21 11:18:56 [error] Validation middleware error: Validation failed
+2025-11-21 11:18:56 [error] Validation middleware error: Validation failed
+2025-11-21 11:18:56 [error] Validation middleware error: Validation failed
+2025-11-21 11:19:12 [error] Validation middleware error: Validation failed
+2025-11-21 11:19:12 [error] Validation middleware error: Validation failed
+2025-11-21 11:19:12 [error] Validation middleware error: Validation failed
+2025-11-21 11:19:42 [error] Validation middleware error: Validation failed
+2025-11-21 11:19:42 [error] Validation middleware error: Validation failed
+2025-11-21 11:19:42 [error] Validation middleware error: Validation failed
+2025-11-21 11:20:25 [error] Validation middleware error: Validation failed
+2025-11-21 11:20:25 [error] Validation middleware error: Validation failed
+2025-11-21 11:20:25 [error] Validation middleware error: Validation failed
+2025-11-21 11:23:07 [error] Validation middleware error: Validation failed
+2025-11-21 11:23:07 [error] Validation middleware error: Validation failed
+2025-11-21 11:23:07 [error] Validation middleware error: Validation failed
+2025-11-21 11:23:39 [error] Validation middleware error: Validation failed
+2025-11-21 11:23:39 [error] Validation middleware error: Validation failed
+2025-11-21 11:23:39 [error] Validation middleware error: Validation failed
+2025-11-21 11:24:25 [error] Validation middleware error: Validation failed
+2025-11-21 11:24:25 [error] Validation middleware error: Validation failed
+2025-11-21 11:24:25 [error] Validation middleware error: Validation failed
+2025-11-21 11:25:07 [error] Validation middleware error: Validation failed
+2025-11-21 11:25:07 [error] Validation middleware error: Validation failed
+2025-11-21 11:25:07 [error] Validation middleware error: Validation failed

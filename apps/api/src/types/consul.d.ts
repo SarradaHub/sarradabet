@@ -4,7 +4,7 @@ declare module "consul" {
     port?: number;
     secure?: boolean;
     defaults?: unknown;
-    promisify?: boolean | ((fn: Function) => Function);
+    promisify?: boolean | ((fn: (...args: unknown[]) => unknown) => (...args: unknown[]) => unknown);
   }
 
   export interface ServiceCheck {

@@ -31,7 +31,7 @@ export class AdminService extends BaseService<any, any, any> {
   constructor() {
     // AdminService uses Prisma directly and doesn't rely on BaseService repository methods
     // Provide a minimal no-op repository to satisfy the base class constructor
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     super({} as any);
   }
   // Implement abstract signatures to satisfy BaseService type; not used here
