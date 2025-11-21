@@ -16,7 +16,7 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
   abstract delete(id: number): Promise<void>;
 
   // accept an argument to allow subclasses to pass data; ignored by default
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   async validateBusinessRules(_data?: CreateInput | UpdateInput): Promise<void> {
     // default no-op; override in subclasses
   }

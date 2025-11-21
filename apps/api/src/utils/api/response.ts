@@ -18,6 +18,42 @@ export class ApiResponse {
   constructor(private res: Response) {}
 
   success(data: ApiResponseData, statusCode: number = 200) {
+    // Handle paginated results FIRST, before any other processing
+    // This must be checked before envelope normalization to avoid double-wrapping
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+      const obj = data as Record<string, unknown>;
+      
+      // Check for paginated results: { data: [...], meta: {...} }
+      // This pattern indicates a paginated response that should be flattened
+      if (Object.prototype.hasOwnProperty.call(obj, "data") && 
+          Object.prototype.hasOwnProperty.call(obj, "meta") &&
+          Array.isArray(obj.data) &&
+          !Object.prototype.hasOwnProperty.call(obj, "success")) {
+        const { data: paginatedData, meta, message, ...rest } = obj as { 
+          data: unknown[]; 
+          meta: unknown;
+          message?: string;
+        } & Record<string, unknown>;
+        const body: Record<string, unknown> = { 
+          success: true, 
+          data: paginatedData,
+          meta 
+        };
+        // Include message if present
+        if (message && typeof message === "string") {
+          body.message = message;
+        }
+        // Include any other properties (excluding success and message which we handle above)
+        Object.keys(rest).forEach(key => {
+          if (key !== "success") {
+            body[key] = rest[key];
+          }
+        });
+        this.res.status(statusCode).json(body);
+        return;
+      }
+    }
+
     // Normalize already-shaped responses safely and only when it truly looks like our API envelope
     if (data && typeof data === "object") {
       const maybeEnvelope = data as Record<string, unknown>;
@@ -67,8 +103,9 @@ export class ApiResponse {
     // hoist it to the top-level response and keep the remainder as data.
     if (data && typeof data === "object" && !Array.isArray(data)) {
       const obj = data as Record<string, unknown>;
-      const hasMessage = typeof obj.message === "string";
       const hasSuccessKey = Object.prototype.hasOwnProperty.call(obj, "success");
+      const hasMessage = typeof obj.message === "string";
+      
       if (hasMessage && !hasSuccessKey) {
         const { message, ...rest } = obj as { message: string } & Record<string, unknown>;
         const restIsEmpty = Object.keys(rest).length === 0;

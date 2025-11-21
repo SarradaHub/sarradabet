@@ -57,10 +57,8 @@ const Modal: React.FC<ModalProps> = ({
         }
       }}
     >
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black bg-opacity-50" />
 
-      {/* Modal */}
       <div
         role="dialog"
         aria-modal="true"
@@ -71,7 +69,6 @@ const Modal: React.FC<ModalProps> = ({
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         {title && (
           <div className="flex items-center justify-between p-6 border-b border-gray-700">
             <h3 id={titleId} className="text-lg font-semibold text-white">
@@ -99,7 +96,6 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         )}
 
-        {/* Content */}
         <div className={cn("p-6", !title && "pt-6")}>{children}</div>
       </div>
     </div>

@@ -163,7 +163,7 @@ export const corsOptions = {
     callback: (error: Error | null, allow?: boolean) => void,
   ) => {
     const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [
-      "http://localhost:3000",
+      "http://localhost:8000",
     ];
 
     if (!origin) return callback(null, true);

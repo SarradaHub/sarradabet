@@ -16,9 +16,8 @@ const AdminLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const API_BASE_URL = (
-    (import.meta as any).env?.VITE_API_URL || "http://localhost:3001"
-  ).replace(/\/+$/, "");
+  const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || "http://localhost";
+  const IDENTITY_SERVICE_URL = import.meta.env.VITE_IDENTITY_SERVICE_URL || `${API_GATEWAY_URL}/api/v1/auth`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +25,16 @@ const AdminLogin: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/admin/login`, {
+      const url = `${IDENTITY_SERVICE_URL}/login`;
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.username, // Support both email and username
+          password: formData.password,
+        }),
       });
 
       const raw = await response.json();
@@ -43,13 +46,18 @@ const AdminLogin: React.FC = () => {
         throw new Error(message);
       }
 
-      // Normalize possible API shapes using explicit key existence checks
       const hasOwn = (obj: unknown, key: string) =>
         !!obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, key);
 
       let payload: any = raw;
       if (hasOwn(raw, "data")) {
         const first = (raw as any).data;
+        if (first.token) {
+          localStorage.setItem("authToken", first.token);
+          if (first.refreshToken) {
+            localStorage.setItem("refreshToken", first.refreshToken);
+          }
+        }
         payload = hasOwn(first, "data") ? (first as any).data : first;
       }
 

@@ -2,6 +2,7 @@ import { app } from "./app";
 import { config } from "./config/env";
 import { logger } from "./utils/logger";
 import { prisma } from "./config/db";
+import { initializeConsul } from "./config/consul";
 
 const checkDatabaseConnection = async () => {
   try {
@@ -14,10 +15,13 @@ const checkDatabaseConnection = async () => {
 };
 
 const startServer = async () => {
-  const PORT = config.PORT || 3001;
+  const PORT = config.PORT;
 
   try {
     await checkDatabaseConnection();
+    
+    // Initialize Consul service registration
+    await initializeConsul();
 
     const server = app.listen(PORT, () => {
       logger.info(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);

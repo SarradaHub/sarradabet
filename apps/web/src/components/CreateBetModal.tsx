@@ -144,7 +144,6 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
         <div>
           <label
             htmlFor="title"
@@ -165,7 +164,6 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
           />
         </div>
 
-        {/* Description */}
         <div>
           <label
             htmlFor="description"
@@ -186,7 +184,6 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
           />
         </div>
 
-        {/* Category */}
         <div>
           <label
             htmlFor="category"
@@ -224,7 +221,6 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
           )}
         </div>
 
-        {/* Odds */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-300">
@@ -281,12 +277,10 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
           </div>
         </div>
 
-        {/* Validation Errors */}
         {validationErrors.length > 0 && (
-          <ErrorMessage error={validationErrors} title="Erros de Validação" />
+          <ErrorMessage error={validationErrors} title="Erros de Validação"           />
         )}
 
-        {/* API Error */}
         {createBetMutation.error && (
           <ErrorMessage
             error={createBetMutation.error}
@@ -294,7 +288,6 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
           />
         )}
 
-        {/* Submit Button */}
         <div className="flex justify-end gap-3">
           <Button
             type="button"

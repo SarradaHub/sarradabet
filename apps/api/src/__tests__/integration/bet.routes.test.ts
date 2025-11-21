@@ -1,13 +1,28 @@
+// Set DATABASE_URL to test database BEFORE importing app
+// This ensures the app uses the test database when it initializes
+const getTestDatabaseUrl = () => {
+  const dbUrl = process.env.DATABASE_URL || "postgresql://appuser:sarradabet1234@localhost:5433/sarradabet_test";
+  // Replace database name with _test suffix if it doesn't already have it
+  if (dbUrl.includes("/sarradabet") && !dbUrl.includes("/sarradabet_test")) {
+    return dbUrl.replace("/sarradabet", "/sarradabet_test");
+  }
+  return dbUrl;
+};
+
+const testDbUrl = getTestDatabaseUrl();
+// Set environment variable before app imports prisma
+process.env.DATABASE_URL = testDbUrl;
+
 import request from "supertest";
 import { app } from "../../app";
 import { PrismaClient } from "@prisma/client";
 
-const hasDbUrl = !!process.env.DATABASE_URL;
+const hasDbUrl = !!testDbUrl;
 const prisma = hasDbUrl
   ? new PrismaClient({
       datasources: {
         db: {
-          url: process.env.DATABASE_URL,
+          url: testDbUrl,
         },
       },
     })
@@ -62,11 +77,9 @@ suite("Bet Routes Integration Tests", () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty("data");
-      expect(response.body.data).toHaveProperty("meta");
-      expect(response.body.data.data).toBeInstanceOf(Array);
-      expect(response.body.data.meta).toHaveProperty("page", 1);
-      expect(response.body.data.meta).toHaveProperty("limit", 10);
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.meta).toHaveProperty("page", 1);
+      expect(response.body.meta).toHaveProperty("limit", 10);
     });
 
     it("should filter bets by status", async () => {
@@ -76,7 +89,7 @@ suite("Bet Routes Integration Tests", () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.data).toBeInstanceOf(Array);
+      expect(response.body.data).toBeInstanceOf(Array);
     });
 
     it("should filter bets by category", async () => {
@@ -86,7 +99,7 @@ suite("Bet Routes Integration Tests", () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.data).toBeInstanceOf(Array);
+      expect(response.body.data).toBeInstanceOf(Array);
     });
   });
 

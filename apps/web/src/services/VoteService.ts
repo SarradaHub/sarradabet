@@ -2,14 +2,14 @@ import { BaseService } from "../core/base/BaseService";
 import { Vote, CreateVoteDto } from "../types/vote";
 import { ApiResponse } from "../core/interfaces/IService";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export class VoteService extends BaseService<Vote, CreateVoteDto, never> {
   constructor() {
     super(API_BASE_URL, "votes");
   }
 
-  // Override update and delete methods since votes are immutable
   async update(): Promise<ApiResponse<Vote>> {
     throw new Error("Votes cannot be updated");
   }
@@ -29,5 +29,4 @@ export class VoteService extends BaseService<Vote, CreateVoteDto, never> {
   }
 }
 
-// Export singleton instance
 export const voteService = new VoteService();

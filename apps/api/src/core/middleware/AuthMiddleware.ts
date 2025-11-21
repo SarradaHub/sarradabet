@@ -5,29 +5,46 @@ import {
   AuthPayload,
 } from "../../utils/auth";
 import { UnauthorizedError } from "../errors/AppError";
+import { identityServiceClient } from "../../services/identityService.client";
 
 declare module "express-serve-static-core" {
   interface Request {
-    user?: AuthPayload;
+    user?: AuthPayload | {
+      userId: number;
+      email: string;
+      username: string;
+      role: string;
+    };
   }
 }
 
 /**
- * Middleware to authenticate admin requests
+ * Middleware to authenticate admin requests using Identity Service
  */
-export const authenticateAdmin = (
+export const authenticateAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     const token = extractTokenFromHeader(authHeader);
 
+    if (process.env.USE_IDENTITY_SERVICE === "true") {
+      const result = await identityServiceClient.validateToken(token);
+      if (result.valid && result.user) {
+        req.user = {
+          userId: result.user.id,
+          email: result.user.email,
+          username: result.user.username,
+          role: result.user.role,
+        };
+        return next();
+      }
+    }
+
     const payload = verifyToken(token);
-
     req.user = payload;
-
     next();
   } catch {
     next(new UnauthorizedError("Authentication required"));

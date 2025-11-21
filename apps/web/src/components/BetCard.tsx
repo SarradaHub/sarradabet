@@ -53,7 +53,6 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
 
   return (
     <div className="group w-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 hover:border-yellow-400/50 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/10 transform hover:-translate-y-1">
-      {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-bold text-white pr-2 leading-tight group-hover:text-yellow-400 transition-colors">
           {bet.title}
@@ -65,7 +64,6 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
         )}
       </div>
 
-      {/* Description */}
       {bet.description && (
         <div className="mb-4">
           <p className="text-gray-300 text-sm leading-relaxed line-clamp-2">
@@ -74,12 +72,10 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
         </div>
       )}
 
-      {/* Odds Section */}
       <div className="mb-6">
         <OddsList odds={oddsData} onVoteCreated={fetchUpdatedOdds} />
       </div>
 
-      {/* Footer */}
       <div className="flex justify-between items-center pt-4 border-t border-gray-700">
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2 text-gray-400">
@@ -116,7 +112,6 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
           </div>
         </div>
 
-        {/* Status Badge */}
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${

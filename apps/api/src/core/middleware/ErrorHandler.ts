@@ -12,7 +12,7 @@ export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _next: NextFunction,
 ): void => {
   let statusCode = 500;

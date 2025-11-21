@@ -23,7 +23,7 @@ export class BetController extends BaseController<
       const result = await this.betService.findAll(params);
       this.sendSuccess(
         res,
-        { data: result.data, meta: result.meta },
+        result,
         200,
         "Bets retrieved successfully",
       );

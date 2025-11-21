@@ -38,14 +38,12 @@ class QueryCache {
   }
 
   setPending<T>(key: string, promise: Promise<T | null>) {
-    // Preserve any existing cached data while marking the request as pending
     const existing = this.cache.get(key);
     this.cache.set(key, {
       data: existing?.data,
       dataTimestamp: existing?.dataTimestamp,
       promise,
     });
-    // Ensure pending is cleared only after the shared promise settles
     promise.finally(() => {
       const current = this.cache.get(key);
       if (current && current.promise === promise) {
@@ -74,7 +72,6 @@ class QueryCache {
     }
   }
 
-  // Clean up expired entries
   cleanup() {
     const now = Date.now();
     for (const [key, value] of this.cache.entries()) {
@@ -84,7 +81,6 @@ class QueryCache {
         now - value.dataTimestamp < this.CACHE_DURATION;
       const hasPending = value.promise !== undefined;
 
-      // Delete entries that have no valid data and no pending promise
       if (!hasValidData && !hasPending) {
         this.cache.delete(key);
       }
@@ -92,10 +88,8 @@ class QueryCache {
   }
 }
 
-// Singleton instance
 export const queryCache = new QueryCache();
 
-// Cleanup expired entries every minute
 setInterval(() => {
   queryCache.cleanup();
 }, 60 * 1000);

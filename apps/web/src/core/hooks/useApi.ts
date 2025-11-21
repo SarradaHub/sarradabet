@@ -55,6 +55,7 @@ export function useApi<T>(
           return response.data;
         } else {
           const errorMessage = response.message || "Request failed";
+
           setState((prev) => ({
             ...prev,
             error: errorMessage,
@@ -64,11 +65,14 @@ export function useApi<T>(
           return null;
         }
       } catch (error: unknown) {
-        const e = error as { message?: string; errors?: ApiError["errors"] };
+        const e = error as ApiError & { message?: string; errors?: ApiError["errors"] };
         const apiError: ApiError = {
           success: false,
           message: e?.message || "An unexpected error occurred",
           errors: e?.errors,
+          url: e?.url,
+          method: e?.method,
+          requestId: e?.requestId,
         };
 
         setState((prev) => ({
@@ -99,7 +103,6 @@ export function useApi<T>(
     setState((prev) => ({ ...prev, data }));
   }, []);
 
-  // Avoid infinite loops when parent passes new function refs each render
   const executeRef = useRef(execute);
   useEffect(() => {
     executeRef.current = execute;
@@ -109,7 +112,6 @@ export function useApi<T>(
     if (immediate) {
       executeRef.current();
     }
-    // only respond to changes in `immediate`
   }, [immediate]);
 
   return {

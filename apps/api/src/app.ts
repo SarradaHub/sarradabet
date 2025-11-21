@@ -41,8 +41,47 @@ app.get("/health", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.status(200).json({
     status: "ok",
+    service: "sarradabet-api",
     timestamp: new Date().toISOString(),
     environment: config.NODE_ENV,
+  });
+});
+
+app.get("/ready", async (req, res) => {
+  try {
+    const { prisma } = await import("./config/db");
+    await prisma.$queryRaw`SELECT 1`;
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.status(200).json({
+      status: "ready",
+      service: "sarradabet-api",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "not ready",
+      service: "sarradabet-api",
+      error: "Database connection failed",
+    });
+  }
+});
+
+// Root route handler
+app.get("/", (req, res) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.status(200).json({
+    name: "SarradaBet API",
+    version: "1.0.0",
+    description: "Mock betting platform API",
+    endpoints: {
+      api: "/api/v1",
+      health: "/health",
+      bets: "/api/v1/bets",
+      categories: "/api/v1/categories",
+      votes: "/api/v1/votes",
+      admin: "/api/v1/admin",
+    },
+    documentation: "API routes are available under /api/v1",
   });
 });
 
