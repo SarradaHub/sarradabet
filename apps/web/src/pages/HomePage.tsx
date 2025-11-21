@@ -29,25 +29,25 @@ const HomePage: React.FC = () => {
     refetch: refetchCategories,
   } = useCategories({ limit: 100 });
 
-  const bets = useMemo(() => {
+  const bets = useMemo((): Bet[] => {
     if (!betsResponse) return [];
     if (Array.isArray(betsResponse)) {
-      return betsResponse;
+      return betsResponse as Bet[];
     }
     if (betsResponse && typeof betsResponse === 'object' && 'data' in betsResponse) {
-      const nestedData = (betsResponse as { data?: unknown[] }).data;
+      const nestedData = (betsResponse as { data?: Bet[] }).data;
       return Array.isArray(nestedData) ? nestedData : [];
     }
     return [];
   }, [betsResponse]);
   
-  const categories = useMemo(() => {
+  const categories = useMemo((): Category[] => {
     if (!categoriesResponse) return [];
     if (Array.isArray(categoriesResponse)) {
-      return categoriesResponse;
+      return categoriesResponse as Category[];
     }
     if (categoriesResponse && typeof categoriesResponse === 'object' && 'data' in categoriesResponse) {
-      const nestedData = (categoriesResponse as { data?: unknown[] }).data;
+      const nestedData = (categoriesResponse as { data?: Category[] }).data;
       return Array.isArray(nestedData) ? nestedData : [];
     }
     return [];
