@@ -24,7 +24,6 @@ const Navigation = ({
       <nav className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
                 <span className="text-black font-bold text-lg">S</span>
@@ -34,7 +33,6 @@ const Navigation = ({
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
               <Link
                 to="/admin/login"
@@ -101,7 +99,6 @@ const Navigation = ({
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
             <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -133,7 +130,6 @@ const Navigation = ({
             </div>
           </div>
 
-          {/* Mobile Navigation */}
           {isMobileMenuOpen && (
             <div className="md:hidden border-t border-gray-700 py-4">
               <div className="flex flex-col space-y-3">

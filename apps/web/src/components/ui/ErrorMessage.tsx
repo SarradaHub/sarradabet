@@ -1,11 +1,13 @@
 import React from "react";
 import { cn } from "../../utils/cn";
+import { ApiError } from "../../core/interfaces/IService";
 
 export interface ErrorMessageProps {
   error: string | string[];
   title?: string;
   onRetry?: () => void;
   className?: string;
+  apiError?: ApiError | null;
 }
 
 const ErrorMessage: React.FC<ErrorMessageProps> = ({
@@ -13,6 +15,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
   title = "Algo deu errado",
   onRetry,
   className,
+  apiError,
 }) => {
   const errors = Array.isArray(error) ? error : [error];
 
@@ -51,6 +54,14 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
               </ul>
             )}
           </div>
+          {import.meta.env.DEV && apiError?.url && (
+            <div className="mt-3 pt-3 border-t border-red-500/20 text-xs text-red-400/70">
+              <p><strong>Endpoint:</strong> {apiError.method} {apiError.url}</p>
+              {apiError.requestId && (
+                <p><strong>Request ID:</strong> {apiError.requestId}</p>
+              )}
+            </div>
+          )}
           {onRetry && (
             <div className="mt-4">
               <button

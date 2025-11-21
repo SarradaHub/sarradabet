@@ -28,6 +28,9 @@ export interface ApiError {
     message: string;
     code?: string;
   }>;
+  url?: string;
+  method?: string;
+  requestId?: string;
 }
 
 export interface PaginationParams {

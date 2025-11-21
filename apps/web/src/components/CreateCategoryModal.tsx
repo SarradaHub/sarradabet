@@ -24,7 +24,6 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
 
   const createCategoryMutation = useCreateCategory();
 
-  // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setFormData({ title: "" });
@@ -47,7 +46,6 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
       errors.push("Título deve ter menos de 50 caracteres");
     }
 
-    // Check for invalid characters (only letters, numbers, spaces, hyphens, underscores)
     const invalidCharRegex = /[^a-zA-Z0-9\s\-_]/;
     if (invalidCharRegex.test(formData.title)) {
       errors.push(
@@ -74,7 +72,6 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
         onClose();
       }
     } catch (error) {
-      // Error is handled by the mutation hook
       console.error("Falha ao criar categoria:", error);
     }
   };
@@ -87,7 +84,6 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
         <div>
           <label
             htmlFor="title"
@@ -111,12 +107,10 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
           </p>
         </div>
 
-        {/* Validation Errors */}
         {validationErrors.length > 0 && (
-          <ErrorMessage error={validationErrors} title="Erros de Validação" />
+          <ErrorMessage error={validationErrors} title="Erros de Validação"           />
         )}
 
-        {/* API Error */}
         {createCategoryMutation.error && (
           <ErrorMessage
             error={createCategoryMutation.error}
@@ -124,7 +118,6 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
           />
         )}
 
-        {/* Submit Button */}
         <div className="flex justify-end gap-3">
           <Button
             type="button"

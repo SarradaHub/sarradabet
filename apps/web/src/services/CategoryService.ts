@@ -6,7 +6,7 @@ import {
 } from "../types/category";
 import { ApiResponse } from "../core/interfaces/IService";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export class CategoryService extends BaseService<
   Category,
@@ -38,5 +38,4 @@ export class CategoryService extends BaseService<
   }
 }
 
-// Export singleton instance
 export const categoryService = new CategoryService();

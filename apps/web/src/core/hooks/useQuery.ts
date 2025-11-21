@@ -61,37 +61,29 @@ export function useQuery<T>(
     const key = queryKeyRef.current;
     const currentlyStale = isStaleRef.current;
 
-    // Check cache first
     const cached = queryCache.get<T>(key);
     if (cached && !currentlyStale) {
       return cached;
     }
 
-    // Check if request is already pending
     if (queryCache.isPending(key)) {
       const pending = queryCache.getPending<T>(key);
       if (pending) {
         const result = await pending;
-        // After pending resolves, prefer cached data if available
-        const after = queryCache.get<T>(key);
-        return after ?? result;
+        return queryCache.get<T>(key) ?? result;
       }
     }
 
-    // Make new request
     const promise = executeRef.current();
     queryCache.setPending<T>(key, promise);
 
     try {
       const result = await promise;
 
-      // Always update last fetched and cache, even if result is null/undefined,
-      // to avoid returning stale data after a nullish resolution.
       setLastFetched(new Date());
       setIsStale(false);
       queryCache.set<T | null>(key, (result as T | null) ?? null);
 
-      // pending is cleared by the cache itself; return cached if present
       const final = queryCache.get<T | null>(key) as T | null;
       return final;
     } catch (error) {
@@ -99,20 +91,16 @@ export function useQuery<T>(
     }
   }, []);
 
-  // Initial fetch
   useEffect(() => {
     if (
       enabled &&
       (refetchOnMount || lastFetched === null) &&
       (isStale || lastFetched === null)
     ) {
-      // Call the latest refetch without creating an effect dependency loop
       refetch();
     }
-    // Intentionally exclude `refetch` from deps to avoid circular updates.
   }, [enabled, refetchOnMount, isStale, lastFetched]);
 
-  // Window focus refetch
   useEffect(() => {
     if (!refetchOnWindowFocus || !enabled) return;
 
@@ -126,7 +114,6 @@ export function useQuery<T>(
     return () => window.removeEventListener("focus", handleFocus);
   }, [refetchOnWindowFocus, enabled, isStale, refetch]);
 
-  // Stale time management
   useEffect(() => {
     if (lastFetched && staleTime > 0) {
       const timer = setTimeout(() => {

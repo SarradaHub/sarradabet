@@ -46,7 +46,7 @@ sarradabet/
    npm run dev
    ```
 
-The API listens on `http://localhost:3001` and the web client on `http://localhost:3000`.
+The API listens on `http://localhost:3001` and the web client on `http://localhost:3002`.
 
 ## Testing
 

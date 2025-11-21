@@ -36,3 +36,9 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Ignore API logs
+/apps/api/logs/*
+
+# Ignore Web logs
+/apps/web/logs/*
