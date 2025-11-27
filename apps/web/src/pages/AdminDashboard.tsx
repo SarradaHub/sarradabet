@@ -110,8 +110,9 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <header className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div className="md:col-span-12 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
                 <span className="text-black font-bold text-lg">A</span>
@@ -140,10 +141,12 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
             <div className="flex items-center justify-between">
               <div>
@@ -247,9 +250,9 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
+        <div className="md:col-span-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
           <h2 className="text-xl font-bold text-white mb-4">Ações Rápidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button
@@ -326,7 +329,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
+        <div className="md:col-span-12 mt-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
           <h2 className="text-xl font-bold text-white mb-4">
             Atividade Recente
           </h2>
@@ -404,6 +407,7 @@ const AdminDashboard: React.FC = () => {
               <div className="ml-auto text-gray-400 text-sm">1 dia atrás</div>
             </div>
           </div>
+        </div>
         </div>
       </main>
     </div>

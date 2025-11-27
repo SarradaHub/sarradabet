@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { Input } from "@sarradahub/design-system";
 
 interface LoginForm {
   username: string;
@@ -95,10 +96,10 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-warning-400 to-orange-500 rounded-full flex items-center justify-center">
             <svg
               className="h-8 w-8 text-black"
               fill="none"
@@ -124,54 +125,50 @@ const AdminLogin: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Usuário ou Email
-              </label>
-              <input
+              <Input
                 id="username"
                 name="username"
                 type="text"
+                label="Usuário ou Email"
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200"
                 placeholder="Digite seu usuário ou email"
                 disabled={loading}
+                aria-describedby={error ? "username-error" : undefined}
+                className="dark:bg-neutral-800 dark:border-neutral-600 dark:text-white dark:placeholder-neutral-400 dark:focus:ring-warning-400"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Senha
-              </label>
-              <input
+              <Input
                 id="password"
                 name="password"
                 type="password"
+                label="Senha"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all duration-200"
                 placeholder="Digite sua senha"
                 disabled={loading}
+                aria-describedby={error ? "password-error" : undefined}
+                className="dark:bg-neutral-800 dark:border-neutral-600 dark:text-white dark:placeholder-neutral-400 dark:focus:ring-warning-400"
               />
             </div>
           </div>
 
-          {error && <ErrorMessage error={error} title="Erro no Login" />}
+          {error && (
+            <div id="login-error" role="alert">
+              <ErrorMessage error={error} title="Erro no Login" />
+            </div>
+          )}
 
           <div>
             <Button
               type="submit"
               loading={loading}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-300 hover:to-orange-400 py-3 text-lg font-semibold"
+              className="w-full bg-gradient-to-r from-warning-400 to-orange-500 text-black hover:from-warning-300 hover:to-orange-400 py-3 text-lg font-semibold"
             >
               {loading ? "Entrando..." : "Entrar"}
             </Button>

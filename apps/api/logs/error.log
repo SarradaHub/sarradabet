@@ -70,3 +70,14 @@ Please make sure your database server is running at `localhost:5433`.
 2025-11-21 11:25:07 [error] Validation middleware error: Validation failed
 2025-11-21 11:25:07 [error] Validation middleware error: Validation failed
 2025-11-21 11:25:07 [error] Validation middleware error: Validation failed
+2025-11-21 15:56:42 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-21 16:17:12 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-21 16:36:41 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-21 17:01:42 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-21 18:15:28 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-24 11:49:13 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-24 12:06:55 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-24 12:16:32 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-24 14:11:20 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-24 21:36:23 [[31merror[39m] Failed to deregister from Consul: not found
+2025-11-24 22:16:30 [[31merror[39m] Failed to deregister from Consul: not found

@@ -7,6 +7,8 @@ import BetCard from "../components/BetCard";
 import CreateBetModal from "../components/CreateBetModal";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { Button } from "../components/ui/Button";
+import { Plus, Info } from "lucide-react";
 
 const HomePage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -111,7 +113,7 @@ const HomePage: React.FC = () => {
   const hasError = betsError || categoriesError;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 text-white">
       <Navigation
         onOpenCreateModal={() => setShowCreateModal(true)}
         onCategoryCreated={handleCategoryCreated}
@@ -134,11 +136,11 @@ const HomePage: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="bg-gray-900 min-h-screen flex items-center justify-center">
+        <div className="bg-neutral-900 min-h-screen flex items-center justify-center">
           <LoadingSpinner size="lg" text="Carregando apostas..." />
         </div>
       ) : hasError ? (
-        <div className="bg-gray-900 min-h-screen flex items-center justify-center">
+        <div className="bg-neutral-900 min-h-screen flex items-center justify-center">
           <ErrorMessage
             error={betsError || categoriesError || "Falha ao carregar dados"}
             apiError={betsApiError || categoriesApiError}
@@ -152,6 +154,7 @@ const HomePage: React.FC = () => {
         <BetsList
           groupedBets={filteredBets}
           onVoteCreated={handleVoteCreated}
+          onOpenCreateModal={() => setShowCreateModal(true)}
         />
       )}
     </div>
@@ -163,15 +166,16 @@ interface HeroProps {
 }
 
 const HeroSection: React.FC<HeroProps> = ({ onOpenCreateModal }) => (
-  <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-20 lg:py-32 overflow-hidden">
+  <section className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-20 lg:py-32 overflow-hidden">
     <div className="absolute inset-0 opacity-10">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
     </div>
 
-    <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto text-center">
+    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-12 max-w-4xl mx-auto text-center">
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-6 shadow-2xl">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-warning-400 to-orange-500 rounded-full mb-6 shadow-2xl">
             <svg
               className="w-10 h-10 text-black"
               fill="none"
@@ -188,7 +192,7 @@ const HeroSection: React.FC<HeroProps> = ({ onOpenCreateModal }) => (
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-warning-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
               SarradaBet
             </span>
             <br />
@@ -205,51 +209,29 @@ const HeroSection: React.FC<HeroProps> = ({ onOpenCreateModal }) => (
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button
+          <Button
             onClick={onOpenCreateModal}
-            className="group bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-xl text-lg font-bold hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-2xl hover:shadow-yellow-500/25 transform hover:-translate-y-1 hover:scale-105"
+            variant="primary"
+            size="lg"
+            leftIcon={Plus}
+            className="group bg-gradient-to-r from-warning-400 to-orange-500 text-black hover:from-warning-300 hover:to-orange-400 shadow-2xl hover:shadow-warning-500/25 transform hover:-translate-y-1 hover:scale-105"
           >
-            <span className="flex items-center space-x-3">
-              <svg
-                className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              <span>Criar Nova Aposta</span>
-            </span>
-          </button>
+            Criar Nova Aposta
+          </Button>
 
-          <button className="group border-2 border-gray-600 text-gray-300 px-8 py-4 rounded-xl text-lg font-semibold hover:border-gray-500 hover:text-white transition-all duration-300 hover:bg-gray-800/50">
-            <span className="flex items-center space-x-3">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>Como Funciona</span>
-            </span>
-          </button>
+          <Button
+            variant="secondary"
+            size="lg"
+            leftIcon={Info}
+            className="border-2 border-gray-600 text-gray-300 hover:border-gray-500 hover:text-white hover:bg-gray-800/50"
+          >
+            Como Funciona
+          </Button>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
+        <div className="md:col-span-12 mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
           <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-400 mb-2">1000+</div>
+            <div className="text-3xl font-bold text-warning-400 mb-2">1000+</div>
             <div className="text-gray-400">Apostas Ativas</div>
           </div>
           <div className="text-center">
@@ -260,6 +242,7 @@ const HeroSection: React.FC<HeroProps> = ({ onOpenCreateModal }) => (
             <div className="text-3xl font-bold text-red-500 mb-2">99.9%</div>
             <div className="text-gray-400">Uptime</div>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -302,20 +285,24 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   }
 
   return (
-    <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700 py-6">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="bg-gradient-to-r from-neutral-800 to-neutral-900 border-b border-neutral-700 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="md:col-span-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h2 className="text-lg font-semibold text-white">
             Filtrar por Categoria
           </h2>
           <div className="flex flex-wrap gap-3">
-            <button
+            <Button
               onClick={() => onSelectCategory(null)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:-translate-y-0.5 ${
+              variant={selectedCategory === null ? "primary" : "secondary"}
+              size="md"
+              className={
                 selectedCategory === null
-                  ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg shadow-yellow-500/25"
-                  : "bg-gray-700 text-white hover:bg-gray-600 shadow-md hover:shadow-lg"
-              }`}
+                  ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg shadow-yellow-500/25 hover:from-yellow-300 hover:to-orange-400"
+                  : "bg-gray-700 text-white hover:bg-gray-600 shadow-md hover:shadow-lg border-gray-600"
+              }
+              aria-pressed={selectedCategory === null}
             >
               <span className="flex items-center space-x-2">
                 <svg
@@ -323,6 +310,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -333,23 +321,27 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                 </svg>
                 <span>Todas</span>
               </span>
-            </button>
+            </Button>
             {Array.isArray(categories) && categories.map((category) => (
-              <button
+              <Button
                 key={category.id}
                 onClick={() => onSelectCategory(category.id)}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:-translate-y-0.5 ${
+                variant={selectedCategory === category.id ? "primary" : "secondary"}
+                size="md"
+                className={
                   selectedCategory === category.id
-                    ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg shadow-yellow-500/25"
-                    : "bg-gray-700 text-white hover:bg-gray-600 shadow-md hover:shadow-lg"
-                }`}
+                    ? "bg-gradient-to-r from-warning-400 to-orange-500 text-black shadow-lg shadow-warning-500/25 hover:from-warning-300 hover:to-orange-400"
+                    : "bg-neutral-700 text-white hover:bg-neutral-600 shadow-md hover:shadow-lg border-neutral-600"
+                }
+                aria-pressed={selectedCategory === category.id}
               >
                 <span className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                  <div className="w-2 h-2 rounded-full bg-current opacity-60" aria-hidden="true"></div>
                   <span>{category.title}</span>
                 </span>
-              </button>
+              </Button>
             ))}
+          </div>
           </div>
         </div>
       </div>
@@ -364,13 +356,15 @@ interface BetsListProps {
     bets: Bet[];
   }>;
   onVoteCreated: () => void;
+  onOpenCreateModal: () => void;
 }
 
-const BetsList: React.FC<BetsListProps> = ({ groupedBets, onVoteCreated }) => (
-  <div className="bg-gray-900 min-h-screen">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+const BetsList: React.FC<BetsListProps> = ({ groupedBets, onVoteCreated, onOpenCreateModal }) => (
+  <div className="bg-neutral-900 min-h-screen">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
       {groupedBets.length === 0 ? (
-        <div className="text-center py-20">
+        <div className="md:col-span-12 text-center py-20">
           <div className="max-w-md mx-auto">
             <div className="w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
@@ -393,20 +387,26 @@ const BetsList: React.FC<BetsListProps> = ({ groupedBets, onVoteCreated }) => (
             <p className="text-gray-400 text-lg mb-8">
               Crie sua primeira aposta para começar a apostar!
             </p>
-            <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-3 rounded-xl font-semibold hover:from-yellow-300 hover:to-orange-400 transition-all duration-200 shadow-lg hover:shadow-yellow-500/25 transform hover:-translate-y-1">
+            <Button
+              onClick={onOpenCreateModal}
+              variant="primary"
+              size="lg"
+              leftIcon={Plus}
+              className="bg-gradient-to-r from-warning-400 to-orange-500 text-black hover:from-warning-300 hover:to-orange-400 shadow-lg hover:shadow-warning-500/25 transform hover:-translate-y-1"
+            >
               Criar Primeira Aposta
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
-        <div className="space-y-12">
+        <div className="md:col-span-12 space-y-12">
           {groupedBets.map((group) => (
             <div
               key={group.id}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 lg:p-8 shadow-2xl border border-gray-700"
+              className="bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-2xl p-6 lg:p-8 shadow-2xl border border-neutral-700"
             >
               <div className="flex items-center space-x-4 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-warning-400 to-orange-500 rounded-xl flex items-center justify-center">
                   <svg
                     className="w-7 h-7 text-black"
                     fill="none"
@@ -425,7 +425,7 @@ const BetsList: React.FC<BetsListProps> = ({ groupedBets, onVoteCreated }) => (
                   <h2 className="text-3xl font-bold text-white">
                     {group.name}
                   </h2>
-                  <p className="text-gray-400 mt-1">
+                  <p className="text-neutral-400 mt-1">
                     {group.bets.length} apostas ativas
                   </p>
                 </div>
@@ -443,6 +443,7 @@ const BetsList: React.FC<BetsListProps> = ({ groupedBets, onVoteCreated }) => (
           ))}
         </div>
       )}
+      </div>
     </div>
   </div>
 );
