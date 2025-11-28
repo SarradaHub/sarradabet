@@ -9,7 +9,6 @@ on:
     - cron: '0 2 * * *'
 
 jobs:
-<<<<<<< HEAD
   # Dependency vulnerability scan
   dependency-scan:
     runs-on: ubuntu-latest
@@ -189,15 +188,3 @@ jobs:
           echo "| License Check | ${{ needs.license-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Security Config | ${{ needs.security-config.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker Scan | ${{ needs.docker-scan.result == 'success' && '✅ Passed' || needs.docker-scan.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-=======
-  security:
-    uses: SarradaHub/platform/.github/workflows/security-scan.yaml@main
-    with:
-      node-version: '20'
-      working-directory: .
-      audit-level: moderate
-      fail-on-high: true
-      check-secrets: true
-      codeql: true
-      codeql-languages: javascript
->>>>>>> 6954b79 (Adding more workflows)
