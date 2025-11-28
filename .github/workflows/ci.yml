@@ -25,7 +25,12 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: SarradaHub/platform
-          path: ../platform
+          path: _platform
+      
+      - name: Move platform to expected location
+        run: |
+          cd ..
+          mv sarradabet/_platform platform
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -57,7 +62,12 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: SarradaHub/platform
-          path: ../platform
+          path: _platform
+      
+      - name: Move platform to expected location
+        run: |
+          cd ..
+          mv sarradabet/_platform platform
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -110,7 +120,12 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: SarradaHub/platform
-          path: ../platform
+          path: _platform
+      
+      - name: Move platform to expected location
+        run: |
+          cd ..
+          mv sarradabet/_platform platform
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
