@@ -10,6 +10,10 @@ on:
 
 jobs:
   security-scan:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     uses: SarradaHub/platform/.github/workflows/security-scan.yaml@main
     with:
       node-version: '20'
