@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "npm run build:design-system && turbo run build",
-    "build:design-system": "cd ../platform/design-system && npm ci && npm run build",
+    "build:design-system": "cd ../platform/design-system && npm ci --legacy-peer-deps && npm run build",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
