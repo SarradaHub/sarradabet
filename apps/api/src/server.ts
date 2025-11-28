@@ -19,7 +19,7 @@ const startServer = async () => {
 
   try {
     await checkDatabaseConnection();
-    
+
     // Initialize Consul service registration
     await initializeConsul();
 

@@ -27,7 +27,10 @@ export const getAllBetsFromRepository = async (
   });
 
   return bets.map((bet: any) => {
-    const totalVotes = bet.odds.reduce((sum: number, odd: any) => sum + odd._count.votes, 0);
+    const totalVotes = bet.odds.reduce(
+      (sum: number, odd: any) => sum + odd._count.votes,
+      0,
+    );
     const odds = bet.odds.map(({ _count, ...rest }: any) => ({
       ...rest,
       totalVotes: _count.votes,
@@ -75,7 +78,10 @@ export const getBetByIdFromRepository = async (betId: number) => {
 
   if (!bet) return null;
 
-  const totalVotes = bet.odds.reduce((sum: number, odd: any) => sum + odd._count.votes, 0);
+  const totalVotes = bet.odds.reduce(
+    (sum: number, odd: any) => sum + odd._count.votes,
+    0,
+  );
   const odds = bet.odds.map(({ _count, ...rest }: any) => ({
     ...rest,
     totalVotes: _count.votes,

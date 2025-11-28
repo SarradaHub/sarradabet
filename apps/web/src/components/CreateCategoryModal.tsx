@@ -4,6 +4,7 @@ import { CreateCategoryDto, Category } from "../types/category";
 import Modal from "./ui/Modal";
 import { Button } from "./ui/Button";
 import { ErrorMessage } from "./ui/ErrorMessage";
+import { Input } from "@sarradahub/design-system";
 
 interface CreateCategoryModalProps {
   isOpen: boolean;
@@ -85,30 +86,27 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Título *
-          </label>
-          <input
+          <Input
             id="title"
             type="text"
+            label="Título"
             value={formData.title}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, title: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
             placeholder="Digite o título da categoria"
             maxLength={50}
+            required
+            aria-describedby="title-help"
+            className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p id="title-help" className="text-xs text-gray-400 mt-1">
             Use apenas letras, números, espaços, hífens e underscores
           </p>
         </div>
 
         {validationErrors.length > 0 && (
-          <ErrorMessage error={validationErrors} title="Erros de Validação"           />
+          <ErrorMessage error={validationErrors} title="Erros de Validação" />
         )}
 
         {createCategoryMutation.error && (

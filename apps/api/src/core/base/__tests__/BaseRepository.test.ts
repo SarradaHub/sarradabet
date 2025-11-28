@@ -16,16 +16,24 @@ jest.mock("@prisma/client", () => ({
   })),
 }));
 
-class TestRepository extends BaseRepository<Record<string, unknown>, unknown, unknown> {
+class TestRepository extends BaseRepository<
+  Record<string, unknown>,
+  unknown,
+  unknown
+> {
   constructor(prisma: PrismaClient) {
     super(prisma);
   }
 
-  async findMany(params?: Record<string, unknown>): Promise<Record<string, unknown>[]> {
+  async findMany(
+    params?: Record<string, unknown>,
+  ): Promise<Record<string, unknown>[]> {
     return (this.prisma as any).test.findMany(params);
   }
 
-  async findUnique(where?: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+  async findUnique(
+    where?: Record<string, unknown>,
+  ): Promise<Record<string, unknown> | null> {
     return (this.prisma as any).test.findUnique(where ?? { where: { id: 1 } });
   }
 
@@ -33,11 +41,18 @@ class TestRepository extends BaseRepository<Record<string, unknown>, unknown, un
     return (this.prisma as any).test.create(data ?? { data: {} });
   }
 
-  async update(where?: Record<string, unknown>, data?: unknown): Promise<Record<string, unknown>> {
-    return (this.prisma as any).test.update(where ?? { where: { id: 1 }, data: {} });
+  async update(
+    where?: Record<string, unknown>,
+    data?: unknown,
+  ): Promise<Record<string, unknown>> {
+    return (this.prisma as any).test.update(
+      where ?? { where: { id: 1 }, data: {} },
+    );
   }
 
-  async delete(where?: Record<string, unknown>): Promise<Record<string, unknown>> {
+  async delete(
+    where?: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
     return (this.prisma as any).test.delete(where ?? { where: { id: 1 } });
   }
 
@@ -76,12 +91,15 @@ describe("BaseRepository", () => {
       (mockPrisma as any).test.findMany.mockResolvedValueOnce(mockData);
       (mockPrisma as any).test.count.mockResolvedValueOnce(25);
 
-      const result = await repository.findManyWithPagination({
-        page: 2,
-        limit: 10,
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      }, {} as any);
+      const result = await repository.findManyWithPagination(
+        {
+          page: 2,
+          limit: 10,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+        },
+        {} as any,
+      );
 
       expect(result).toEqual({
         data: mockData,
@@ -111,10 +129,13 @@ describe("BaseRepository", () => {
       (mockPrisma as any).test.findMany.mockResolvedValueOnce(mockData);
       (mockPrisma as any).test.count.mockResolvedValueOnce(5);
 
-      const result = await repository.findManyWithPagination({
-        page: 1,
-        limit: 10,
-      }, {} as any);
+      const result = await repository.findManyWithPagination(
+        {
+          page: 1,
+          limit: 10,
+        },
+        {} as any,
+      );
 
       expect(result.meta).toEqual({
         page: 1,

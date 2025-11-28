@@ -9,12 +9,14 @@ import { identityServiceClient } from "../../services/identityService.client";
 
 declare module "express-serve-static-core" {
   interface Request {
-    user?: AuthPayload | {
-      userId: number;
-      email: string;
-      username: string;
-      role: string;
-    };
+    user?:
+      | AuthPayload
+      | {
+          userId: number;
+          email: string;
+          username: string;
+          role: string;
+        };
   }
 }
 

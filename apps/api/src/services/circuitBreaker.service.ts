@@ -15,7 +15,7 @@ class CircuitBreakerService {
 
   createClient(serviceName: string, baseUrl?: string): AxiosInstance | null {
     const url = baseUrl || null;
-    
+
     if (!url && !consulService) {
       logger.warn(`No URL provided and Consul not enabled for ${serviceName}`);
       return null;
@@ -36,16 +36,14 @@ class CircuitBreakerService {
         volumeThreshold: 10,
       };
 
-      breaker = new CircuitBreaker(
-        async (config: AxiosRequestConfig) => {
-          const discoveredUrl = url || await consulService.discoverService(serviceName);
-          if (!discoveredUrl) {
-            throw new Error(`Service ${serviceName} not available`);
-          }
-          return axios({ ...config, baseURL: discoveredUrl });
-        },
-        options
-      );
+      breaker = new CircuitBreaker(async (config: AxiosRequestConfig) => {
+        const discoveredUrl =
+          url || (await consulService.discoverService(serviceName));
+        if (!discoveredUrl) {
+          throw new Error(`Service ${serviceName} not available`);
+        }
+        return axios({ ...config, baseURL: discoveredUrl });
+      }, options);
 
       breaker.on("open", () => {
         logger.warn(`Circuit breaker opened for ${serviceName}`);
@@ -76,10 +74,15 @@ class CircuitBreakerService {
     method: "get" | "post" | "put" | "patch" | "delete",
     path: string,
     data?: unknown,
-    config?: AxiosRequestConfig
-  ): Promise<{ success: boolean; data?: unknown; error?: string; circuitOpen?: boolean }> {
+    config?: AxiosRequestConfig,
+  ): Promise<{
+    success: boolean;
+    data?: unknown;
+    error?: string;
+    circuitOpen?: boolean;
+  }> {
     const client = this.createClient(serviceName);
-    
+
     if (!client) {
       return { success: false, error: "Service unavailable" };
     }
@@ -88,9 +91,16 @@ class CircuitBreakerService {
       const response = await client[method](path, data, config);
       return { success: true, data: response.data };
     } catch (error: unknown) {
-      if (error instanceof Error && error.message.includes("Circuit breaker is open")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Circuit breaker is open")
+      ) {
         logger.error(`Circuit breaker open for ${serviceName}`);
-        return { success: false, error: "Service temporarily unavailable", circuitOpen: true };
+        return {
+          success: false,
+          error: "Service temporarily unavailable",
+          circuitOpen: true,
+        };
       }
       logger.error(`Error calling ${serviceName}: ${(error as Error).message}`);
       return { success: false, error: (error as Error).message };
@@ -99,4 +109,3 @@ class CircuitBreakerService {
 }
 
 export const circuitBreakerService = new CircuitBreakerService();
-

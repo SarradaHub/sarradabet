@@ -13,12 +13,16 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write
     uses: SarradaHub/platform/.github/workflows/release.yaml@main
     with:
       node-version: '20'
       working-directory: .
       install-command: npm ci
-      build-command: npm run build
+      build-command: |
+        git clone --depth 1 https://github.com/SarradaHub/platform.git ../platform || true
+        npm run build
       prisma-generate: true
       prisma-working-directory: apps/api
       build-paths: |

@@ -1,6 +1,9 @@
 // Simple query cache to prevent duplicate requests
 class QueryCache {
-  private cache = new Map<string, { data?: unknown; dataTimestamp?: number; promise?: Promise<unknown> }>();
+  private cache = new Map<
+    string,
+    { data?: unknown; dataTimestamp?: number; promise?: Promise<unknown> }
+  >();
   private readonly CACHE_DURATION = 30 * 1000; // 30 seconds
 
   get<T>(key: string): T | null {

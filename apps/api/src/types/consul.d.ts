@@ -4,7 +4,11 @@ declare module "consul" {
     port?: number;
     secure?: boolean;
     defaults?: unknown;
-    promisify?: boolean | ((fn: (...args: unknown[]) => unknown) => (...args: unknown[]) => unknown);
+    promisify?:
+      | boolean
+      | ((
+          fn: (...args: unknown[]) => unknown,
+        ) => (...args: unknown[]) => unknown);
   }
 
   export interface ServiceCheck {
@@ -58,4 +62,3 @@ declare module "consul" {
   const ConsulClass: typeof Consul;
   export = ConsulClass;
 }
-

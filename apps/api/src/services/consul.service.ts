@@ -11,7 +11,7 @@ class ConsulService {
     if (this.isEnabled()) {
       this.client = new Consul({
         host: this.consulUrl.replace("http://", "").split(":")[0],
-        port: this.consulUrl.includes(":") 
+        port: this.consulUrl.includes(":")
           ? parseInt(this.consulUrl.split(":")[2] || "8500", 10)
           : 8500,
         promisify: true,
@@ -26,7 +26,7 @@ class ConsulService {
 
     try {
       const serviceAddress = process.env.SERVICE_ADDRESS || "localhost";
-      
+
       await this.client.agent.service.register({
         name: this.serviceName,
         id: this.serviceName,
@@ -41,9 +41,13 @@ class ConsulService {
         },
       });
 
-      logger.info(`Registered ${this.serviceName} with Consul at ${this.consulUrl}`);
+      logger.info(
+        `Registered ${this.serviceName} with Consul at ${this.consulUrl}`,
+      );
     } catch (error) {
-      logger.error(`Failed to register with Consul: ${(error as Error).message}`);
+      logger.error(
+        `Failed to register with Consul: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -56,7 +60,9 @@ class ConsulService {
       await this.client.agent.service.deregister(this.serviceName);
       logger.info(`Deregistered ${this.serviceName} from Consul`);
     } catch (error) {
-      logger.error(`Failed to deregister from Consul: ${(error as Error).message}`);
+      logger.error(
+        `Failed to deregister from Consul: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -78,7 +84,9 @@ class ConsulService {
       const service = services[0].Service;
       return `http://${service.Address}:${service.Port}`;
     } catch (error) {
-      logger.error(`Failed to discover service ${serviceName}: ${(error as Error).message}`);
+      logger.error(
+        `Failed to discover service ${serviceName}: ${(error as Error).message}`,
+      );
       return null;
     }
   }
@@ -89,4 +97,3 @@ class ConsulService {
 }
 
 export const consulService = new ConsulService();
-

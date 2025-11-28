@@ -101,7 +101,7 @@ describe("useBets", () => {
 
       // Clear cache to force refetch
       queryCache.clear(`bets-${JSON.stringify({})}`);
-      
+
       // Refetch
       await act(async () => {
         await result.current.refetch();

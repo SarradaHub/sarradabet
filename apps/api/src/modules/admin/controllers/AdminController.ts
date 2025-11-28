@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { AdminService, CreateAdminInput, LoginInput } from "../services/AdminService";
+import {
+  AdminService,
+  CreateAdminInput,
+  LoginInput,
+} from "../services/AdminService";
 import { AuthPayload } from "../../../utils/auth";
 import { ApiResponse } from "../../../utils/api/response";
 import { AppError } from "../../../core/errors/AppError";

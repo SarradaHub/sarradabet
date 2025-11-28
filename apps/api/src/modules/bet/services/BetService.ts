@@ -1,6 +1,9 @@
 import { BaseService } from "../../../core/base/BaseService";
 import { BetRepository, BetWithOdds } from "../repositories/BetRepository";
-import { CreateBetInput, UpdateBetInput } from "../../../core/validation/ValidationSchemas";
+import {
+  CreateBetInput,
+  UpdateBetInput,
+} from "../../../core/validation/ValidationSchemas";
 import {
   PaginationParams,
   PaginatedResult,

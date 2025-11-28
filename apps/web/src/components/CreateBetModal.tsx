@@ -6,6 +6,7 @@ import Modal from "./ui/Modal";
 import { Button } from "./ui/Button";
 import { ErrorMessage } from "./ui/ErrorMessage";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { Input, Textarea, Select } from "@sarradahub/design-system";
 
 interface CreateBetModalProps {
   isOpen: boolean;
@@ -27,8 +28,11 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const { data: categoriesResponse, loading: categoriesLoading, error: categoriesError } =
-    useCategories();
+  const {
+    data: categoriesResponse,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useCategories();
   const categories = categoriesResponse ?? [];
   const createBetMutation = useCreateBet();
 
@@ -145,52 +149,43 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Título *
-          </label>
-          <input
+          <Input
             id="title"
             type="text"
+            label="Título"
             value={formData.title}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setFormData((prev) => ({ ...prev, title: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
             placeholder="Digite o título da aposta"
             maxLength={255}
+            required
+            aria-invalid={validationErrors.some((e) => e.includes("Título"))}
+            aria-describedby={
+              validationErrors.some((e) => e.includes("Título"))
+                ? "title-error"
+                : undefined
+            }
+            className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Descrição
-          </label>
-          <textarea
+          <Textarea
             id="description"
+            label="Descrição"
             value={formData.description || ""}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
               setFormData((prev) => ({ ...prev, description: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
             placeholder="Digite a descrição da aposta (opcional)"
             rows={3}
             maxLength={1000}
+            className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-gray-300 mb-2"
-          >
-            Categoria *
-          </label>
           {categoriesLoading ? (
             <LoadingSpinner size="sm" />
           ) : categoriesError ? (
@@ -198,10 +193,11 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
               Erro ao carregar categorias: {categoriesError}
             </div>
           ) : (
-            <select
+            <Select
               id="category"
-              value={formData.categoryId || ""}
-              onChange={(e) =>
+              label="Categoria"
+              value={String(formData.categoryId || "")}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                 setFormData((prev) => ({
                   ...prev,
                   categoryId: e.target.value
@@ -209,23 +205,34 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
                     : undefined,
                 }))
               }
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-            >
-              <option value="">Selecione uma categoria</option>
-              {Array.isArray(categories) && categories.map((category: Category) => (
-                <option key={category.id} value={category.id}>
-                  {category.title}
-                </option>
-              ))}
-            </select>
+              required
+              aria-invalid={validationErrors.some((e) =>
+                e.includes("Categoria"),
+              )}
+              aria-describedby={
+                validationErrors.some((e) => e.includes("Categoria"))
+                  ? "category-error"
+                  : undefined
+              }
+              options={[
+                { value: "", label: "Selecione uma categoria" },
+                ...(Array.isArray(categories)
+                  ? categories.map((category: Category) => ({
+                      value: String(category.id),
+                      label: category.title,
+                    }))
+                  : []),
+              ]}
+              className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
+            />
           )}
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-300">
+            <div className="block text-sm font-medium text-gray-300">
               Odds *
-            </label>
+            </div>
             <Button
               type="button"
               variant="secondary"
@@ -240,26 +247,28 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
             {formData.odds?.map((odd, index) => (
               <div key={index} className="flex gap-3 items-end">
                 <div className="flex-1">
-                  <input
+                  <Input
                     type="text"
                     value={odd.title}
-                    onChange={(e) => updateOdd(index, "title", e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      updateOdd(index, "title", e.target.value)
+                    }
                     placeholder="Título da odd"
+                    className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
                   />
                 </div>
                 <div className="w-24">
-                  <input
+                  <Input
                     type="number"
                     value={odd.value}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       updateOdd(index, "value", Number(e.target.value))
                     }
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                     placeholder="Valor"
                     min="1.01"
                     max="1000"
                     step="0.01"
+                    className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
                   />
                 </div>
                 {formData.odds && formData.odds.length > 1 && (
@@ -278,7 +287,9 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
         </div>
 
         {validationErrors.length > 0 && (
-          <ErrorMessage error={validationErrors} title="Erros de Validação"           />
+          <div role="alert" aria-live="polite">
+            <ErrorMessage error={validationErrors} title="Erros de Validação" />
+          </div>
         )}
 
         {createBetMutation.error && (

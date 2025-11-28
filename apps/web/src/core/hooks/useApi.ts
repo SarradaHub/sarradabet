@@ -65,7 +65,10 @@ export function useApi<T>(
           return null;
         }
       } catch (error: unknown) {
-        const e = error as ApiError & { message?: string; errors?: ApiError["errors"] };
+        const e = error as ApiError & {
+          message?: string;
+          errors?: ApiError["errors"];
+        };
         const apiError: ApiError = {
           success: false,
           message: e?.message || "An unexpected error occurred",

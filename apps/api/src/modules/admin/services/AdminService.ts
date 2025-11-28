@@ -1,5 +1,10 @@
 import { prisma } from "../../../config/db";
-import { hashPassword, comparePassword, generateToken, AuthToken } from "../../../utils/auth";
+import {
+  hashPassword,
+  comparePassword,
+  generateToken,
+  AuthToken,
+} from "../../../utils/auth";
 import { BaseService } from "../../../core/base/BaseService";
 import {
   NotFoundError,
@@ -31,12 +36,26 @@ export class AdminService extends BaseService<any, any, any> {
   constructor() {
     // AdminService uses Prisma directly and doesn't rely on BaseService repository methods
     // Provide a minimal no-op repository to satisfy the base class constructor
-     
+
     super({} as any);
   }
   // Implement abstract signatures to satisfy BaseService type; not used here
-  async findAll(): Promise<any> { return { data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0, hasNext: false, hasPrev: false } }; }
-  async findById(): Promise<any> { return {}; }
+  async findAll(): Promise<any> {
+    return {
+      data: [],
+      meta: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
+  }
+  async findById(): Promise<any> {
+    return {};
+  }
   // Remove protected implementation at bottom; keep this public override only
   async create(data: CreateAdminInput): Promise<AdminWithToken> {
     // Validate input

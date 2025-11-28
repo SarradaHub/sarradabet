@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { BaseController } from "../../../core/base/BaseController";
 import { BetService } from "../services/BetService";
-import { CreateBetInput, UpdateBetInput } from "../../../core/validation/ValidationSchemas";
+import {
+  CreateBetInput,
+  UpdateBetInput,
+} from "../../../core/validation/ValidationSchemas";
 import { BetWithOdds } from "../repositories/BetRepository";
 
 export class BetController extends BaseController<
@@ -21,12 +24,7 @@ export class BetController extends BaseController<
     try {
       const params = this.parsePaginationParams(req);
       const result = await this.betService.findAll(params);
-      this.sendSuccess(
-        res,
-        result,
-        200,
-        "Bets retrieved successfully",
-      );
+      this.sendSuccess(res, result, 200, "Bets retrieved successfully");
     } catch (error) {
       this.handleError(error as Error, res, next);
     }
@@ -94,7 +92,12 @@ export class BetController extends BaseController<
     try {
       const { status } = req.params;
       const bets = await this.betService.findByStatus(status);
-      this.sendSuccess(res, { data: bets }, 200, `Bets with status '${status}' retrieved successfully`);
+      this.sendSuccess(
+        res,
+        { data: bets },
+        200,
+        `Bets with status '${status}' retrieved successfully`,
+      );
     } catch (error) {
       this.handleError(error as Error, res, next);
     }
@@ -108,7 +111,12 @@ export class BetController extends BaseController<
     try {
       const categoryId = this.parseId(req);
       const bets = await this.betService.findByCategory(categoryId);
-      this.sendSuccess(res, { data: bets }, 200, "Bets by category retrieved successfully");
+      this.sendSuccess(
+        res,
+        { data: bets },
+        200,
+        "Bets by category retrieved successfully",
+      );
     } catch (error) {
       this.handleError(error as Error, res, next);
     }

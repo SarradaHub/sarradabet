@@ -7,6 +7,9 @@ on:
 
 jobs:
   update:
+    permissions:
+      contents: write
+      pull-requests: write
     uses: SarradaHub/platform/.github/workflows/dependency-update.yaml@main
     with:
       node-version: '20'

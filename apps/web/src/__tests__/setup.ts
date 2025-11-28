@@ -16,10 +16,12 @@ if (!(global as any).fetch) {
 
 // Polyfill TextEncoder/TextDecoder for libs expecting Node encoders
 if (!(global as any).TextEncoder) {
-  (global as any).TextEncoder = TextEncoder as unknown as typeof globalThis.TextEncoder;
+  (global as any).TextEncoder =
+    TextEncoder as unknown as typeof globalThis.TextEncoder;
 }
 if (!(global as any).TextDecoder) {
-  (global as any).TextDecoder = TextDecoder as unknown as typeof globalThis.TextDecoder;
+  (global as any).TextDecoder =
+    TextDecoder as unknown as typeof globalThis.TextDecoder;
 }
 
 // Mock window.matchMedia

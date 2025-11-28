@@ -27,7 +27,9 @@ if (process.env.NODE_ENV === "development") {
   });
 
   router.post("/debug-bet-validation", async (req: Request, res: Response) => {
-    const { CreateBetSchema } = await import("../core/validation/ValidationSchemas");
+    const { CreateBetSchema } = await import(
+      "../core/validation/ValidationSchemas"
+    );
 
     console.log("Debug - Received data:", req.body);
 

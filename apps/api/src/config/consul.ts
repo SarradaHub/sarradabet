@@ -5,7 +5,7 @@ export const initializeConsul = async (): Promise<void> => {
   if (process.env.CONSUL_ENABLED === "true") {
     try {
       await consulService.registerService();
-      
+
       // Deregister on shutdown
       process.on("SIGTERM", async () => {
         await consulService.deregisterService();
@@ -21,4 +21,3 @@ export const initializeConsul = async (): Promise<void> => {
     }
   }
 };
-
