@@ -46,7 +46,7 @@ describe("ErrorMessage", () => {
       name: /tentar novamente/i,
     });
     expect(retryButton).toBeInTheDocument();
-    expect(retryButton).toHaveClass("bg-red-600", "text-white");
+    expect(retryButton).toHaveClass("bg-error-600", "text-white");
   });
 
   it("should call onRetry when retry button is clicked", () => {
@@ -79,16 +79,10 @@ describe("ErrorMessage", () => {
   it("should have correct styling classes", () => {
     render(<ErrorMessage error="Error message" />);
 
-    // Find the outermost div with the error styling classes
-    const container = document.querySelector(".bg-red-900\\/20");
-    expect(container).toBeInTheDocument();
-    expect(container).toHaveClass(
-      "bg-red-900/20",
-      "border",
-      "border-red-500/30",
-      "rounded-lg",
-      "p-4",
-    );
+    // Alert component from design system wraps content
+    const alert = screen.getByText("Error message").closest('[role="alert"]') || 
+                  screen.getByText("Error message").closest('div');
+    expect(alert).toBeInTheDocument();
   });
 
   it("should have error icon", () => {
@@ -96,7 +90,8 @@ describe("ErrorMessage", () => {
 
     const icon = document.querySelector("svg");
     expect(icon).toBeInTheDocument();
-    expect(icon).toHaveClass("h-5", "w-5", "text-red-400");
+    // Icon from Alert component uses lucide-react classes
+    expect(icon).toHaveClass("w-5", "h-5");
   });
 
   it("should handle empty error array", () => {

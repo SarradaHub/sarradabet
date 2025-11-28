@@ -19,24 +19,62 @@ import request from "supertest";
 import { app } from "../../app";
 import { PrismaClient } from "@prisma/client";
 
-const hasDbUrl = !!testDbUrl;
-const prisma = hasDbUrl
-  ? new PrismaClient({
+let prisma: PrismaClient | null = null;
+let isDatabaseAvailable = false;
+
+// Function to check database connectivity
+const checkDatabaseConnection = async (): Promise<boolean> => {
+  if (!testDbUrl) return false;
+  
+  const testClient = new PrismaClient({
+    datasources: {
+      db: {
+        url: testDbUrl,
+      },
+    },
+  });
+
+  try {
+    await testClient.$connect();
+    await testClient.$disconnect();
+    return true;
+  } catch (error) {
+    console.warn(
+      `Database connection check failed: ${error instanceof Error ? error.message : "Unknown error"}. Integration tests will be skipped.`,
+    );
+    try {
+      await testClient.$disconnect();
+    } catch {
+      // Ignore disconnect errors
+    }
+    return false;
+  }
+};
+
+describe("Bet Routes Integration Tests", () => {
+  let testCategoryId: number;
+  let testBetId: number;
+
+  beforeAll(async () => {
+    // Check if database is available
+    isDatabaseAvailable = await checkDatabaseConnection();
+    
+    if (!isDatabaseAvailable) {
+      console.warn(
+        "Skipping integration tests - database is not available at " + testDbUrl,
+      );
+      return;
+    }
+
+    // Initialize Prisma client only if database is available
+    prisma = new PrismaClient({
       datasources: {
         db: {
           url: testDbUrl,
         },
       },
-    })
-  : (null as unknown as PrismaClient);
+    });
 
-const suite = hasDbUrl ? describe : describe.skip;
-
-suite("Bet Routes Integration Tests", () => {
-  let testCategoryId: number;
-  let testBetId: number;
-
-  beforeAll(async () => {
     // Clean up test database using Prisma to avoid table name/case issues
     await prisma.vote.deleteMany();
     await prisma.odd.deleteMany();
@@ -68,11 +106,26 @@ suite("Bet Routes Integration Tests", () => {
   });
 
   afterAll(async () => {
-    await prisma.$disconnect();
+    if (prisma) {
+      await prisma.$disconnect();
+      prisma = null;
+    }
   });
 
+  // Helper to conditionally run tests based on database availability
+  const testIfDbAvailable = (
+    name: string,
+    fn?: jest.ProvidesCallback,
+  ) => {
+    if (isDatabaseAvailable) {
+      return it(name, fn);
+    } else {
+      return it.skip(name, fn);
+    }
+  };
+
   describe("GET /api/v1/bets", () => {
-    it("should return all bets with pagination", async () => {
+    testIfDbAvailable("should return all bets with pagination", async () => {
       const response = await request(app)
         .get("/api/v1/bets")
         .query({ page: 1, limit: 10 })
@@ -84,7 +137,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.meta).toHaveProperty("limit", 10);
     });
 
-    it("should filter bets by status", async () => {
+    testIfDbAvailable("should filter bets by status", async () => {
       const response = await request(app)
         .get("/api/v1/bets")
         .query({ status: "open" })
@@ -94,7 +147,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.data).toBeInstanceOf(Array);
     });
 
-    it("should filter bets by category", async () => {
+    testIfDbAvailable("should filter bets by category", async () => {
       const response = await request(app)
         .get("/api/v1/bets")
         .query({ categoryId: testCategoryId })
@@ -106,7 +159,7 @@ suite("Bet Routes Integration Tests", () => {
   });
 
   describe("GET /api/v1/bets/:id", () => {
-    it("should return a specific bet", async () => {
+    testIfDbAvailable("should return a specific bet", async () => {
       const response = await request(app)
         .get(`/api/v1/bets/${testBetId}`)
         .expect(200);
@@ -118,14 +171,14 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.data.bet.odds).toBeInstanceOf(Array);
     });
 
-    it("should return 404 for non-existent bet", async () => {
+    testIfDbAvailable("should return 404 for non-existent bet", async () => {
       const response = await request(app).get("/api/v1/bets/99999").expect(404);
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain("not found");
     });
 
-    it("should return 400 for invalid ID", async () => {
+    testIfDbAvailable("should return 400 for invalid ID", async () => {
       const response = await request(app)
         .get("/api/v1/bets/invalid")
         .expect(400);
@@ -135,7 +188,7 @@ suite("Bet Routes Integration Tests", () => {
   });
 
   describe("POST /api/v1/bets", () => {
-    it("should create a new bet", async () => {
+    testIfDbAvailable("should create a new bet", async () => {
       const betData = {
         title: "New Test Bet",
         description: "New Test Description",
@@ -157,7 +210,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.data.bet.odds).toHaveLength(2);
     });
 
-    it("should return 400 for invalid bet data", async () => {
+    testIfDbAvailable("should return 400 for invalid bet data", async () => {
       const invalidBetData = {
         title: "", // Empty title
         categoryId: testCategoryId,
@@ -173,7 +226,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.errors).toBeInstanceOf(Array);
     });
 
-    it("should return 400 for invalid odds values", async () => {
+    testIfDbAvailable("should return 400 for invalid odds values", async () => {
       const invalidBetData = {
         title: "Test Bet",
         categoryId: testCategoryId,
@@ -190,7 +243,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.success).toBe(false);
     });
 
-    it("should return 404 for non-existent category", async () => {
+    testIfDbAvailable("should return 404 for non-existent category", async () => {
       const betData = {
         title: "Test Bet",
         categoryId: 99999,
@@ -210,7 +263,7 @@ suite("Bet Routes Integration Tests", () => {
   });
 
   describe("PUT /api/v1/bets/:id", () => {
-    it("should update a bet", async () => {
+    testIfDbAvailable("should update a bet", async () => {
       const updateData = {
         title: "Updated Bet Title",
         description: "Updated Description",
@@ -226,7 +279,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.data.bet.description).toBe(updateData.description);
     });
 
-    it("should return 404 for non-existent bet", async () => {
+    testIfDbAvailable("should return 404 for non-existent bet", async () => {
       const updateData = { title: "Updated Title" };
 
       const response = await request(app)
@@ -239,9 +292,9 @@ suite("Bet Routes Integration Tests", () => {
   });
 
   describe("DELETE /api/v1/bets/:id", () => {
-    it("should delete a bet", async () => {
+    testIfDbAvailable("should delete a bet", async () => {
       // Create a bet to delete
-      const bet = await prisma.bet.create({
+      const bet = await prisma!.bet.create({
         data: {
           title: "Bet to Delete",
           categoryId: testCategoryId,
@@ -259,13 +312,13 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.message).toContain("deleted successfully");
 
       // Verify bet is deleted
-      const deletedBet = await prisma.bet.findUnique({
+      const deletedBet = await prisma!.bet.findUnique({
         where: { id: bet.id },
       });
       expect(deletedBet).toBeNull();
     });
 
-    it("should return 404 for non-existent bet", async () => {
+    testIfDbAvailable("should return 404 for non-existent bet", async () => {
       const response = await request(app)
         .delete("/api/v1/bets/99999")
         .expect(404);
@@ -275,9 +328,9 @@ suite("Bet Routes Integration Tests", () => {
   });
 
   describe("PATCH /api/v1/bets/:id/close", () => {
-    it("should close a bet", async () => {
+    testIfDbAvailable("should close a bet", async () => {
       // Create an open bet
-      const bet = await prisma.bet.create({
+      const bet = await prisma!.bet.create({
         data: {
           title: "Bet to Close",
           categoryId: testCategoryId,
@@ -296,38 +349,41 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.data.bet.status).toBe("closed");
 
       // Verify bet is closed in database
-      const closedBet = await prisma.bet.findUnique({
+      const closedBet = await prisma!.bet.findUnique({
         where: { id: bet.id },
       });
       expect(closedBet?.status).toBe("closed");
     });
 
-    it("should return 409 when trying to close a non-open bet", async () => {
-      // Create a closed bet
-      const bet = await prisma.bet.create({
-        data: {
-          title: "Already Closed Bet",
-          categoryId: testCategoryId,
-          status: "closed",
-          odds: {
-            create: [{ title: "Option 1", value: 2.0 }],
+    testIfDbAvailable(
+      "should return 409 when trying to close a non-open bet",
+      async () => {
+        // Create a closed bet
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Already Closed Bet",
+            categoryId: testCategoryId,
+            status: "closed",
+            odds: {
+              create: [{ title: "Option 1", value: 2.0 }],
+            },
           },
-        },
-      });
+        });
 
-      const response = await request(app)
-        .patch(`/api/v1/bets/${bet.id}/close`)
-        .expect(409);
+        const response = await request(app)
+          .patch(`/api/v1/bets/${bet.id}/close`)
+          .expect(409);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain("Only open bets can be closed");
-    });
+        expect(response.body.success).toBe(false);
+        expect(response.body.message).toContain("Only open bets can be closed");
+      },
+    );
   });
 
   describe("PATCH /api/v1/bets/:id/resolve", () => {
-    it("should resolve a bet", async () => {
+    testIfDbAvailable("should resolve a bet", async () => {
       // Create a bet with odds
-      const bet = await prisma.bet.create({
+      const bet = await prisma!.bet.create({
         data: {
           title: "Bet to Resolve",
           categoryId: testCategoryId,
@@ -342,7 +398,9 @@ suite("Bet Routes Integration Tests", () => {
         include: { odds: true },
       });
 
-      const firstOdd = await prisma.odd.findFirst({ where: { betId: bet.id } });
+      const firstOdd = await prisma!.odd.findFirst({
+        where: { betId: bet.id },
+      });
       const response = await request(app)
         .patch(`/api/v1/bets/${bet.id}/resolve`)
         .send({ winningOddId: firstOdd ? firstOdd.id : -1 })
@@ -352,7 +410,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.data.bet.status).toBe("resolved");
 
       // Verify odds are updated
-      const updatedOdds = await prisma.odd.findMany({
+      const updatedOdds = await prisma!.odd.findMany({
         where: { betId: bet.id },
         orderBy: { id: "asc" },
       });
@@ -360,7 +418,7 @@ suite("Bet Routes Integration Tests", () => {
       expect(updatedOdds[1]?.result).toBe("lost");
     });
 
-    it("should return 400 for invalid winning odd", async () => {
+    testIfDbAvailable("should return 400 for invalid winning odd", async () => {
       const response = await request(app)
         .patch(`/api/v1/bets/${testBetId}/resolve`)
         .send({ winningOddId: 99999 })
@@ -369,27 +427,32 @@ suite("Bet Routes Integration Tests", () => {
       expect(response.body.success).toBe(false);
     });
 
-    it("should return 409 when trying to resolve an already resolved bet", async () => {
-      // Create a resolved bet
-      const bet = await prisma.bet.create({
-        data: {
-          title: "Already Resolved Bet",
-          categoryId: testCategoryId,
-          status: "resolved",
-          odds: {
-            create: [{ title: "Option 1", value: 2.0 }],
+    testIfDbAvailable(
+      "should return 409 when trying to resolve an already resolved bet",
+      async () => {
+        // Create a resolved bet
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Already Resolved Bet",
+            categoryId: testCategoryId,
+            status: "resolved",
+            odds: {
+              create: [{ title: "Option 1", value: 2.0 }],
+            },
           },
-        },
-      });
+        });
 
-      const firstOdd = await prisma.odd.findFirst({ where: { betId: bet.id } });
-      const response = await request(app)
-        .patch(`/api/v1/bets/${bet.id}/resolve`)
-        .send({ winningOddId: firstOdd!.id })
-        .expect(409);
+        const firstOdd = await prisma!.odd.findFirst({
+          where: { betId: bet.id },
+        });
+        const response = await request(app)
+          .patch(`/api/v1/bets/${bet.id}/resolve`)
+          .send({ winningOddId: firstOdd!.id })
+          .expect(409);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain("already resolved");
-    });
+        expect(response.body.success).toBe(false);
+        expect(response.body.message).toContain("already resolved");
+      },
+    );
   });
 });
