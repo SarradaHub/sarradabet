@@ -35,7 +35,7 @@ const LoadingSpinner = forwardRef<HTMLDivElement, LoadingSpinnerProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 LoadingSpinner.displayName = "LoadingSpinner";

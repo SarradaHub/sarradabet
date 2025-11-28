@@ -144,7 +144,9 @@ export const sanitizeRequest = (
       if (obj && typeof obj === "object") {
         const sanitized: Record<string, unknown> = {};
         Object.keys(obj as Record<string, unknown>).forEach((key) => {
-          sanitized[key] = sanitizeObject((obj as Record<string, unknown>)[key]);
+          sanitized[key] = sanitizeObject(
+            (obj as Record<string, unknown>)[key],
+          );
         });
         return sanitized;
       }

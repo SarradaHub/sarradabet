@@ -8,7 +8,12 @@ describe("LoadingSpinner", () => {
 
     const spinner = document.querySelector("svg");
     expect(spinner).toBeInTheDocument();
-    expect(spinner).toHaveClass("animate-spin", "text-yellow-400", "w-8", "h-8");
+    expect(spinner).toHaveClass(
+      "animate-spin",
+      "text-yellow-400",
+      "w-8",
+      "h-8",
+    );
   });
 
   it("should render with text", () => {

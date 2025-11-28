@@ -22,29 +22,36 @@ export class ApiResponse {
     // This must be checked before envelope normalization to avoid double-wrapping
     if (data && typeof data === "object" && !Array.isArray(data)) {
       const obj = data as Record<string, unknown>;
-      
+
       // Check for paginated results: { data: [...], meta: {...} }
       // This pattern indicates a paginated response that should be flattened
-      if (Object.prototype.hasOwnProperty.call(obj, "data") && 
-          Object.prototype.hasOwnProperty.call(obj, "meta") &&
-          Array.isArray(obj.data) &&
-          !Object.prototype.hasOwnProperty.call(obj, "success")) {
-        const { data: paginatedData, meta, message, ...rest } = obj as { 
-          data: unknown[]; 
+      if (
+        Object.prototype.hasOwnProperty.call(obj, "data") &&
+        Object.prototype.hasOwnProperty.call(obj, "meta") &&
+        Array.isArray(obj.data) &&
+        !Object.prototype.hasOwnProperty.call(obj, "success")
+      ) {
+        const {
+          data: paginatedData,
+          meta,
+          message,
+          ...rest
+        } = obj as {
+          data: unknown[];
           meta: unknown;
           message?: string;
         } & Record<string, unknown>;
-        const body: Record<string, unknown> = { 
-          success: true, 
+        const body: Record<string, unknown> = {
+          success: true,
           data: paginatedData,
-          meta 
+          meta,
         };
         // Include message if present
         if (message && typeof message === "string") {
           body.message = message;
         }
         // Include any other properties (excluding success and message which we handle above)
-        Object.keys(rest).forEach(key => {
+        Object.keys(rest).forEach((key) => {
           if (key !== "success") {
             body[key] = rest[key];
           }
@@ -57,12 +64,17 @@ export class ApiResponse {
     // Normalize already-shaped responses safely and only when it truly looks like our API envelope
     if (data && typeof data === "object") {
       const maybeEnvelope = data as Record<string, unknown>;
-      const hasOwn = (key: string) => Object.prototype.hasOwnProperty.call(maybeEnvelope, key);
-      const hasSuccessKey = hasOwn("success") && typeof maybeEnvelope.success === "boolean";
+      const hasOwn = (key: string) =>
+        Object.prototype.hasOwnProperty.call(maybeEnvelope, key);
+      const hasSuccessKey =
+        hasOwn("success") && typeof maybeEnvelope.success === "boolean";
       const hasEnvelopeHints =
         hasOwn("data") ||
-        (hasOwn("message") && typeof (maybeEnvelope as { message?: unknown }).message === "string") ||
-        (hasOwn("errors") && Array.isArray((maybeEnvelope as { errors?: unknown }).errors));
+        (hasOwn("message") &&
+          typeof (maybeEnvelope as { message?: unknown }).message ===
+            "string") ||
+        (hasOwn("errors") &&
+          Array.isArray((maybeEnvelope as { errors?: unknown }).errors));
 
       if (hasSuccessKey && hasEnvelopeHints) {
         const shaped = maybeEnvelope as {
@@ -74,8 +86,13 @@ export class ApiResponse {
 
         // For success=false payloads coming into success(), convert to a proper error response
         if (shaped.success === false) {
-          const message = typeof shaped.message === "string" ? shaped.message : "Request failed";
-          const errors = Array.isArray(shaped.errors) ? shaped.errors : undefined;
+          const message =
+            typeof shaped.message === "string"
+              ? shaped.message
+              : "Request failed";
+          const errors = Array.isArray(shaped.errors)
+            ? shaped.errors
+            : undefined;
           this.error(message, errors, statusCode);
           return;
         }
@@ -83,16 +100,23 @@ export class ApiResponse {
         // For success=true payloads, re-wrap consistently as { success: true, data, message? }
         const hasDataKey = Object.prototype.hasOwnProperty.call(shaped, "data");
         const topLevelMessage =
-          typeof shaped.message === "string" ? (shaped.message as string) : undefined;
+          typeof shaped.message === "string"
+            ? (shaped.message as string)
+            : undefined;
         const normalizedData = hasDataKey
           ? ((shaped.data ?? null) as ApiResponseData)
           : (() => {
               // Keep all fields except the envelope discriminator 'success'
               const { success, ...rest } = shaped as Record<string, unknown>;
-              return Object.keys(rest).length ? (rest as unknown as ApiResponseData) : null;
+              return Object.keys(rest).length
+                ? (rest as unknown as ApiResponseData)
+                : null;
             })();
 
-        const body: Record<string, unknown> = { success: true, data: normalizedData };
+        const body: Record<string, unknown> = {
+          success: true,
+          data: normalizedData,
+        };
         if (topLevelMessage) body.message = topLevelMessage;
         this.res.status(statusCode).json(body);
         return;
@@ -103,11 +127,17 @@ export class ApiResponse {
     // hoist it to the top-level response and keep the remainder as data.
     if (data && typeof data === "object" && !Array.isArray(data)) {
       const obj = data as Record<string, unknown>;
-      const hasSuccessKey = Object.prototype.hasOwnProperty.call(obj, "success");
+      const hasSuccessKey = Object.prototype.hasOwnProperty.call(
+        obj,
+        "success",
+      );
       const hasMessage = typeof obj.message === "string";
-      
+
       if (hasMessage && !hasSuccessKey) {
-        const { message, ...rest } = obj as { message: string } & Record<string, unknown>;
+        const { message, ...rest } = obj as { message: string } & Record<
+          string,
+          unknown
+        >;
         const restIsEmpty = Object.keys(rest).length === 0;
         this.res.status(statusCode).json({
           success: true,

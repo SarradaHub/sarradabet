@@ -7,7 +7,8 @@ beforeAll(async () => {
   process.env.DATABASE_URL =
     process.env.DATABASE_URL ||
     "postgresql://postgres:postgres@localhost:5432/sarradabet_test";
-  process.env.CORS_ORIGINS = process.env.CORS_ORIGINS || "http://localhost:5173";
+  process.env.CORS_ORIGINS =
+    process.env.CORS_ORIGINS || "http://localhost:5173";
   process.env.PORT = process.env.PORT || "0";
 
   if (process.env.RUN_DB_TESTS !== "true") return;

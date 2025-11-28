@@ -106,7 +106,7 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
         </div>
 
         {validationErrors.length > 0 && (
-          <ErrorMessage error={validationErrors} title="Erros de Validação"           />
+          <ErrorMessage error={validationErrors} title="Erros de Validação" />
         )}
 
         {createCategoryMutation.error && (

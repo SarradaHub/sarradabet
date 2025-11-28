@@ -25,11 +25,7 @@ router.post("/logout", adminController.logout);
 router.get("/", adminController.getAll);
 router.post("/", validateBody(CreateAdminSchema), adminController.create);
 
-router.get(
-  "/:id",
-  validateParams(ParamIdSchema),
-  adminController.getById,
-);
+router.get("/:id", validateParams(ParamIdSchema), adminController.getById);
 
 router.put(
   "/:id",
@@ -38,10 +34,6 @@ router.put(
   adminController.update,
 );
 
-router.delete(
-  "/:id",
-  validateParams(ParamIdSchema),
-  adminController.delete,
-);
+router.delete("/:id", validateParams(ParamIdSchema), adminController.delete);
 
 export default router;

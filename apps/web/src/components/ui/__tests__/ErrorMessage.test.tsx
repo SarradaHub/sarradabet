@@ -11,9 +11,7 @@ describe("ErrorMessage", () => {
   });
 
   it("should render with custom title", () => {
-    render(
-      <ErrorMessage error="Something went wrong" title="Custom Error" />
-    );
+    render(<ErrorMessage error="Something went wrong" title="Custom Error" />);
 
     expect(screen.getByText("Custom Error")).toBeInTheDocument();
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
@@ -44,7 +42,9 @@ describe("ErrorMessage", () => {
     const onRetry = vi.fn();
     render(<ErrorMessage error="Error message" onRetry={onRetry} />);
 
-    const retryButton = screen.getByRole("button", { name: /tentar novamente/i });
+    const retryButton = screen.getByRole("button", {
+      name: /tentar novamente/i,
+    });
     expect(retryButton).toBeInTheDocument();
     expect(retryButton).toHaveClass("bg-red-600", "text-white");
   });
@@ -53,7 +53,9 @@ describe("ErrorMessage", () => {
     const onRetry = vi.fn();
     render(<ErrorMessage error="Error message" onRetry={onRetry} />);
 
-    const retryButton = screen.getByRole("button", { name: /tentar novamente/i });
+    const retryButton = screen.getByRole("button", {
+      name: /tentar novamente/i,
+    });
     fireEvent.click(retryButton);
 
     expect(onRetry).toHaveBeenCalledTimes(1);
@@ -85,7 +87,7 @@ describe("ErrorMessage", () => {
       "border",
       "border-red-500/30",
       "rounded-lg",
-      "p-4"
+      "p-4",
     );
   });
 

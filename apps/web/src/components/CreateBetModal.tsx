@@ -28,8 +28,11 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const { data: categoriesResponse, loading: categoriesLoading, error: categoriesError } =
-    useCategories();
+  const {
+    data: categoriesResponse,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useCategories();
   const categories = categoriesResponse ?? [];
   const createBetMutation = useCreateBet();
 
@@ -203,7 +206,9 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
                 }))
               }
               required
-              aria-invalid={validationErrors.some((e) => e.includes("Categoria"))}
+              aria-invalid={validationErrors.some((e) =>
+                e.includes("Categoria"),
+              )}
               aria-describedby={
                 validationErrors.some((e) => e.includes("Categoria"))
                   ? "category-error"
@@ -225,9 +230,9 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-300">
+            <div className="block text-sm font-medium text-gray-300">
               Odds *
-            </label>
+            </div>
             <Button
               type="button"
               variant="secondary"
@@ -245,7 +250,9 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
                   <Input
                     type="text"
                     value={odd.title}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateOdd(index, "title", e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      updateOdd(index, "title", e.target.value)
+                    }
                     placeholder="Título da odd"
                     className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
                   />

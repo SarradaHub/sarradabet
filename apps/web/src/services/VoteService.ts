@@ -2,7 +2,6 @@ import { BaseService } from "../core/base/BaseService";
 import { Vote, CreateVoteDto } from "../types/vote";
 import { ApiResponse } from "../core/interfaces/IService";
 
-
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export class VoteService extends BaseService<Vote, CreateVoteDto, never> {

@@ -1,4 +1,8 @@
-import { IBusinessService, PaginationParams, PaginatedResult } from "../interfaces/IService";
+import {
+  IBusinessService,
+  PaginationParams,
+  PaginatedResult,
+} from "../interfaces/IService";
 import { NotFoundError } from "../errors/AppError";
 import { IRepository } from "../interfaces/IRepository";
 
@@ -16,8 +20,10 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
   abstract delete(id: number): Promise<void>;
 
   // accept an argument to allow subclasses to pass data; ignored by default
-   
-  async validateBusinessRules(_data?: CreateInput | UpdateInput): Promise<void> {
+
+  async validateBusinessRules(
+    _data?: CreateInput | UpdateInput,
+  ): Promise<void> {
     // default no-op; override in subclasses
   }
 
@@ -29,7 +35,9 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
     id: number,
     entityName: string,
   ): Promise<void> {
-    const exists = await this.repository.findUnique({ id } as unknown as Parameters<typeof this.repository.findUnique>[0]);
+    const exists = await this.repository.findUnique({
+      id,
+    } as unknown as Parameters<typeof this.repository.findUnique>[0]);
     if (!exists) {
       throw new NotFoundError(entityName, id);
     }

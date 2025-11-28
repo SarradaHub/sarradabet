@@ -58,7 +58,9 @@ describe("useCategories", () => {
         },
       });
 
-      const { result } = renderHook(() => useCategories({ page: 1, limit: 10 }));
+      const { result } = renderHook(() =>
+        useCategories({ page: 1, limit: 10 }),
+      );
 
       await waitFor(() => {
         expect(result.current.data).toEqual(mockCategories);
@@ -66,7 +68,9 @@ describe("useCategories", () => {
         expect(result.current.error).toBe(null);
       });
 
-      expect(mockCategoryService.getCategoriesWithPagination).toHaveBeenCalledWith({
+      expect(
+        mockCategoryService.getCategoriesWithPagination,
+      ).toHaveBeenCalledWith({
         page: 1,
         limit: 10,
       });
@@ -117,9 +121,7 @@ describe("useCategories", () => {
 
   describe("useSearchCategories", () => {
     it("should search categories", async () => {
-      const mockCategories = [
-        { id: 1, title: "Sports" },
-      ];
+      const mockCategories = [{ id: 1, title: "Sports" }];
       mockCategoryService.searchCategories.mockResolvedValue({
         success: true,
         data: mockCategories,
@@ -133,7 +135,9 @@ describe("useCategories", () => {
         expect(result.current.error).toBe(null);
       });
 
-      expect(mockCategoryService.searchCategories).toHaveBeenCalledWith("sports");
+      expect(mockCategoryService.searchCategories).toHaveBeenCalledWith(
+        "sports",
+      );
     });
 
     it("should not search when search term is too short", () => {
@@ -235,7 +239,10 @@ describe("useCategories", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockCategoryService.update).toHaveBeenCalledWith(1, mockUpdateData);
+      expect(mockCategoryService.update).toHaveBeenCalledWith(
+        1,
+        mockUpdateData,
+      );
     });
   });
 
@@ -254,7 +261,9 @@ describe("useCategories", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.data).toEqual({ message: "Category deleted successfully" });
+        expect(result.current.data).toEqual({
+          message: "Category deleted successfully",
+        });
         expect(result.current.loading).toBe(false);
         expect(result.current.error).toBe(null);
         expect(result.current.isSuccess).toBe(true);

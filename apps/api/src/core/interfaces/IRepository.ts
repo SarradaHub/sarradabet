@@ -1,6 +1,11 @@
 // Note: Keep this file independent of Prisma-specific types for reusability
 
-export interface IRepository<T, CreateInput, UpdateInput, WhereInput = Record<string, unknown>> {
+export interface IRepository<
+  T,
+  CreateInput,
+  UpdateInput,
+  WhereInput = Record<string, unknown>,
+> {
   findMany(params?: FindManyParams): Promise<T[]>;
   findUnique(where: WhereInput): Promise<T | null>;
   create(data: CreateInput): Promise<T>;

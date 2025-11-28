@@ -2,7 +2,8 @@ import { circuitBreakerService } from "./circuitBreaker.service";
 import { logger } from "../utils/logger";
 
 class IdentityServiceClient {
-  private baseUrl = process.env.IDENTITY_SERVICE_URL || "http://identity-service:3001";
+  private baseUrl =
+    process.env.IDENTITY_SERVICE_URL || "http://identity-service:3001";
   private serviceApiKey = process.env.SERVICE_API_KEY || "";
 
   async validateToken(token: string): Promise<{
@@ -28,10 +29,14 @@ class IdentityServiceClient {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
-    if (response.success && response.data && (response.data as { success: boolean }).success) {
+    if (
+      response.success &&
+      response.data &&
+      (response.data as { success: boolean }).success
+    ) {
       const data = response.data as {
         data: {
           user: {
@@ -64,7 +69,7 @@ class IdentityServiceClient {
         headers: {
           Authorization: `Bearer ${this.serviceApiKey}`,
         },
-      }
+      },
     );
 
     if (response.success && response.data) {
@@ -77,4 +82,3 @@ class IdentityServiceClient {
 }
 
 export const identityServiceClient = new IdentityServiceClient();
-

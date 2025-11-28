@@ -17,8 +17,11 @@ const AdminLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || "http://localhost";
-  const IDENTITY_SERVICE_URL = import.meta.env.VITE_IDENTITY_SERVICE_URL || `${API_GATEWAY_URL}/api/v1/auth`;
+  const API_GATEWAY_URL =
+    import.meta.env.VITE_API_GATEWAY_URL || "http://localhost";
+  const IDENTITY_SERVICE_URL =
+    import.meta.env.VITE_IDENTITY_SERVICE_URL ||
+    `${API_GATEWAY_URL}/api/v1/auth`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +51,9 @@ const AdminLogin: React.FC = () => {
       }
 
       const hasOwn = (obj: unknown, key: string) =>
-        !!obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, key);
+        !!obj &&
+        typeof obj === "object" &&
+        Object.prototype.hasOwnProperty.call(obj, key);
 
       let payload: any = raw;
       if (hasOwn(raw, "data")) {
@@ -63,7 +68,10 @@ const AdminLogin: React.FC = () => {
       }
 
       const tokenValue =
-        (payload && typeof payload === "object" && (payload as any).token && (payload as any).token.token)
+        payload &&
+        typeof payload === "object" &&
+        (payload as any).token &&
+        (payload as any).token.token
           ? (payload as any).token.token
           : (payload as any)?.token;
       if (typeof tokenValue !== "string") {

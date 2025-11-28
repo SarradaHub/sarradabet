@@ -34,19 +34,19 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
         )}
         {import.meta.env.DEV && apiError?.url && (
           <div className="mt-3 pt-3 border-t border-current/20 text-xs opacity-70">
-            <p><strong>Endpoint:</strong> {apiError.method} {apiError.url}</p>
+            <p>
+              <strong>Endpoint:</strong> {apiError.method} {apiError.url}
+            </p>
             {apiError.requestId && (
-              <p><strong>Request ID:</strong> {apiError.requestId}</p>
+              <p>
+                <strong>Request ID:</strong> {apiError.requestId}
+              </p>
             )}
           </div>
         )}
         {onRetry && (
           <div className="mt-4">
-            <Button
-              onClick={onRetry}
-              variant="danger"
-              size="sm"
-            >
+            <Button onClick={onRetry} variant="danger" size="sm">
               Tentar Novamente
             </Button>
           </div>

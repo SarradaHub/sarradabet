@@ -99,7 +99,7 @@ export function useQuery<T>(
     ) {
       refetch();
     }
-  }, [enabled, refetchOnMount, isStale, lastFetched]);
+  }, [enabled, refetchOnMount, isStale, lastFetched, refetch]);
 
   useEffect(() => {
     if (!refetchOnWindowFocus || !enabled) return;

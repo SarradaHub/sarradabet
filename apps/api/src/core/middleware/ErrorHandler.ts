@@ -12,12 +12,14 @@ export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
-   
+
   _next: NextFunction,
 ): void => {
   let statusCode = 500;
   let message = "Internal server error";
-  let errors: Array<{ field?: string; message: string; code?: string; stack?: string }> | undefined;
+  let errors:
+    | Array<{ field?: string; message: string; code?: string; stack?: string }>
+    | undefined;
   const requestId = (req.headers["x-request-id"] as string) || "unknown";
   const timestamp = new Date().toISOString();
 
@@ -78,7 +80,12 @@ export const errorHandler = (
   const errorResponse: {
     success: false;
     message: string;
-    errors?: Array<{ field?: string; message: string; code?: string; stack?: string }>;
+    errors?: Array<{
+      field?: string;
+      message: string;
+      code?: string;
+      stack?: string;
+    }>;
     requestId: string;
     timestamp: string;
     stack?: string;
@@ -167,7 +174,11 @@ export const notFoundHandler = (
   next(error);
 };
 
-export const asyncHandler = <T extends (req: Request, res: Response, next: NextFunction) => unknown>(fn: T) => {
+export const asyncHandler = <
+  T extends (req: Request, res: Response, next: NextFunction) => unknown,
+>(
+  fn: T,
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

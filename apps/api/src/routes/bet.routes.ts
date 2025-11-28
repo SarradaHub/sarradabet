@@ -8,7 +8,11 @@ import {
   validateParams,
   validateQuery,
 } from "../core/middleware/ValidationMiddleware";
-import { CreateBetSchema, UpdateBetSchema, BetQuerySchema } from "../core/validation/ValidationSchemas";
+import {
+  CreateBetSchema,
+  UpdateBetSchema,
+  BetQuerySchema,
+} from "../core/validation/ValidationSchemas";
 import {
   ParamIdSchema,
   ParamCategoryIdSchema,

@@ -1,7 +1,9 @@
 // Set DATABASE_URL to test database BEFORE importing app
 // This ensures the app uses the test database when it initializes
 const getTestDatabaseUrl = () => {
-  const dbUrl = process.env.DATABASE_URL || "postgresql://appuser:sarradabet1234@localhost:5433/sarradabet_test";
+  const dbUrl =
+    process.env.DATABASE_URL ||
+    "postgresql://appuser:sarradabet1234@localhost:5433/sarradabet_test";
   // Replace database name with _test suffix if it doesn't already have it
   if (dbUrl.includes("/sarradabet") && !dbUrl.includes("/sarradabet_test")) {
     return dbUrl.replace("/sarradabet", "/sarradabet_test");

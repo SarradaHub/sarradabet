@@ -8,7 +8,11 @@ import {
   validateParams,
   validateQuery,
 } from "../core/middleware/ValidationMiddleware";
-import { CreateCategorySchema, UpdateCategorySchema, CategoryQuerySchema } from "../core/validation/ValidationSchemas";
+import {
+  CreateCategorySchema,
+  UpdateCategorySchema,
+  CategoryQuerySchema,
+} from "../core/validation/ValidationSchemas";
 import { ParamIdSchema } from "../core/validation/ValidationSchemas";
 const categoryRepository = new CategoryRepository(prisma);
 const categoryService = new CategoryService(categoryRepository);
