@@ -24,10 +24,14 @@ jobs:
       install-command: npm ci
       lint-command: npm run lint
       typecheck-command: npm run check-types
-      build-command: npm run build
+      build-command: |
+        git clone --depth 1 https://github.com/SarradaHub/platform.git ../platform || true
+        npm run build
       prisma-generate: true
       prisma-working-directory: apps/api
-      prepare-db-command: npm run build:design-system && cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
+      prepare-db-command: |
+        git clone --depth 1 https://github.com/SarradaHub/platform.git ../platform || true
+        npm run build:design-system && cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
       test-api-command: npm run test:api:coverage
       test-web-command: npm run test:web:coverage
       postgres-db: sarradabet_test
