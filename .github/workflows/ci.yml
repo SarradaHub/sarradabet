@@ -12,159 +12,20 @@ permissions:
   issues: read
 
 jobs:
-  lint-and-types:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - name: Checkout sarradabet
-        uses: actions/checkout@v5
-      
-      - name: Checkout platform repository
-        uses: actions/checkout@v5
-        with:
-          repository: SarradaHub/platform
-          path: _platform
-      
-      - name: Move platform to expected location
-        run: |
-          cd ..
-          mv sarradabet/_platform platform
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run check-types
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint-and-types]
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - name: Checkout sarradabet
-        uses: actions/checkout@v5
-      
-      - name: Checkout platform repository
-        uses: actions/checkout@v5
-        with:
-          repository: SarradaHub/platform
-          path: _platform
-      
-      - name: Move platform to expected location
-        run: |
-          cd ..
-          mv sarradabet/_platform platform
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: apps/api
-
-      - name: Build
-        run: npm run build
-
-  test:
-    runs-on: ubuntu-latest
-    needs: [lint-and-types]
-    defaults:
-      run:
-        working-directory: .
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: sarradabet_test
-        ports:
-          - "5432:5432"
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-      NODE_ENV: test
-
-    steps:
-      - name: Checkout sarradabet
-        uses: actions/checkout@v5
-      
-      - name: Checkout platform repository
-        uses: actions/checkout@v5
-        with:
-          repository: SarradaHub/platform
-          path: _platform
-      
-      - name: Move platform to expected location
-        run: |
-          cd ..
-          mv sarradabet/_platform platform
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build design-system
-        run: npm run build:design-system
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: apps/api
-
-      - name: Prepare database
-        run: cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-
-      - name: Run API tests
-        run: npm run test:api:coverage
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-          NODE_ENV: test
-
-      - name: Run Web tests
-        run: npm run test:web:coverage
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-reports
-          path: |
-            coverage
-            **/coverage
-          retention-days: 7
+  ci:
+    uses: SarradaHub/platform/.github/workflows/node-monorepo-ci.yaml@main
+    with:
+      working-directory: .
+      node-version: '20'
+      install-command: npm ci
+      lint-command: npm run lint
+      typecheck-command: npm run check-types
+      build-command: npm run build
+      prisma-generate: true
+      prisma-working-directory: apps/api
+      prepare-db-command: npm run build:design-system && cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
+      test-api-command: npm run test:api:coverage
+      test-web-command: npm run test:web:coverage
+      postgres-db: sarradabet_test
+      db-url: postgresql://postgres:postgres@localhost:5432/sarradabet_test
+      coverage-artifacts: true

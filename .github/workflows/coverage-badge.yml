@@ -15,7 +15,7 @@ jobs:
       test-command: npm run test:api:coverage && npm run test:web:coverage
       prisma-generate: true
       prisma-working-directory: apps/api
-      prepare-db-command: cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
+      prepare-db-command: npm run build:design-system && cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
       postgres-db: sarradabet_test
       db-url: postgresql://postgres:postgres@localhost:5432/sarradabet_test
       coverage-paths: |
