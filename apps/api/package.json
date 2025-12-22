@@ -65,7 +65,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "opossum": "^7.0.0",
-    "prisma": "^6.19.0",
+    "prisma": "^6.19.1",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
   }
