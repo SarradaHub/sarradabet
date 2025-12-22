@@ -27,7 +27,7 @@
     "test:web:coverage": "npm run -w apps/web test:coverage"
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
+    "prettier": "^3.7.4",
     "turbo": "^2.6.1",
     "typescript": "5.9.3",
     "vitest": "^3.2.4",
