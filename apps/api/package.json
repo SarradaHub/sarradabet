@@ -55,7 +55,7 @@
     "@prisma/client": "^6.19.0",
     "@sarradabet/types": "*",
     "@types/express": "^5.0.0",
-    "axios": "^1.7.9",
+    "axios": "^1.18.0",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.0",
     "consul": "^1.2.0",
