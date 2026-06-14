@@ -849,10 +849,22 @@ For managed hosting without self-managed Docker/nginx:
 
 ### Web (Vercel)
 
+The web app depends on `@sarradahub/design-system` from the sibling [`SarradaHub/platform`](https://github.com/SarradaHub/platform) repo. Vercel must clone that repo before install/build (handled by [`scripts/clone-platform.sh`](../scripts/clone-platform.sh)).
+
+**Option A — monorepo root (recommended, matches Turborepo):**
+
+- **Root directory:** `.` (repository root)
+- **Install / build / output:** defined in root [`vercel.json`](../vercel.json) — clones platform, builds design-system, then `turbo run build --filter=web`
+- **Output directory:** `apps/web/dist`
+
+**Option B — web app only:**
+
 - **Root directory:** `apps/web`
-- **Build:** `npm run build`
-- **Environment:** `VITE_API_URL=https://your-api.onrender.com` (no `/api/v1` suffix)
-- **Config:** [`apps/web/vercel.json`](../apps/web/vercel.json) — SPA rewrites + immutable asset cache
+- **Install / build / output:** defined in [`apps/web/vercel.json`](../apps/web/vercel.json)
+
+**Environment:** `VITE_API_URL=https://your-api.onrender.com` (no `/api/v1` suffix)
+
+If the Vercel project dashboard overrides **Install Command** or **Build Command**, remove those overrides so `vercel.json` settings apply (or set them to the same values). A bare `turbo run build` without cloning platform will fail with `Cannot find module '@sarradahub/design-system'`.
 
 ### Migrations
 

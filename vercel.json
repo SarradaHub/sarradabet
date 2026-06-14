@@ -1,7 +1,8 @@
 {
-  "installCommand": "cd ../.. && bash scripts/clone-platform.sh && npm ci",
-  "buildCommand": "cd ../.. && npm run build:design-system && npm run -w web build",
-  "outputDirectory": "dist",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "bash scripts/clone-platform.sh && npm ci",
+  "buildCommand": "npm run build:design-system && turbo run build --filter=web",
+  "outputDirectory": "apps/web/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
