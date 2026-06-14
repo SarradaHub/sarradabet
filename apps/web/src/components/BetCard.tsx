@@ -1,65 +1,66 @@
-import { Bet } from "../types/bet";
+import { useState, useEffect, useCallback } from "react";
+import { RealtimeEvents, type VoteCreatedPayload } from "@sarradabet/types";
 import { format } from "date-fns";
 import OddsList from "./OddsList";
-import { useState, useEffect, useCallback } from "react";
-import { betService } from "../services/BetService";
-import { categoryService } from "../services/CategoryService";
+import { useSocketEvent } from "../core/hooks/useSocket";
+import { Bet } from "../types/bet";
 
 interface BetCardProps {
   bet: Bet;
-  onVoteCreated?: () => void;
 }
 
-const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
+const BetCard = ({ bet }: BetCardProps) => {
   const [oddsData, setOddsData] = useState(bet.odds);
-  const [categoryData, setCategoryData] = useState<{
-    id: number;
-    title: string;
-  } | null>(null);
+  const [totalVotes, setTotalVotes] = useState(bet.totalVotes ?? 0);
 
   const formattedDate = format(new Date(bet.createdAt), "dd/MM/yyyy");
+  const categoryTitle = bet.category?.title;
 
   useEffect(() => {
     setOddsData(bet.odds);
-  }, [bet.odds]);
+    setTotalVotes(bet.totalVotes ?? 0);
+  }, [bet.odds, bet.totalVotes]);
 
-  const fetchUpdatedOdds = async () => {
-    try {
-      const response = await betService.getById(bet.id);
-      setOddsData(response.data.odds);
-      onVoteCreated?.();
-    } catch (error) {
-      console.error("Error updating odds:", error);
-    }
-  };
+  useSocketEvent<VoteCreatedPayload>(RealtimeEvents.VOTE_CREATED, (payload) => {
+    if (payload.betId !== bet.id) return;
 
-  const fetchCategory = useCallback(async () => {
-    if (typeof bet.categoryId !== "number") return;
+    setTotalVotes(payload.totalVotes);
+    setOddsData((current) =>
+      current.map((odd) => {
+        const updated = payload.odds.find((o) => o.id === odd.id);
+        return updated ? { ...odd, totalVotes: updated.totalVotes } : odd;
+      }),
+    );
+  });
 
-    try {
-      const category = await categoryService.getById(bet.categoryId);
-      setCategoryData(category.data);
-    } catch (error) {
-      console.error("Error getting category:", error);
-      setCategoryData(null);
-    }
-  }, [bet.categoryId]);
+  const handleOptimisticVote = useCallback((oddId: number) => {
+    setOddsData((current) =>
+      current.map((odd) =>
+        odd.id === oddId
+          ? { ...odd, totalVotes: odd.totalVotes + 1 }
+          : odd,
+      ),
+    );
+    setTotalVotes((current) => current + 1);
+  }, []);
 
-  useEffect(() => {
-    if (bet.categoryId) {
-      fetchCategory();
-    }
-  }, [bet.categoryId, fetchCategory]);
+  const handleVoteRollback = useCallback(
+    (_oddId: number, previousOdds: typeof bet.odds, previousTotal: number) => {
+      setOddsData(previousOdds);
+      setTotalVotes(previousTotal);
+    },
+    [],
+  );
 
   return (
-    <div className="group w-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 hover:border-yellow-400/50 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/10 transform hover:-translate-y-1">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-bold text-white pr-2 leading-tight group-hover:text-yellow-400 transition-colors">
+    <div className="group w-full min-w-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 sm:p-5 lg:p-6 border border-gray-700 hover:border-yellow-400/50 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-yellow-500/10 transform hover:-translate-y-1">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start mb-4">
+        <h3 className="min-w-0 flex-1 text-base sm:text-lg font-bold text-white leading-tight line-clamp-2 group-hover:text-yellow-400 transition-colors">
           {bet.title}
         </h3>
-        {categoryData && (
-          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-3 py-1 rounded-full text-xs font-semibold shrink-0 shadow-md">
-            {categoryData.title}
+        {categoryTitle && (
+          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-3 py-1 rounded-full text-xs font-semibold shrink-0 self-start shadow-md max-w-full truncate">
+            {categoryTitle}
           </span>
         )}
       </div>
@@ -73,11 +74,15 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
       )}
 
       <div className="mb-6">
-        <OddsList odds={oddsData} onVoteCreated={fetchUpdatedOdds} />
+        <OddsList
+          odds={oddsData}
+          onOptimisticVote={handleOptimisticVote}
+          onVoteRollback={handleVoteRollback}
+        />
       </div>
 
-      <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-        <div className="flex items-center gap-4 text-sm">
+      <div className="flex flex-col gap-3 pt-4 border-t border-gray-700 sm:flex-row sm:flex-wrap sm:justify-between sm:items-center">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm min-w-0">
           <div className="flex items-center gap-2 text-gray-400">
             <svg
               className="w-4 h-4"
@@ -92,7 +97,7 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            <span>{bet.totalVotes ?? 0} votos</span>
+            <span>{totalVotes} votos</span>
           </div>
           <div className="flex items-center gap-2 text-gray-400">
             <svg
@@ -112,7 +117,7 @@ const BetCard = ({ bet, onVoteCreated }: BetCardProps) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div
             className={`w-2 h-2 rounded-full ${
               bet.status === "open"

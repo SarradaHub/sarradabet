@@ -17,11 +17,7 @@ const AdminLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const API_GATEWAY_URL =
-    import.meta.env.VITE_API_GATEWAY_URL || "http://localhost";
-  const IDENTITY_SERVICE_URL =
-    import.meta.env.VITE_IDENTITY_SERVICE_URL ||
-    `${API_GATEWAY_URL}/api/v1/auth`;
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,14 +25,16 @@ const AdminLogin: React.FC = () => {
     setError(null);
 
     try {
-      const url = `${IDENTITY_SERVICE_URL}/login`;
+      const url = API_BASE_URL
+        ? `${API_BASE_URL}/api/v1/admin/login`
+        : "/api/v1/admin/login";
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: formData.username, // Support both email and username
+          username: formData.username,
           password: formData.password,
         }),
       });

@@ -75,6 +75,40 @@ class QueryCache {
     }
   }
 
+  keysMatching(prefix: string): string[] {
+    return Array.from(this.cache.keys()).filter((key) => key.startsWith(prefix));
+  }
+
+  getRaw<T>(key: string): T | null {
+    const cached = this.cache.get(key);
+    if (cached?.data !== undefined) {
+      return cached.data as T;
+    }
+    return null;
+  }
+
+  updateData<T>(key: string, updater: (data: T) => T): void {
+    const cached = this.cache.get(key);
+    if (cached?.data !== undefined) {
+      this.set(key, updater(cached.data as T));
+    }
+  }
+
+  updateByPrefix<T>(
+    prefix: string,
+    updater: (key: string, data: T) => T | null,
+  ): void {
+    for (const key of this.keysMatching(prefix)) {
+      const data = this.getRaw<T>(key);
+      if (data !== null) {
+        const updated = updater(key, data);
+        if (updated !== null) {
+          this.set(key, updated);
+        }
+      }
+    }
+  }
+
   cleanup() {
     const now = Date.now();
     for (const [key, value] of this.cache.entries()) {

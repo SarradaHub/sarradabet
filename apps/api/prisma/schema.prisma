@@ -33,6 +33,8 @@ model Bet {
 
   @@index([status])
   @@index([createdAt])
+  @@index([categoryId])
+  @@index([status, createdAt(sort: Desc)])
   @@map("bets")
 }
 

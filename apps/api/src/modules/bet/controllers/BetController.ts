@@ -6,6 +6,11 @@ import {
   UpdateBetInput,
 } from "../../../core/validation/ValidationSchemas";
 import { BetWithOdds } from "../repositories/BetRepository";
+import {
+  toBetDetail,
+  toBetListItem,
+  toBetListItems,
+} from "../mappers/bet.mapper";
 
 export class BetController extends BaseController<
   BetWithOdds,
@@ -24,7 +29,12 @@ export class BetController extends BaseController<
     try {
       const params = this.parsePaginationParams(req);
       const result = await this.betService.findAll(params);
-      this.sendSuccess(res, result, 200, "Bets retrieved successfully");
+      this.sendSuccess(
+        res,
+        { ...result, data: toBetListItems(result.data) },
+        200,
+        "Bets retrieved successfully",
+      );
     } catch (error) {
       this.handleError(error as Error, res, next);
     }
@@ -39,7 +49,7 @@ export class BetController extends BaseController<
       const id = this.parseId(req);
       const bet = await this.betService.findById(id);
 
-      this.sendSuccess(res, { bet }, 200, "Bet retrieved successfully");
+      this.sendSuccess(res, { bet: toBetDetail(bet) }, 200, "Bet retrieved successfully");
     } catch (error) {
       this.handleError(error as Error, res, next);
     }
@@ -50,7 +60,12 @@ export class BetController extends BaseController<
       const betData = req.body as CreateBetInput;
       const newBet = await this.betService.create(betData);
 
-      this.sendSuccess(res, { bet: newBet }, 201, "Bet created successfully");
+      this.sendSuccess(
+        res,
+        { bet: toBetListItem(newBet) },
+        201,
+        "Bet created successfully",
+      );
     } catch (error) {
       this.handleError(error as Error, res, next);
     }
@@ -64,7 +79,7 @@ export class BetController extends BaseController<
 
       this.sendSuccess(
         res,
-        { bet: updatedBet },
+        { bet: toBetListItem(updatedBet) },
         200,
         "Bet updated successfully",
       );
@@ -94,7 +109,7 @@ export class BetController extends BaseController<
       const bets = await this.betService.findByStatus(status);
       this.sendSuccess(
         res,
-        { data: bets },
+        { data: toBetListItems(bets) },
         200,
         `Bets with status '${status}' retrieved successfully`,
       );
@@ -113,7 +128,7 @@ export class BetController extends BaseController<
       const bets = await this.betService.findByCategory(categoryId);
       this.sendSuccess(
         res,
-        { data: bets },
+        { data: toBetListItems(bets) },
         200,
         "Bets by category retrieved successfully",
       );
@@ -131,7 +146,12 @@ export class BetController extends BaseController<
       const id = this.parseId(req);
       const closedBet = await this.betService.closeBet(id);
 
-      this.sendSuccess(res, { bet: closedBet }, 200, "Bet closed successfully");
+      this.sendSuccess(
+        res,
+        { bet: toBetListItem(closedBet) },
+        200,
+        "Bet closed successfully",
+      );
     } catch (error) {
       this.handleError(error as Error, res, next);
     }
@@ -155,7 +175,7 @@ export class BetController extends BaseController<
 
       this.sendSuccess(
         res,
-        { bet: resolvedBet },
+        { bet: toBetDetail(resolvedBet) },
         200,
         "Bet resolved successfully",
       );

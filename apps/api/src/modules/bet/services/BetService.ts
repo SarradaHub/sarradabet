@@ -13,6 +13,9 @@ import {
   ConflictError,
   BadRequestError,
 } from "../../../core/errors/AppError";
+import { emitBetCreated, emitBetUpdated } from "../../../realtime/emitter";
+import { toBetListItem } from "../mappers/bet.mapper";
+import { cacheService } from "../../../core/cache/CacheService";
 
 export class BetService extends BaseService<
   BetWithOdds,
@@ -39,11 +42,22 @@ export class BetService extends BaseService<
   async findById(id: number): Promise<BetWithOdds> {
     this.validateId(id);
 
+    if (process.env.NODE_ENV !== "test") {
+      const cacheKey = `bet:${id}`;
+      const cached = cacheService.get<BetWithOdds>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
     const bet = await this.betRepository.findUnique({ id });
     if (!bet) {
       throw new NotFoundError("Bet", id);
     }
 
+    if (process.env.NODE_ENV !== "test") {
+      cacheService.set(`bet:${id}`, bet, 30);
+    }
     return bet;
   }
 
@@ -57,9 +71,13 @@ export class BetService extends BaseService<
     await this.validateCategoryExists(data.categoryId);
 
     const bet = await this.betRepository.create(data);
-    return this.executeBusinessLogic
+    const result = this.executeBusinessLogic
       ? await this.executeBusinessLogic(bet)
       : bet;
+
+    cacheService.invalidatePattern("bets:");
+    emitBetCreated(toBetListItem(result));
+    return result;
   }
 
   async update(id: number, data: UpdateBetInput): Promise<BetWithOdds> {
@@ -81,9 +99,12 @@ export class BetService extends BaseService<
     }
 
     const updatedBet = await this.betRepository.update({ id }, data);
-    return this.executeBusinessLogic
+    const result = this.executeBusinessLogic
       ? await this.executeBusinessLogic(updatedBet)
       : updatedBet;
+
+    this.publishBetUpdate(result);
+    return result;
   }
 
   async delete(id: number): Promise<void> {
@@ -99,9 +120,22 @@ export class BetService extends BaseService<
     }
 
     await this.betRepository.delete({ id });
+    cacheService.invalidateBet(id);
   }
 
   async findByStatus(status: string): Promise<BetWithOdds[]> {
+    if (status === "resolved" && process.env.NODE_ENV !== "test") {
+      const cacheKey = `bets:status:resolved`;
+      const cached = cacheService.get<BetWithOdds[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      const bets = await this.betRepository.findByStatus(status);
+      cacheService.set(cacheKey, bets, 120);
+      return bets;
+    }
+
     return this.betRepository.findByStatus(status);
   }
 
@@ -163,7 +197,15 @@ export class BetService extends BaseService<
       });
     });
 
-    return this.findById(id);
+    const resolved = await this.findById(id);
+    this.publishBetUpdate(resolved);
+    return resolved;
+  }
+
+  private publishBetUpdate(bet: BetWithOdds): void {
+    cacheService.invalidateBet(bet.id);
+    cacheService.del("bets:status:resolved");
+    emitBetUpdated(toBetListItem(bet));
   }
 
   private validateOddsValues(odds: { value: number }[]): void {

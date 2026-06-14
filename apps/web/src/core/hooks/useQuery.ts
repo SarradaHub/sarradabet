@@ -118,11 +118,14 @@ export function useQuery<T>(
     if (lastFetched && staleTime > 0) {
       const timer = setTimeout(() => {
         setIsStale(true);
+        if (enabled) {
+          void refetch();
+        }
       }, staleTime);
 
       return () => clearTimeout(timer);
     }
-  }, [lastFetched, staleTime]);
+  }, [lastFetched, staleTime, enabled, refetch]);
 
   return {
     data: api.data,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-SarradaBet follows **Clean Architecture** principles, ensuring separation of concerns, testability, and maintainability. The system is built as a monorepo with separate frontend and backend applications.
+SarradaBet follows **Clean Architecture** principles with a **Socket.io realtime layer** for push updates on votes and bet mutations. Shared contracts live in `@sarradabet/types` (`packages/types`).
 
 ## Architecture Principles
 
@@ -48,27 +48,76 @@ apps/api/src/
 │   ├── validation/                # Validation schemas
 │   │   ├── ValidationSchemas.ts   # Zod validation schemas
 │   │   └── SanitizationSchemas.ts # Input sanitization
+│   ├── cache/                     # In-memory cache (node-cache)
+│   │   └── CacheService.ts
 │   └── middleware/                # Core middleware
 │       ├── ErrorHandler.ts        # Global error handling
 │       ├── ValidationMiddleware.ts # Request validation
-│       └── SecurityMiddleware.ts  # Security middleware
+│       ├── SecurityMiddleware.ts  # Security middleware
+│       └── cacheHeaders.ts        # Cache-Control for GET routes
+├── realtime/                      # Socket.io layer
+│   ├── socket.ts                  # IO server on HTTP server
+│   └── emitter.ts                 # Typed event broadcast
 ├── modules/                       # Feature modules
-│   ├── bet/                      # Bet management
-│   │   ├── repositories/         # Data access layer
-│   │   ├── services/            # Business logic layer
-│   │   ├── controllers/         # Presentation layer
-│   │   ├── routes/              # API routes
-│   │   └── __tests__/           # Tests
-│   ├── category/                # Category management
-│   └── vote/                    # Voting system
-├── config/                       # Configuration
-│   └── env.ts                   # Environment configuration
-├── routes/                       # Main routing
-│   └── index.ts                 # Route aggregation
-├── utils/                        # Utilities
-│   └── logger.ts                # Logging utility
-└── app.ts                       # Application setup
+│   ├── bet/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   ├── controllers/
+│   │   ├── mappers/               # Slim BetListItem / BetDetail DTOs
+│   │   └── __tests__/
+│   ├── category/
+│   └── admin/
+├── config/                        # env.ts, db.ts, consul
+├── routes/                        # Route aggregation
+├── utils/
+├── app.ts                         # Express + REST + compression
+└── server.ts                      # HTTP server + Socket.io bootstrap
 ```
+
+## Realtime Architecture
+
+Vote and bet mutations emit Socket.io events after the database transaction succeeds. Clients subscribe instead of polling REST.
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant REST as Express_REST
+  participant Svc as VoteService_BetService
+  participant IO as Socket_io
+  participant DB as Postgres
+
+  Client->>REST: POST /api/v1/votes
+  REST->>Svc: createVote
+  Svc->>DB: transaction + aggregate counts
+  Svc->>IO: emit vote:created
+  IO->>Client: push payload
+  Note over Client: RealtimeProvider patches query cache; BetCard updates odds
+```
+
+| Event | Emitter | Payload |
+|-------|---------|---------|
+| `vote:created` | `vote.service.ts` | `{ betId, oddId, odds[], totalVotes }` |
+| `bet:created` | `BetService.create` | `BetListItem` |
+| `bet:updated` | `BetService` update/close/resolve | `BetListItem` |
+
+Event contracts: [`packages/types/src/realtime.ts`](../packages/types/src/realtime.ts). API reference: [API.md](./API.md#realtime-api-socketio).
+
+**Scaling note:** broadcasts are in-process. Multiple API instances need `@socket.io/redis-adapter` — see [PERFORMANCE.md](./PERFORMANCE.md).
+
+## Caching and Performance Layers
+
+| Layer | Implementation | Notes |
+|-------|----------------|-------|
+| Backend memory | `CacheService` (node-cache) | Categories 5m, resolved bets 2m, bet detail 30s |
+| HTTP headers | `cacheHeaders` middleware | `GET /api/v1/categories` |
+| Response size | `bet.mapper.ts` | Slim list DTOs vs full detail |
+| Wire format | `compression` middleware | gzip above ~1KB |
+| Frontend | `useQuery` + `queryCache` | Stale-while-revalidate; `RealtimeProvider` patches cache |
+| Frontend UI | `OddsList` optimistic vote | Rollback on error; socket reconciles counts |
+
+## Shared Types
+
+The `@sarradabet/types` package exports `BetListItem`, `BetDetail`, `Category`, and `RealtimeEvents`. Both `apps/api` and `apps/web` depend on it.
 
 ### Layer Responsibilities
 
@@ -251,36 +300,31 @@ apps/web/src/
 │   │   └── BaseService.ts       # HTTP service base
 │   └── hooks/                   # Core hooks
 │       ├── useApi.ts            # Generic API hook
-│       ├── useQuery.ts          # Query hook
-│       ├── useMutation.ts       # Mutation hook
-│       └── index.ts             # Hook exports
+│       ├── useQuery.ts          # Query + cache + SWR
+│       ├── useMutation.ts       # Mutations + onMutate/onRollback
+│       ├── useSocket.ts         # Socket.io client
+│       └── useQueryCache.ts     # In-memory query cache
+├── context/
+│   └── RealtimeProvider.tsx     # Socket listeners → cache patches
 ├── services/                    # API services
 │   ├── BetService.ts           # Bet API service
 │   ├── CategoryService.ts      # Category API service
 │   └── VoteService.ts          # Vote API service
 ├── hooks/                       # Domain-specific hooks
-│   ├── useBets.ts              # Bet-related hooks
-│   ├── useCategories.ts        # Category-related hooks
-│   ├── useVotes.ts             # Vote-related hooks
-│   └── index.ts                # Hook exports
-├── components/                  # React components
-│   ├── ui/                     # Reusable UI components
-│   │   ├── Button.tsx          # Button component
-│   │   ├── Modal.tsx           # Modal component
-│   │   ├── LoadingSpinner.tsx  # Loading spinner
-│   │   └── ErrorMessage.tsx    # Error display
-│   ├── CreateBetModal.tsx      # Bet creation modal
-│   ├── BetCard.tsx             # Bet display card
-│   └── OddsList.tsx            # Odds display
-├── pages/                       # Page components
-│   └── HomePage.tsx            # Main page
-├── types/                       # TypeScript types
-│   ├── bet.ts                  # Bet types
-│   ├── category.ts             # Category types
-│   └── vote.ts                 # Vote types
-├── utils/                       # Utility functions
-│   └── cn.ts                   # Class name utility
-└── App.tsx                     # Main app component
+│   ├── useBets.ts              # staleTime 2m
+│   ├── useCategories.ts        # staleTime 5m
+│   └── useVotes.ts
+├── components/
+│   ├── ui/                     # Button, Modal, BetCardSkeleton, etc.
+│   ├── CreateBetModal.tsx
+│   ├── BetCard.tsx             # Socket vote updates + category from list
+│   └── OddsList.tsx            # Optimistic vote + rollback
+├── pages/
+│   ├── HomePage.tsx
+│   ├── AdminLogin.tsx          # lazy-loaded
+│   └── AdminDashboard.tsx      # lazy-loaded
+├── types/                       # Re-exports from @sarradabet/types
+└── App.tsx                     # Router + RealtimeProvider
 ```
 
 ### Frontend Patterns
@@ -348,35 +392,40 @@ export const useQuery = <T>(
   // Caching and stale time logic
 };
 
-// useMutation - Mutations with optimistic updates
-export const useMutation = <TData, TVariables>(
-  service: (variables: TVariables) => Promise<ApiResponse<TData>>,
-  options?: MutationOptions,
-) => {
-  // Optimistic updates and error handling
-};
+// useMutation - Mutations with optional optimistic updates
+export function useMutation<TData, TVariables, TContext = unknown>(
+  mutationFn: (variables: TVariables) => Promise<ApiResponse<TData>>,
+  options?: {
+    onMutate?: (variables: TVariables) => TContext | void;
+    onRollback?: (context: TContext, error: ApiError, variables: TVariables) => void;
+    onSuccess?: (data: TData, variables: TVariables) => void;
+  },
+) {
+  // Runs onMutate before request; onRollback on failure
+}
 ```
 
-**Domain Hooks** combine core hooks with domain logic:
+**Domain Hooks** use custom cache keys and stale times:
 
 ```typescript
 export const useBets = (params?: BetQueryParams) => {
   return useQuery(
     `bets-${JSON.stringify(params)}`,
-    () => betService.getBets(params),
-    { staleTime: 30000 }, // 30 seconds
+    () => betService.getBetsWithPagination(params),
+    { staleTime: 2 * 60 * 1000, refetchOnMount: false },
   );
 };
 
-export const useCreateBet = () => {
-  return useMutation(betService.createBet, {
-    onSuccess: () => {
-      // Invalidate and refetch bets
-      queryClient.invalidateQueries(["bets"]);
-    },
-  });
+export const useCategories = () => {
+  return useQuery(
+    `categories-...`,
+    () => categoryService.getCategoriesWithPagination(),
+    { staleTime: 5 * 60 * 1000 },
+  );
 };
 ```
+
+**RealtimeProvider** listens for Socket.io events and patches `queryCache` keys prefixed with `bets-`. **OddsList** applies optimistic vote counts; **BetCard** reconciles via `vote:created` events.
 
 #### 3. Component Composition
 
@@ -663,20 +712,22 @@ __tests__/
 
 ```
 Developer Machine
-├── Node.js (Backend)
-├── React Dev Server (Frontend)
-└── Docker (PostgreSQL)
+├── API (Express + Socket.io) — localhost:8000
+├── Vite dev server — localhost:3002
+└── Docker db (Postgres) — localhost:5433
 ```
 
 ### Production Environment
 
 ```
 Production Server
-├── Nginx (Reverse Proxy)
-├── Node.js (Backend API)
-├── React (Static Files)
-└── PostgreSQL (Database)
+├── Nginx (Reverse Proxy + WebSocket upgrade for /socket.io)
+├── Node.js (Backend API + Socket.io)
+├── React static files (Vite build)
+└── PostgreSQL (Supabase or self-hosted)
 ```
+
+Alternative cloud hosting: see [DEPLOYMENT.md](./DEPLOYMENT.md#alternative-render--vercel).
 
 ## Monitoring and Observability
 

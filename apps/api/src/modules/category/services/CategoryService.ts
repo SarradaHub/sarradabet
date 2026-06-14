@@ -12,6 +12,7 @@ import {
   PaginatedResult,
 } from "../../../core/interfaces/IRepository";
 import { NotFoundError, ConflictError } from "../../../core/errors/AppError";
+import { cacheService } from "../../../core/cache/CacheService";
 
 export class CategoryService extends BaseService<
   CategoryWithStats,
@@ -25,14 +26,28 @@ export class CategoryService extends BaseService<
   async findAll(
     params?: PaginationParams,
   ): Promise<PaginatedResult<CategoryWithStats>> {
-    return this.categoryRepository.findManyWithPagination(
-      params || {
-        page: 1,
-        limit: 10,
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      },
-    );
+    const resolvedParams = params || {
+      page: 1,
+      limit: 10,
+      sortBy: "createdAt",
+      sortOrder: "desc" as const,
+    };
+
+    if (process.env.NODE_ENV !== "test") {
+      const cacheKey = `categories:list:${JSON.stringify(resolvedParams)}`;
+      const cached =
+        cacheService.get<PaginatedResult<CategoryWithStats>>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      const result =
+        await this.categoryRepository.findManyWithPagination(resolvedParams);
+      cacheService.set(cacheKey, result, 300);
+      return result;
+    }
+
+    return this.categoryRepository.findManyWithPagination(resolvedParams);
   }
 
   async findById(id: number): Promise<CategoryWithStats> {
@@ -58,6 +73,7 @@ export class CategoryService extends BaseService<
     }
 
     const category = await this.categoryRepository.create(data);
+    cacheService.invalidateCategories();
     return await this.executeBusinessLogic(category);
   }
 
@@ -83,6 +99,7 @@ export class CategoryService extends BaseService<
     }
 
     const updatedCategory = await this.categoryRepository.update({ id }, data);
+    cacheService.invalidateCategories();
     return await this.executeBusinessLogic(updatedCategory);
   }
 
@@ -98,6 +115,7 @@ export class CategoryService extends BaseService<
     }
 
     await this.categoryRepository.delete({ id });
+    cacheService.invalidateCategories();
   }
 
   async searchByTitle(searchTerm: string): Promise<CategoryWithStats[]> {

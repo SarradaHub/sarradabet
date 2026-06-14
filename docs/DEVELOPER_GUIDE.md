@@ -8,7 +8,7 @@ This guide will help you set up your development environment and understand how 
 
 ### Required Software
 
-- **Node.js** 18.0.0 or higher
+- **Node.js** 20.0.0 or higher
 - **npm** 9.0.0 or higher
 - **Docker Desktop** (for database)
 - **Git** (for version control)
@@ -46,48 +46,49 @@ npm install
 
 ### 3. Environment Setup
 
-#### Backend Environment
+Copy the committed example files and adjust secrets if needed:
 
-Create `apps/api/.env`:
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+#### Backend (`apps/api/.env`)
+
+Key variables (see [`apps/api/.env.example`](../apps/api/.env.example) for the full list):
 
 ```env
-# Application
 NODE_ENV=development
-PORT=3001
-
-# Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/sarradabet_dev"
-
-# CORS
-CORS_ORIGINS="http://localhost:3000,http://localhost:3001"
-
-# API
-API_KEY="dev-api-key-12345"
-
-# JWT (for future auth)
-JWT_SECRET="dev-jwt-secret-key"
+PORT=8000
+CORS_ORIGINS=http://localhost:3002,http://localhost:5173
+DATABASE_URL=postgresql://appuser:sarradabet1234@localhost:5433/sarradabet
+DIRECT_URL=postgresql://appuser:sarradabet1234@localhost:5433/sarradabet
+JWT_SECRET=dev-jwt-secret-change-me
 ```
 
-#### Frontend Environment
+- **`DIRECT_URL`** is required by Prisma (same as `DATABASE_URL` for local Docker; use Supabase direct port `5432` in production).
+- **`CORS_ORIGINS`** must include the web dev URL or Socket.io connections will fail.
 
-Create `apps/web/.env`:
+#### Frontend (`apps/web/.env`)
 
 ```env
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:8000
 ```
+
+Use the API **base URL only** — do not append `/api/v1` (the client adds it).
 
 ### 4. Database Setup
 
 ```bash
-# Start PostgreSQL with Docker
-docker-compose up -d postgres
+# Start PostgreSQL (service name is "db", not "postgres")
+docker compose up -d db
 
 # Run migrations
 cd apps/api
 npm run prisma:migrate:dev
 
 # Seed database (optional)
-npm run prisma:seed
+npm run db:seed:simple
 ```
 
 ### 5. Start Development Servers
@@ -99,9 +100,14 @@ npm run dev
 
 This will start:
 
-- Backend API: `http://localhost:3001`
-- Frontend: `http://localhost:3000`
-- Database: `localhost:5432`
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:8000 |
+| Frontend | http://localhost:3002 |
+| Socket.io | http://localhost:8000/socket.io |
+| Database | localhost:5433 |
+
+Vite proxies `/api` and `/socket.io` to the API in dev when using relative URLs. With `VITE_API_URL` set, the client connects directly to the API.
 
 ## Project Structure
 
@@ -113,7 +119,7 @@ sarradabet/
 │   ├── api/                 # Backend API
 │   └── web/                 # Frontend React app
 ├── packages/
-│   └── types/               # Shared TypeScript types
+│   └── types/               # @sarradabet/types — shared contracts
 ├── docs/                    # Documentation
 ├── docker-compose.yml       # Docker services
 ├── package.json             # Root package.json
@@ -125,12 +131,16 @@ sarradabet/
 ```
 apps/api/
 ├── src/
-│   ├── core/               # Core architecture
-│   ├── modules/            # Feature modules
-│   ├── config/             # Configuration
-│   ├── routes/             # API routes
-│   ├── utils/              # Utilities
-│   └── app.ts              # Application setup
+│   ├── core/               # Base classes, cache, middleware
+│   │   ├── cache/          # node-cache wrapper
+│   │   └── middleware/     # Validation, security, cache headers
+│   ├── realtime/           # Socket.io server + event emitter
+│   ├── modules/            # Feature modules (bet, category, admin)
+│   ├── config/             # env, db, consul
+│   ├── routes/             # Route aggregation
+│   ├── utils/              # Logger, auth helpers
+│   ├── app.ts              # Express middleware + REST routes
+│   └── server.ts           # HTTP server + Socket.io bootstrap
 ├── prisma/
 │   ├── schema.prisma       # Database schema
 │   └── migrations/         # Database migrations
@@ -144,17 +154,19 @@ apps/api/
 ```
 apps/web/
 ├── src/
-│   ├── core/               # Core architecture
-│   ├── services/           # API services
-│   ├── hooks/              # Custom hooks
-│   ├── components/         # React components
-│   ├── pages/              # Page components
-│   ├── types/              # TypeScript types
+│   ├── core/               # Hooks (useQuery, useMutation, useSocket)
+│   ├── context/            # RealtimeProvider (Socket.io cache patches)
+│   ├── services/           # API services (Axios)
+│   ├── hooks/              # Domain hooks (useBets, useCategories)
+│   ├── components/         # React components + ui/ skeletons
+│   ├── pages/              # HomePage, admin (lazy-loaded)
+│   ├── types/              # Re-exports from @sarradabet/types
 │   └── utils/              # Utilities
 ├── public/                 # Static assets
+├── vercel.json             # SPA rewrites + asset cache headers
 ├── __tests__/              # Tests
 ├── package.json
-└── vite.config.ts
+└── vite.config.ts          # Dev proxy for /api and /socket.io
 ```
 
 ## Development Workflow
@@ -383,14 +395,15 @@ export const useYourFeatures = (params?: YourFeatureQueryParams) => {
   return useQuery(
     `your-features-${JSON.stringify(params)}`,
     () => yourFeatureService.getYourFeatures(params),
-    { staleTime: 30000 },
+    { staleTime: 5 * 60 * 1000 }, // 5 minutes
   );
 };
 
 export const useCreateYourFeature = () => {
   return useMutation(yourFeatureService.createYourFeature, {
     onSuccess: () => {
-      queryClient.invalidateQueries(["your-features"]);
+      // Refetch or rely on RealtimeProvider if you emit socket events
+      // queryCache is updated via RealtimeProvider for bet/vote flows
     },
   });
 };
@@ -783,11 +796,12 @@ refactor(services): extract common validation logic
 **Database Debugging:**
 
 ```bash
-# Connect to database
-docker exec -it sarradabet-postgres psql -U postgres -d sarradabet_dev
+# Connect to local database (docker compose service: db)
+docker compose exec db psql -U appuser -d sarradabet
 
-# View logs
-docker logs sarradabet-postgres
+# View database logs
+docker compose logs db
+```
 ```
 
 ### Frontend Debugging
@@ -799,43 +813,29 @@ docker logs sarradabet-postgres
 
 **Network Debugging:**
 
-- Use browser DevTools Network tab
-- Check API request/response details
-- Monitor WebSocket connections
+- Use browser DevTools Network tab for REST calls
+- Check the **WS** filter for the `socket.io` connection
+- After voting, expect only `POST /api/v1/votes` — no follow-up `GET /api/v1/bets/:id`
+- Monitor Socket.io events: `vote:created`, `bet:created`, `bet:updated`
+
+## Validating Changes (Blackbox)
+
+Quick checks without reading internal code. Full checklist: [Performance Guide](./PERFORMANCE.md#blackbox-validation-checklist).
+
+1. **Two-browser realtime** — open http://localhost:3002 in two windows; vote in one; counts update in both without refresh.
+2. **DevTools** — confirm WebSocket to `/socket.io` and no post-vote bet refetch.
+3. **REST shape** — `curl http://localhost:8000/api/v1/bets?limit=1` returns slim odds (no `createdAt` on list items).
+4. **Cache headers** — `curl -D - http://localhost:8000/api/v1/categories -o /dev/null | grep -i cache-control`
+5. **Regression** — `npm run test:api` and `npm run test:web`
 
 ## Performance Optimization
 
-### Backend Optimization
+See [Performance Guide](./PERFORMANCE.md) for caching TTLs, Supabase pooling, Socket.io scaling, and the blackbox checklist.
 
-**Database:**
+Implemented in this codebase:
 
-- Add proper indexes
-- Optimize queries
-- Use connection pooling
-- Implement caching
-
-**API:**
-
-- Implement rate limiting
-- Use compression
-- Optimize response sizes
-- Cache frequently accessed data
-
-### Frontend Optimization
-
-**React:**
-
-- Use React.memo for expensive components
-- Implement code splitting
-- Optimize re-renders
-- Use proper key props
-
-**Bundle:**
-
-- Analyze bundle size
-- Remove unused code
-- Optimize images
-- Use CDN for static assets
+- **Backend:** `node-cache`, gzip compression, slim bet list DTOs, DB indexes on `categoryId` and `(status, created_at)`
+- **Frontend:** Socket.io push (no polling), optimistic votes, lazy admin routes, skeleton loaders, query cache with stale-while-revalidate
 
 ## Common Issues and Solutions
 
@@ -845,14 +845,14 @@ docker logs sarradabet-postgres
 
 ```bash
 # Check if PostgreSQL is running
-docker ps | grep postgres
+docker compose ps db
 
 # Restart database
-docker-compose restart postgres
+docker compose restart db
 
 # Reset database
-docker-compose down -v
-docker-compose up -d postgres
+docker compose down -v
+docker compose up -d db
 ```
 
 **TypeScript Compilation Errors:**
