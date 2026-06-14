@@ -1,6 +1,1 @@
-export type Odd = {
-  id: number;
-  title: string;
-  value: number;
-  totalVotes: number;
-};
+export type { OddWithVotes as Odd } from "@sarradabet/types";

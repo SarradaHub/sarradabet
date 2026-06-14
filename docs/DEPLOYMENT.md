@@ -2,7 +2,9 @@
 
 ## Overview
 
-This guide covers deploying the SarradaBet application to production environments. The application consists of a Node.js backend API and a React frontend, with PostgreSQL as the database.
+This guide covers deploying the SarradaBet application to production. The stack includes an Express API with **Socket.io**, a React frontend, and PostgreSQL. For local development setup, see the [Main README](../README.md).
+
+**Default API port:** `8000` (configurable via `PORT`).
 
 ## Deployment Options
 
@@ -54,19 +56,19 @@ services:
     container_name: sarradabet-api
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 8000
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sarradabet_prod
+      DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sarradabet_prod
       CORS_ORIGINS: ${CORS_ORIGINS}
-      API_KEY: ${API_KEY}
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "3001:3001"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -150,7 +152,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 USER nodejs
 
 # Expose port
-EXPOSE 3001
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -205,7 +207,7 @@ Create `nginx.conf`:
 
 ```nginx
 upstream api {
-    server api:3001;
+    server api:8000;
 }
 
 upstream web {
@@ -253,6 +255,18 @@ server {
         limit_req zone=api burst=20 nodelay;
     }
 
+    # Socket.io (realtime)
+    location /socket.io/ {
+        proxy_pass http://api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     # Health Check
     location /health {
         proxy_pass http://api;
@@ -287,19 +301,19 @@ http {
 Create `.env.prod`:
 
 ```env
-# Database
-POSTGRES_USER=sarradabet_user
-POSTGRES_PASSWORD=your_secure_password_here
+# Database (Prisma)
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sarradabet_prod
+DIRECT_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sarradabet_prod
 
 # API
-API_KEY=your_production_api_key_here
 JWT_SECRET=your_jwt_secret_key_here
+PORT=8000
 
-# CORS
+# CORS (must include your frontend origin for Socket.io)
 CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
 
-# Frontend
-VITE_API_URL=https://your-domain.com/api/v1
+# Frontend build — API base URL only (no /api/v1 suffix)
+VITE_API_URL=https://api.your-domain.com
 ```
 
 ### Deployment Commands
@@ -407,7 +421,7 @@ module.exports = {
       cwd: "/var/www/sarradabet",
       env: {
         NODE_ENV: "production",
-        PORT: 3001,
+        PORT: 8000,
       },
       instances: "max",
       exec_mode: "cluster",
@@ -464,7 +478,7 @@ server {
 
     # API routes
     location /api/ {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -477,7 +491,7 @@ server {
 
     # Health check
     location /health {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:8000;
         access_log off;
     }
 
@@ -605,7 +619,7 @@ const http = require("http");
 
 const options = {
   hostname: "localhost",
-  port: process.env.PORT || 3001,
+  port: process.env.PORT || 8000,
   path: "/health",
   method: "GET",
 };
@@ -816,6 +830,33 @@ docker-compose down
 docker-compose up -d --scale api=0
 docker-compose up -d
 ```
+
+## Alternative: Render + Vercel
+
+For managed hosting without self-managed Docker/nginx:
+
+### API (Render)
+
+- **Root directory:** `apps/api`
+- **Build:** `npm install && npm run build && npm run prisma:generate`
+- **Start:** `npm run start`
+- **Environment:**
+  - `DATABASE_URL` — Supabase pooler (`6543?pgbouncer=true`)
+  - `DIRECT_URL` — Supabase direct (`5432`, migrations)
+  - `CORS_ORIGINS` — your Vercel frontend URL
+  - `JWT_SECRET`, `PORT` (Render sets `PORT` automatically)
+- **WebSockets:** supported on a single Render web service; see [PERFORMANCE.md](./PERFORMANCE.md) for multi-instance Redis adapter.
+
+### Web (Vercel)
+
+- **Root directory:** `apps/web`
+- **Build:** `npm run build`
+- **Environment:** `VITE_API_URL=https://your-api.onrender.com` (no `/api/v1` suffix)
+- **Config:** [`apps/web/vercel.json`](../apps/web/vercel.json) — SPA rewrites + immutable asset cache
+
+### Migrations
+
+Run `npm run prisma:migrate:deploy` in CI or a one-off Render shell with `DATABASE_URL` and `DIRECT_URL` set (see [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)).
 
 ## Security Considerations
 

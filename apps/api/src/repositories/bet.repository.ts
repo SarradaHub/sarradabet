@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { UpdateBetDTO, CreateBetDTO } from "../types/bet.types";
-
-const prisma = new PrismaClient();
+import { prisma } from "../config/db";
 
 export const getAllBetsFromRepository = async (
   page: number = 1,

@@ -1,8 +1,10 @@
+import { createServer } from "http";
 import { app } from "./app";
 import { config } from "./config/env";
 import { logger } from "./utils/logger";
 import { prisma } from "./config/db";
 import { initializeConsul } from "./config/consul";
+import { initSocketServer, closeSocketServer } from "./realtime/socket";
 
 const checkDatabaseConnection = async () => {
   try {
@@ -20,16 +22,19 @@ const startServer = async () => {
   try {
     await checkDatabaseConnection();
 
-    // Initialize Consul service registration
     await initializeConsul();
 
-    const server = app.listen(PORT, () => {
+    const httpServer = createServer(app);
+    initSocketServer(httpServer);
+
+    httpServer.listen(PORT, () => {
       logger.info(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
     });
 
     const shutdown = async () => {
       logger.info("Shutting down server...");
-      server.close(async () => {
+      closeSocketServer();
+      httpServer.close(async () => {
         await prisma.$disconnect();
         logger.info("Server and database connections closed");
         process.exit(0);

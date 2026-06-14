@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { CreateCategoryDTO, UpdateCategoryDTO } from "../types/category.types";
-
-const prisma = new PrismaClient();
+import { prisma } from "../config/db";
 
 export const getAllCategoriesFromRepository = async (
   page: number = 1,

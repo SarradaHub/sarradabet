@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import cors from "cors";
 import morgan from "morgan";
 import { config } from "./config/env";
@@ -10,10 +11,13 @@ import {
   sanitizeRequest,
   corsOptions,
 } from "./core/middleware/SecurityMiddleware";
+import { cacheHeaders } from "./core/middleware/cacheHeaders";
 import router from "./routes";
 import { logger } from "./utils/logger";
 
 export const app = express();
+
+app.use(compression({ threshold: 1024 }));
 
 app.use(securityHeaders);
 app.use(requestSizeLimit("10mb"));
@@ -85,6 +89,7 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use("/api/v1/categories", cacheHeaders({ maxAge: 300, staleWhileRevalidate: 60 }));
 app.use("/api/v1", router);
 
 app.use(notFoundHandler);

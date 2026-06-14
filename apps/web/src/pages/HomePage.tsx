@@ -5,6 +5,7 @@ import { Category } from "../types/category";
 import Navigation from "../components/Navigation";
 import BetCard from "../components/BetCard";
 import CreateBetModal from "../components/CreateBetModal";
+import BetCardSkeleton from "../components/ui/BetCardSkeleton";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { Button } from "../components/ui/Button";
@@ -66,10 +67,6 @@ const HomePage: React.FC = () => {
   const handleBetCreated = useCallback(() => {
     refetchBets();
     setShowCreateModal(false);
-  }, [refetchBets]);
-
-  const handleVoteCreated = useCallback(() => {
-    refetchBets();
   }, [refetchBets]);
 
   const handleCategoryCreated = useCallback(() => {
@@ -149,8 +146,14 @@ const HomePage: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="bg-neutral-900 min-h-screen flex items-center justify-center">
-          <LoadingSpinner size="lg" text="Carregando apostas..." />
+        <div className="bg-neutral-900 min-h-screen">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <BetCardSkeleton key={index} />
+              ))}
+            </div>
+          </div>
         </div>
       ) : hasError ? (
         <div className="bg-neutral-900 min-h-screen flex items-center justify-center">
@@ -166,7 +169,6 @@ const HomePage: React.FC = () => {
       ) : (
         <BetsList
           groupedBets={filteredBets}
-          onVoteCreated={handleVoteCreated}
           onOpenCreateModal={() => setShowCreateModal(true)}
         />
       )}
@@ -284,7 +286,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   if (loading) {
     return (
       <div className="bg-gray-800 py-4">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <LoadingSpinner size="sm" text="Carregando categorias..." />
         </div>
       </div>
@@ -294,7 +296,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   if (error) {
     return (
       <div className="bg-gray-800 py-4">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ErrorMessage error={error} />
         </div>
       </div>
@@ -378,13 +380,11 @@ interface BetsListProps {
     name: string;
     bets: Bet[];
   }>;
-  onVoteCreated: () => void;
   onOpenCreateModal: () => void;
 }
 
 const BetsList: React.FC<BetsListProps> = ({
   groupedBets,
-  onVoteCreated,
   onOpenCreateModal,
 }) => (
   <div className="bg-neutral-900 min-h-screen">
@@ -430,12 +430,12 @@ const BetsList: React.FC<BetsListProps> = ({
             {groupedBets.map((group) => (
               <div
                 key={group.id}
-                className="bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-2xl p-6 lg:p-8 shadow-2xl border border-neutral-700"
+                className="bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-neutral-700 min-w-0"
               >
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-12 h-12 bg-gradient-to-br from-warning-400 to-orange-500 rounded-xl flex items-center justify-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 mb-6 sm:mb-8 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-warning-400 to-orange-500 rounded-xl flex items-center justify-center shrink-0">
                     <svg
-                      className="w-7 h-7 text-black"
+                      className="w-6 h-6 sm:w-7 sm:h-7 text-black"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -448,8 +448,8 @@ const BetsList: React.FC<BetsListProps> = ({
                       />
                     </svg>
                   </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-white">
+                  <div className="min-w-0">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white truncate">
                       {group.name}
                     </h2>
                     <p className="text-neutral-400 mt-1">
@@ -457,13 +457,9 @@ const BetsList: React.FC<BetsListProps> = ({
                     </p>
                   </div>
                 </div>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {group.bets.map((bet) => (
-                    <BetCard
-                      key={bet.id}
-                      bet={bet}
-                      onVoteCreated={onVoteCreated}
-                    />
+                    <BetCard key={bet.id} bet={bet} />
                   ))}
                 </div>
               </div>

@@ -11,26 +11,27 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 
 ### Architecture & Design
 
-- **[Architecture Documentation](./ARCHITECTURE.md)** - Clean architecture principles, system design, and patterns
-- **[API Documentation](./API.md)** - Complete API reference with examples and schemas
+- **[Architecture Documentation](./ARCHITECTURE.md)** - Clean architecture, realtime data flow, and patterns
+- **[API Documentation](./API.md)** - REST reference, Socket.io events, and schemas
 
 ### Deployment & Operations
 
-- **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment strategies and server management
+- **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment (Docker/nginx primary)
+- **[Performance Guide](./PERFORMANCE.md)** - Caching, pooling, realtime scaling, blackbox validation
 
 ## 🚀 Quick Navigation
 
 ### For Developers
 
-1. Start with the [Developer Guide](./DEVELOPER_GUIDE.md) for setup instructions
-2. Review the [Architecture Documentation](./ARCHITECTURE.md) to understand the system design
-3. Use the [API Documentation](./API.md) for backend integration
+1. Start with the [Main README](../README.md) or [Developer Guide](./DEVELOPER_GUIDE.md) for setup
+2. Review [Architecture Documentation](./ARCHITECTURE.md) for realtime and caching design
+3. Use [API Documentation](./API.md) for REST + Socket.io integration
 
 ### For DevOps/System Administrators
 
 1. Follow the [Deployment Guide](./DEPLOYMENT.md) for production setup
-2. Review security considerations and monitoring setup
-3. Implement backup and maintenance procedures
+2. Review [Performance Guide](./PERFORMANCE.md) for Supabase pooling and scaling notes
+3. Implement backup and monitoring procedures
 
 ### For Product Managers/Business Users
 
@@ -44,187 +45,110 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 docs/
 ├── README.md              # This index file
 ├── ARCHITECTURE.md        # System architecture and design patterns
-├── API.md                 # Complete API documentation
+├── API.md                 # REST + Socket.io API documentation
 ├── DEVELOPER_GUIDE.md     # Development setup and workflow
-└── DEPLOYMENT.md          # Production deployment guide
+├── DEPLOYMENT.md          # Production deployment guide
+└── PERFORMANCE.md         # Performance, caching, and validation
 ```
 
 ## 🎯 Key Features Covered
 
 ### Backend Architecture
 
-- **Clean Architecture** implementation with separation of concerns
-- **Repository Pattern** for data access layer
-- **Service Layer** for business logic
-- **Controller Layer** for request handling
-- **Validation System** with Zod schemas
-- **Error Handling** with custom error classes
-- **Security Middleware** with rate limiting and sanitization
+- **Clean Architecture** with separation of concerns
+- **Socket.io** realtime layer (`realtime/` — push on vote and bet mutations)
+- **Repository / Service / Controller** layers with Prisma ORM
+- **In-memory cache** (`node-cache`) for categories and resolved bets
+- **Response compression** and slim list DTOs via bet mappers
+- **Validation** with Zod; **security** middleware (Helmet, rate limiting, CORS)
 
 ### Frontend Architecture
 
-- **Modern React** patterns with hooks and functional components
-- **Custom Hooks** for state management and API integration
-- **Service Layer** for API communication
-- **Component Composition** with reusable UI components
-- **TypeScript** integration for type safety
+- **React 19** with custom hooks (`useQuery`, `useMutation`, `useSocket`)
+- **`RealtimeProvider`** — patches query cache on Socket.io events
+- **Optimistic voting** in `OddsList` with rollback on error
+- **Lazy-loaded admin routes** and skeleton loaders
+- **Shared types** via `@sarradabet/types`
 
 ### API Features
 
-- **RESTful API** design with proper HTTP status codes
-- **Input Validation** and sanitization
-- **Rate Limiting** and security measures
-- **Comprehensive Error Handling** with detailed error responses
-- **Pagination** and filtering support
-- **Health Checks** for monitoring
+- **RESTful API** at `/api/v1` plus **Socket.io** at `/socket.io`
+- **Public endpoints** for bets, categories, votes; **JWT** for admin routes
+- Pagination, filtering, health checks
+- **HTTP cache headers** on category list responses
 
 ### Testing
 
-- **Unit Tests** for business logic
-- **Integration Tests** for API endpoints
-- **Component Tests** for React components
-- **Hook Tests** for custom hooks
-- **Test Coverage** reporting
+- Unit tests for business logic and hooks
+- Integration tests for REST bet routes
+- Blackbox validation checklist in [Performance Guide](./PERFORMANCE.md)
 
 ### Security
 
-- **Input Validation** and sanitization
-- **Rate Limiting** to prevent abuse
-- **Security Headers** for protection
-- **CORS Configuration** for cross-origin requests
-- **API Key Authentication** (ready for JWT upgrade)
+- Input validation and sanitization
+- Rate limiting and security headers
+- CORS configuration (must include frontend origin for Socket.io)
+- JWT admin authentication
 
 ### Deployment
 
-- **Docker** containerization
-- **Nginx** reverse proxy configuration
-- **SSL/TLS** setup with Let's Encrypt
-- **Database** backup and maintenance
-- **Monitoring** and health checks
-- **CI/CD** ready configuration
+- **Docker / nginx / PM2** (primary path in Deployment Guide)
+- **Render + Vercel** addendum for cloud hosting
+- Database migrations with `DATABASE_URL` + `DIRECT_URL`
 
 ## 🔧 Technology Stack
 
 ### Backend
 
-- **Node.js** 18+ with Express.js
-- **TypeScript** for type safety
-- **PostgreSQL** with Prisma ORM
-- **Zod** for validation
-- **Jest** for testing
-- **Winston** for logging
+- **Node.js** ≥20, **Express.js**, **Socket.io**
+- **TypeScript**, **PostgreSQL**, **Prisma ORM**
+- **node-cache**, **compression**, **Zod**, **Jest**, **Winston**
 
 ### Frontend
 
-- **React** 19 with TypeScript
-- **Vite** for build tooling
-- **Tailwind CSS** for styling
-- **Vitest** and **React Testing Library** for testing
-- **Custom Hooks** for state management
+- **React** 19, **Vite**, **Tailwind CSS**
+- **socket.io-client**, custom query/mutation hooks
+- **Vitest**, **React Testing Library**
+
+### Shared
+
+- **`@sarradabet/types`** — `BetListItem`, `BetDetail`, `RealtimeEvents`
 
 ### DevOps
 
-- **Docker** for containerization
-- **Docker Compose** for orchestration
-- **Nginx** for reverse proxy
-- **PM2** for process management
-- **Git** for version control
-
-## 📊 Project Statistics
-
-- **Backend**: 15+ modules with clean architecture
-- **Frontend**: 20+ components with modern React patterns
-- **API**: 15+ endpoints with comprehensive validation
-- **Tests**: 50+ test cases with good coverage
-- **Documentation**: 4 comprehensive guides
-- **Security**: Multiple layers of protection
+- **Docker Compose** (local `db` service on port 5433)
+- **Nginx** reverse proxy (including WebSocket upgrade for `/socket.io`)
+- **Supabase** connection pooling in production
 
 ## 🤝 Contributing
 
-To contribute to this project:
-
-1. **Read the [Developer Guide](./DEVELOPER_GUIDE.md)** for setup instructions
-2. **Follow the architecture patterns** described in the [Architecture Documentation](./ARCHITECTURE.md)
-3. **Write tests** for new features
-4. **Update documentation** as needed
-5. **Submit pull requests** following the established workflow
-
-## 🆘 Support
-
-If you need help:
-
-1. **Check the documentation** - Most questions are answered here
-2. **Review the examples** - Each guide includes practical examples
-3. **Check the code** - The codebase follows the patterns described in the docs
-4. **Create an issue** - For bugs or feature requests
-5. **Ask questions** - Use the project's communication channels
+1. Read the [Developer Guide](./DEVELOPER_GUIDE.md)
+2. Follow patterns in [Architecture Documentation](./ARCHITECTURE.md)
+3. Keep `packages/types` in sync when changing API or realtime contracts
+4. Write tests and update docs with your changes
 
 ## 📈 Roadmap
 
-### Planned Documentation Updates
+### Documentation
 
-- [ ] **Performance Optimization Guide** - Advanced performance tuning
-- [ ] **Security Best Practices** - Comprehensive security guidelines
-- [ ] **Monitoring and Alerting** - Production monitoring setup
-- [ ] **API Versioning Guide** - Managing API evolution
-- [ ] **Testing Strategies** - Advanced testing patterns
-- [ ] **CI/CD Pipeline** - Automated deployment workflows
+- [x] **Performance Optimization Guide** — [PERFORMANCE.md](./PERFORMANCE.md)
+- [ ] **Security Best Practices** — comprehensive security guidelines
+- [ ] **Monitoring and Alerting** — production monitoring setup
+- [ ] **API Versioning Guide** — managing API evolution
+- [ ] **Testing Strategies** — advanced testing patterns
+- [ ] **CI/CD Pipeline** — automated deployment workflows
 
-### Planned Features
+### Features
 
-- [ ] **User Authentication** - JWT-based authentication system
-- [ ] **Real-time Updates** - WebSocket integration
-- [ ] **Advanced Analytics** - Betting analytics and reporting
-- [ ] **Mobile App** - React Native mobile application
-- [ ] **Payment Integration** - Payment processing capabilities
-- [ ] **Admin Dashboard** - Enhanced admin interface
-
-## 📝 Documentation Standards
-
-This documentation follows these standards:
-
-- **Clear Structure** - Logical organization and navigation
-- **Practical Examples** - Real code examples and use cases
-- **Comprehensive Coverage** - All aspects of the system documented
-- **Up-to-date Content** - Regular updates with code changes
-- **Easy to Follow** - Step-by-step instructions and explanations
-
-## 🏆 Best Practices Highlighted
-
-### Code Quality
-
-- **Clean Architecture** principles
-- **SOLID** design principles
-- **DRY** (Don't Repeat Yourself)
-- **Separation of Concerns**
-- **Dependency Injection**
-
-### Security
-
-- **Input Validation** and sanitization
-- **Rate Limiting** and abuse prevention
-- **Security Headers** implementation
-- **Error Handling** without information leakage
-- **Authentication** and authorization patterns
-
-### Performance
-
-- **Database Optimization** with proper indexing
-- **Caching Strategies** for frequently accessed data
-- **Bundle Optimization** for frontend assets
-- **Connection Pooling** for database connections
-- **Monitoring** and performance tracking
-
-### Maintainability
-
-- **Comprehensive Testing** with good coverage
-- **Clear Documentation** for all components
-- **Consistent Code Style** and formatting
-- **Modular Architecture** for easy updates
-- **Version Control** best practices
+- [x] **Real-time Updates** — Socket.io (see [ARCHITECTURE.md](./ARCHITECTURE.md) and [API.md](./API.md))
+- [ ] **User Authentication** — end-user JWT (admin JWT exists today)
+- [ ] **Advanced Analytics** — betting analytics and reporting
+- [ ] **Mobile App** — React Native mobile application
+- [ ] **Payment Integration** — payment processing capabilities
+- [ ] **Admin Dashboard** — enhanced admin interface
 
 ---
 
 **Happy coding!** 🚀
 
-This documentation is designed to help you understand, develop, and deploy the SarradaBet platform successfully. If you have suggestions for improvements or additional documentation needs, please contribute to the project!
+For quick local setup, start with the [Main README](../README.md).

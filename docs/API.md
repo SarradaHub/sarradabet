@@ -2,44 +2,32 @@
 
 ## Overview
 
-The SarradaBet API is a RESTful API built with Express.js and TypeScript, following clean architecture principles. It provides endpoints for managing betting markets, categories, and votes.
+The SarradaBet API is a RESTful API built with Express.js and TypeScript, with a **Socket.io** realtime layer for live odds and bet updates. Types are shared via `@sarradabet/types` in `packages/types`.
 
 ## Base Information
 
-- **Base URL**: `http://localhost:3001/api/v1`
-- **Protocol**: HTTP/HTTPS
+- **REST base URL**: `http://localhost:8000/api/v1`
+- **Socket.io URL**: `http://localhost:8000` (path: `/socket.io`)
+- **Protocol**: HTTP/HTTPS + WebSocket (via Socket.io)
 - **Content Type**: `application/json`
-- **Authentication**: API Key (Header: `X-API-Key`)
+- **Compression**: gzip for responses above ~1KB (when client sends `Accept-Encoding: gzip`)
 
 ## Authentication
 
-### API Key Authentication
+### Public endpoints
 
-Include your API key in the request headers:
+No authentication required:
 
-```http
-X-API-Key: your-api-key-here
-```
+- `GET/POST` `/api/v1/bets`, `/api/v1/categories`, `POST /api/v1/votes`
+- `GET /health`, `GET /ready`
 
-### Error Responses
+### Admin endpoints
 
-If authentication fails:
+Routes under `/api/v1/admin/*` require a JWT in the `Authorization: Bearer <token>` header (obtained via `POST /api/v1/admin/login`).
 
-```json
-{
-  "success": false,
-  "message": "Unauthorized access",
-  "errors": [
-    {
-      "field": "authentication",
-      "message": "Invalid or missing API key",
-      "code": "UNAUTHORIZED"
-    }
-  ],
-  "requestId": "req_123456789",
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
-```
+### API key (optional, not mounted)
+
+An `X-API-Key` middleware exists in code but is **not applied** to routes today. Do not rely on API key auth for public betting endpoints.
 
 ## Response Format
 
@@ -85,33 +73,47 @@ All error responses follow this format:
 
 ## Data Models
 
-### Bet
+Types are defined in [`packages/types`](../packages/types/src/index.ts). List and mutation responses use **slim DTOs**; detail endpoints return full **`BetDetail`**.
+
+### BetListItem (list, create, update, close)
+
+Used in `GET /bets`, `bet:created`, and `bet:updated` events.
 
 ```typescript
-interface Bet {
+interface BetListItem {
   id: number;
   title: string;
-  description: string | null;
+  description?: string | null;
   status: "open" | "closed" | "resolved";
-  categoryId: number | null;
-  createdAt: string; // ISO 8601 date
-  updatedAt: string; // ISO 8601 date
-  resolvedAt: string | null; // ISO 8601 date
-  odds: Odd[];
-  totalVotes?: number;
+  categoryId: number;
+  category?: { id: number; title: string };
+  totalVotes: number;
+  createdAt: string; // ISO 8601
+  odds: OddWithVotes[];
+}
+
+interface OddWithVotes {
+  id: number;
+  title: string;
+  value: number;
+  totalVotes: number;
 }
 ```
 
-### Odd
+### BetDetail (GET /bets/:id, resolve)
+
+Extends list shape with timestamps and full odd fields:
 
 ```typescript
-interface Odd {
-  id: number;
-  title: string;
-  value: number; // Decimal odds (e.g., 2.50)
-  totalVotes: number;
-  result: "pending" | "won" | "lost" | null;
-  betId: number;
+interface BetDetail extends BetListItem {
+  updatedAt: string;
+  resolvedAt?: string | null;
+  odds: OddDetail[];
+}
+
+interface OddDetail extends OddWithVotes {
+  result?: "pending" | "won" | "lost";
+  betId?: number;
 }
 ```
 
@@ -129,16 +131,55 @@ interface Category {
 }
 ```
 
-### Vote
+### Vote (create response)
 
 ```typescript
-interface Vote {
-  id: number;
-  oddId: number;
-  createdAt: string; // ISO 8601 date
-  odd?: Odd; // Included when fetching with relations
+interface VoteCreateResponse {
+  vote: {
+    id: number;
+    oddId: number;
+    createdAt: string;
+  };
+  betId: number;
+  odds: { id: number; totalVotes: number }[];
+  totalVotes: number;
 }
 ```
+
+## Realtime API (Socket.io)
+
+Connect to the same host as REST. Event names and payloads match [`packages/types/src/realtime.ts`](../packages/types/src/realtime.ts).
+
+| Field | Value |
+|-------|-------|
+| URL | `http://localhost:8000` (production: your API host) |
+| Path | `/socket.io` |
+| Transport | WebSocket with polling fallback |
+
+### Events
+
+| Event | Payload | Trigger |
+|-------|---------|---------|
+| `vote:created` | `{ betId, oddId, odds[{id,totalVotes}], totalVotes }` | `POST /votes` |
+| `bet:created` | `BetListItem` | `POST /bets` |
+| `bet:updated` | `BetListItem` | bet update, close, resolve |
+
+### Listener example (Node.js)
+
+```javascript
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:8000", { path: "/socket.io" });
+
+socket.on("vote:created", (payload) => {
+  console.log("vote:created", payload);
+});
+
+socket.on("bet:created", (bet) => console.log("bet:created", bet.id));
+socket.on("bet:updated", (bet) => console.log("bet:updated", bet.id));
+```
+
+Clients should prefer Socket.io push over polling `GET /bets/:id` after votes.
 
 ## Endpoints
 
@@ -197,23 +238,20 @@ GET /api/v1/bets?page=1&limit=10&status=open&sortBy=createdAt&sortOrder=desc
         "description": "Championship final match",
         "status": "open",
         "categoryId": 1,
+        "category": { "id": 1, "title": "Sports" },
         "createdAt": "2024-01-01T00:00:00.000Z",
-        "updatedAt": "2024-01-01T00:00:00.000Z",
-        "resolvedAt": null,
         "odds": [
           {
             "id": 1,
             "title": "Yes",
             "value": 2.5,
-            "totalVotes": 45,
-            "result": "pending"
+            "totalVotes": 45
           },
           {
             "id": 2,
             "title": "No",
             "value": 1.67,
-            "totalVotes": 67,
-            "result": "pending"
+            "totalVotes": 67
           }
         ],
         "totalVotes": 112
@@ -715,11 +753,19 @@ Create a new vote.
       "id": 1,
       "oddId": 1,
       "createdAt": "2024-01-01T00:00:00.000Z"
-    }
+    },
+    "betId": 1,
+    "odds": [
+      { "id": 1, "totalVotes": 46 },
+      { "id": 2, "totalVotes": 67 }
+    ],
+    "totalVotes": 113
   },
   "message": "Vote created successfully"
 }
 ```
+
+Also emits **`vote:created`** on Socket.io with the same aggregate counts.
 
 ## Error Codes
 
@@ -745,6 +791,22 @@ Create a new vote.
 - `FORBIDDEN` - Access denied
 - `RATE_LIMIT` - Too many requests
 - `DATABASE_ERROR` - Database operation failed
+
+## HTTP Caching and Compression
+
+### Category list cache headers
+
+`GET /api/v1/categories` responses include:
+
+```http
+Cache-Control: public, max-age=300, stale-while-revalidate=60
+```
+
+### Compression
+
+JSON responses larger than ~1KB may include `Content-Encoding: gzip` when the client accepts gzip.
+
+See [Performance Guide](./PERFORMANCE.md) for backend `node-cache` TTLs and Supabase pooling.
 
 ## Rate Limiting
 
@@ -785,21 +847,21 @@ Cross-Origin Resource Sharing is configured with:
 
 ### Complete Betting Flow
 
+0. **Optional — listen for realtime events** (see Realtime API section above).
+
 1. **Create a category:**
 
    ```bash
-   curl -X POST http://localhost:3001/api/v1/categories \
+   curl -X POST http://localhost:8000/api/v1/categories \
      -H "Content-Type: application/json" \
-     -H "X-API-Key: your-api-key" \
      -d '{"title": "Sports"}'
    ```
 
 2. **Create a bet:**
 
    ```bash
-   curl -X POST http://localhost:3001/api/v1/bets \
+   curl -X POST http://localhost:8000/api/v1/bets \
      -H "Content-Type: application/json" \
-     -H "X-API-Key: your-api-key" \
      -d '{
        "title": "Will Team A win?",
        "categoryId": 1,
@@ -813,24 +875,22 @@ Cross-Origin Resource Sharing is configured with:
 3. **Vote on an odd:**
 
    ```bash
-   curl -X POST http://localhost:3001/api/v1/votes \
+   curl -X POST http://localhost:8000/api/v1/votes \
      -H "Content-Type: application/json" \
-     -H "X-API-Key: your-api-key" \
      -d '{"oddId": 1}'
    ```
 
 4. **Close the bet:**
 
    ```bash
-   curl -X PATCH http://localhost:3001/api/v1/bets/1/close \
-     -H "X-API-Key: your-api-key"
+   curl -X PATCH http://localhost:8000/api/v1/bets/1/close
    ```
 
 5. **Resolve the bet:**
+
    ```bash
-   curl -X PATCH http://localhost:3001/api/v1/bets/1/resolve \
+   curl -X PATCH http://localhost:8000/api/v1/bets/1/resolve \
      -H "Content-Type: application/json" \
-     -H "X-API-Key: your-api-key" \
      -d '{"winningOddId": 1}'
    ```
 
@@ -846,8 +906,7 @@ import {
 } from "@sarradabet/api-client";
 
 const betService = new BetService({
-  baseURL: "http://localhost:3001/api/v1",
-  apiKey: "your-api-key",
+  baseURL: "http://localhost:8000/api/v1",
 });
 
 // Create a bet
@@ -882,7 +941,7 @@ class SarradaBetClient:
         )
         return response.json()
 
-client = SarradaBetClient('http://localhost:3001/api/v1', 'your-api-key')
+client = SarradaBetClient('http://localhost:8000/api/v1')
 ```
 
 ## Support
