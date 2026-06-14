@@ -2,6 +2,14 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { IApiService, ApiResponse, ApiError } from "../interfaces/IService";
 import { requestDeduplicator } from "../utils/requestDeduplicator";
 
+function headerValue(
+  headers: AxiosResponse["headers"],
+  key: string,
+): string {
+  const value = headers[key];
+  return typeof value === "string" ? value : "";
+}
+
 export abstract class BaseService<T, CreateInput, UpdateInput>
   implements IApiService<T, CreateInput, UpdateInput>
 {
@@ -45,7 +53,7 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
 
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
-        const contentType = response.headers["content-type"] || "";
+        const contentType = headerValue(response.headers, "content-type");
         if (
           contentType.includes("text/html") &&
           typeof response.data === "string" &&
@@ -72,7 +80,10 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
           error.message?.includes("exceeded");
 
         const isHtmlResponse =
-          error.response?.headers?.["content-type"]?.includes("text/html") ||
+          headerValue(
+            error.response?.headers ?? {},
+            "content-type",
+          ).includes("text/html") ||
           (typeof error.response?.data === "string" &&
             error.response?.data?.includes("<!doctype html>"));
 

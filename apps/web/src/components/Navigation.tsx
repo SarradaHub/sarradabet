@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import CreateCategoryModal from "./CreateCategoryModal";
 import { Button } from "./ui/Button";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings } from "@sarradahub/design-system";
 
 interface NavigationProps {
   onOpenCreateModal: () => void;

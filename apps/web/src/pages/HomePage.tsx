@@ -9,7 +9,7 @@ import BetCardSkeleton from "../components/ui/BetCardSkeleton";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { Button } from "../components/ui/Button";
-import { Plus, Info } from "lucide-react";
+import { Plus, Info } from "@sarradahub/design-system";
 
 const HomePage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
