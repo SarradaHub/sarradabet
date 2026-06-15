@@ -18,5 +18,6 @@ module.exports = {
   testTimeout: 10000,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@sarradabet/types$': '<rootDir>/../../packages/types/src/index.ts',
   },
 };
