@@ -93,7 +93,8 @@ docs/
 ### Deployment
 
 - **Docker / nginx / PM2** (primary path in Deployment Guide)
-- **Render + Vercel** addendum for cloud hosting
+- **Vercel** for web (`apps/web`) and API (`apps/api`) — two projects, separate `vercel.json` per app
+- **Render** as an alternative API host
 - Database migrations with `DATABASE_URL` + `DIRECT_URL`
 
 ## 🔧 Technology Stack

@@ -49,6 +49,7 @@ const startServer = async () => {
   }
 };
 
-if (process.env.NODE_ENV !== "test") {
+// Local/docker only — Vercel uses src/index.ts (default export, no listen()).
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   startServer();
 }

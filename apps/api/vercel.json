@@ -1,0 +1,4 @@
+{
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && turbo run build --filter=api && npm run -w api prisma:generate"
+}

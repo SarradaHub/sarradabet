@@ -144,6 +144,7 @@ apps/api/
 ├── prisma/
 │   ├── schema.prisma       # Database schema
 │   └── migrations/         # Database migrations
+├── vercel.json             # Vercel install/build (monorepo root npm ci + turbo)
 ├── __tests__/              # Tests
 ├── package.json
 └── tsconfig.json
