@@ -66,7 +66,7 @@ Payload shapes: [`packages/types/src/realtime.ts`](../packages/types/src/realtim
 
 ## Horizontal scaling note
 
-Socket.io broadcasts are in-memory. If Render runs multiple API instances, add `@socket.io/redis-adapter` for cross-instance fan-out.
+Socket.io broadcasts are in-memory. If Vercel or Render runs multiple API instances, add `@socket.io/redis-adapter` for cross-instance fan-out.
 
 ## Blackbox validation checklist
 

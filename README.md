@@ -15,8 +15,8 @@ SarradaBet is a mock betting platform built as a Turborepo monorepo. It combines
 
 | Layer | Stack |
 |-------|-------|
-| Frontend | React, Vite, Tailwind CSS — deploy on **Vercel** |
-| Backend | Express, Socket.io, Prisma — deploy on **Render** |
+| Frontend | React, Vite, Tailwind CSS — deploy on **Vercel** (`apps/web`) |
+| Backend | Express, Socket.io, Prisma — deploy on **Vercel** (`apps/api`) or **Render** |
 | Database | PostgreSQL — **Supabase** (or local Docker) |
 | Monorepo | Turborepo, shared `@sarradabet/types` |
 
@@ -123,19 +123,27 @@ The web app wraps routes in `RealtimeProvider`, which patches the query cache wh
 
 ## Deployment
 
-### API (Render)
+Use **two Vercel projects** from the same repo (e.g. `sarradabet-web` and `sarradabet-api`), each with its own root directory and `vercel.json` ([web](apps/web/vercel.json), [api](apps/api/vercel.json)). Do not point the API project at the repository root — root [`vercel.json`](vercel.json) is for the web app only (platform design-system clone).
 
-- Build: `npm run build` (in `apps/api`)
+### API (Vercel)
+
+- **Root directory:** `apps/api`
+- **Install / build:** [`apps/api/vercel.json`](apps/api/vercel.json) — `npm ci` and `turbo run build --filter=api` from the monorepo root (no `clone-platform.sh`; that script is web-only).
+- **Environment:** `DATABASE_URL`, `DIRECT_URL` (Supabase), `CORS_ORIGINS` (your Vercel web URL), `JWT_SECRET`, `NODE_ENV=production`.
+- **WebSockets:** supported on a single Vercel deployment; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for multi-instance Redis adapter notes.
+
+### API (Render, alternative)
+
+- **Root directory:** `apps/api`
+- Build: `npm install && npm run build && npm run prisma:generate`
 - Start: `npm run start`
-- Set `DATABASE_URL`, `DIRECT_URL` (Supabase), `CORS_ORIGINS` (your Vercel URL), `JWT_SECRET`, and `PORT`.
-- Render supports WebSockets on the same HTTP service — no extra config needed for a single instance.
+- Same environment variables as above; Render sets `PORT` automatically.
 
 ### Web (Vercel)
 
-- Root directory: `apps/web`
-- Build: `npm run build`
-- Set `VITE_API_URL` to your Render API URL (e.g. `https://your-api.onrender.com`).
-- [`apps/web/vercel.json`](apps/web/vercel.json) configures SPA rewrites and long-lived cache headers for hashed assets.
+- **Root directory:** `apps/web` (recommended) or `.` (monorepo root — see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
+- **Install / build:** [`apps/web/vercel.json`](apps/web/vercel.json) clones [`SarradaHub/platform`](https://github.com/SarradaHub/platform) for `@sarradahub/design-system`, then builds the SPA.
+- Set `VITE_API_URL` to your API URL (e.g. `https://sarradabet-api.vercel.app` or `https://your-api.onrender.com`) — no `/api/v1` suffix.
 
 ### Database migrations (CI / production)
 

@@ -727,7 +727,7 @@ Production Server
 └── PostgreSQL (Supabase or self-hosted)
 ```
 
-Alternative cloud hosting: see [DEPLOYMENT.md](./DEPLOYMENT.md#alternative-render--vercel).
+Alternative cloud hosting: see [DEPLOYMENT.md](./DEPLOYMENT.md#alternative-vercel--render) (Vercel for web + API, or Render for API).
 
 ## Monitoring and Observability
 

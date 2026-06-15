@@ -831,44 +831,62 @@ docker-compose up -d --scale api=0
 docker-compose up -d
 ```
 
-## Alternative: Render + Vercel
+## Alternative: Vercel + Render
 
-For managed hosting without self-managed Docker/nginx:
+For managed hosting without self-managed Docker/nginx, use **two Vercel projects** (web + API) from the same GitHub repo, or host the API on Render instead.
 
-### API (Render)
+| Vercel project | Root directory | Config file |
+|----------------|----------------|-------------|
+| Web (e.g. `sarradabet-web`) | `apps/web` | [`apps/web/vercel.json`](../apps/web/vercel.json) |
+| API (e.g. `sarradabet-api`) | `apps/api` | [`apps/api/vercel.json`](../apps/api/vercel.json) |
+
+**Important:** Root [`vercel.json`](../vercel.json) is for the **web** app when deploying from the monorepo root (Option A below). The API project must use root directory `apps/api` so it picks up [`apps/api/vercel.json`](../apps/api/vercel.json). If the API install command includes `clone-platform.sh`, the project is inheriting web settings — fix root directory or clear dashboard overrides.
+
+### API (Vercel)
+
+- **Root directory:** `apps/api`
+- **Install / build:** defined in [`apps/api/vercel.json`](../apps/api/vercel.json):
+  - Install: `cd ../.. && npm ci` (workspace install from monorepo root)
+  - Build: `cd ../.. && turbo run build --filter=api`
+- **Environment:**
+  - `DATABASE_URL` — Supabase pooler (`6543?pgbouncer=true`)
+  - `DIRECT_URL` — Supabase direct (`5432`, migrations)
+  - `CORS_ORIGINS` — your Vercel frontend URL (e.g. `https://sarradabet-web.vercel.app`)
+  - `JWT_SECRET`, `NODE_ENV=production`
+- **WebSockets:** supported on a single Vercel deployment; see [PERFORMANCE.md](./PERFORMANCE.md) for multi-instance Redis adapter.
+
+If the Vercel dashboard overrides **Install Command** or **Build Command**, remove those overrides so `apps/api/vercel.json` applies (or set them to the same values).
+
+### API (Render, alternative)
 
 - **Root directory:** `apps/api`
 - **Build:** `npm install && npm run build && npm run prisma:generate`
 - **Start:** `npm run start`
-- **Environment:**
-  - `DATABASE_URL` — Supabase pooler (`6543?pgbouncer=true`)
-  - `DIRECT_URL` — Supabase direct (`5432`, migrations)
-  - `CORS_ORIGINS` — your Vercel frontend URL
-  - `JWT_SECRET`, `PORT` (Render sets `PORT` automatically)
+- **Environment:** same as Vercel API above; Render sets `PORT` automatically.
 - **WebSockets:** supported on a single Render web service; see [PERFORMANCE.md](./PERFORMANCE.md) for multi-instance Redis adapter.
 
 ### Web (Vercel)
 
 The web app depends on `@sarradahub/design-system` from the sibling [`SarradaHub/platform`](https://github.com/SarradaHub/platform) repo. Vercel must clone that repo before install/build (handled by [`scripts/clone-platform.sh`](../scripts/clone-platform.sh)).
 
-**Option A — monorepo root (recommended, matches Turborepo):**
+**Option A — monorepo root:**
 
 - **Root directory:** `.` (repository root)
 - **Install / build / output:** defined in root [`vercel.json`](../vercel.json) — clones platform, builds design-system, then `turbo run build --filter=web`
 - **Output directory:** `apps/web/dist`
 
-**Option B — web app only:**
+**Option B — web app only (recommended):**
 
 - **Root directory:** `apps/web`
 - **Install / build / output:** defined in [`apps/web/vercel.json`](../apps/web/vercel.json)
 
-**Environment:** `VITE_API_URL=https://your-api.onrender.com` (no `/api/v1` suffix)
+**Environment:** `VITE_API_URL=https://your-api.vercel.app` or `https://your-api.onrender.com` (no `/api/v1` suffix)
 
 If the Vercel project dashboard overrides **Install Command** or **Build Command**, remove those overrides so `vercel.json` settings apply (or set them to the same values). A bare `turbo run build` without cloning platform will fail with `Cannot find module '@sarradahub/design-system'`.
 
 ### Migrations
 
-Run `npm run prisma:migrate:deploy` in CI or a one-off Render shell with `DATABASE_URL` and `DIRECT_URL` set (see [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)).
+Run `npm run prisma:migrate:deploy` in CI or a one-off shell (Vercel CLI, Render shell, etc.) with `DATABASE_URL` and `DIRECT_URL` set (see [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)).
 
 ## Security Considerations
 
