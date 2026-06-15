@@ -1,6 +1,6 @@
 {
   "installCommand": "cd ../.. && bash scripts/clone-platform.sh && npm ci",
-  "buildCommand": "cd ../.. && npm run build:design-system && npm run -w web build",
+  "buildCommand": "cd ../.. && npm run build:design-system && turbo run build --filter=web",
   "outputDirectory": "dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
