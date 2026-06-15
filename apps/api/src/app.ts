@@ -100,3 +100,5 @@ process.on("uncaughtException", (error) => {
   logger.error(`Uncaught Exception: ${error.message}`, error);
   process.exit(1);
 });
+
+export default app;

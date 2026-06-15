@@ -49,6 +49,10 @@ const startServer = async () => {
   }
 };
 
-if (process.env.NODE_ENV !== "test") {
+// Vercel imports this module and uses the default export (Express app).
+// Local/docker use npm start to run the HTTP server + Socket.io.
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   startServer();
 }
+
+export { app as default } from "./app";
