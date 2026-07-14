@@ -12,17 +12,16 @@ export type VoteWithOddsUpdate = {
   totalVotes: number;
 };
 
-type OddWithVoteCount = Prisma.OddGetPayload<{
-  include: { _count: { select: { votes: true } } };
-}>;
+type OddWithVoteCount = {
+  id: number;
+  _count: { votes: number };
+};
 
-type UpdatedOddWithVoteCount = Prisma.OddGetPayload<{
-  select: {
-    id: true;
-    value: true;
-    _count: { select: { votes: true } };
-  };
-}>;
+type UpdatedOddWithVoteCount = {
+  id: number;
+  value: number;
+  _count: { votes: number };
+};
 
 export const createVoteWithOdds = async (
   data: CreateVoteDTO,
@@ -61,11 +60,11 @@ export const createVoteWithOdds = async (
       orderBy: { id: "asc" },
     });
 
-    const voteCounts = oddsWithCounts.map((o) => o._count.votes);
+    const voteCounts = oddsWithCounts.map((o: OddWithVoteCount) => o._count.votes);
     const calculatedValues = calculateOddsFromVotes(voteCounts);
 
-    const updatedOdds = await Promise.all(
-      oddsWithCounts.map((o, index) =>
+    const updatedOdds: UpdatedOddWithVoteCount[] = await Promise.all(
+      oddsWithCounts.map((o: OddWithVoteCount, index: number) =>
         tx.odd.update({
           where: { id: o.id },
           data: { value: calculatedValues[index] },
