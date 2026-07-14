@@ -16,7 +16,7 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveClass("bg-primary-600");
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole("button")).toBeInTheDocument();
+    expect(screen.getByRole("button")).toHaveClass("text-black", "bg-neutral-200");
 
     rerender(<Button variant="danger">Danger</Button>);
     expect(screen.getByRole("button")).toHaveClass("bg-error-600");

@@ -1,21 +1,23 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { useBets, useCategories } from "../hooks";
+import React, { useState, useMemo } from "react";
+import { useBets, useCategories, CATEGORIES_LIST_PARAMS } from "../hooks";
 import { Bet } from "../types/bet";
 import { Category } from "../types/category";
 import Navigation from "../components/Navigation";
-import BetCard from "../components/BetCard";
-import CreateBetModal from "../components/CreateBetModal";
-import BetCardSkeleton from "../components/ui/BetCardSkeleton";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
-import { Button } from "../components/ui/Button";
-import { Plus, Info } from "@sarradahub/design-system";
+import SportsbookLayout from "../components/sportsbook/SportsbookLayout";
+import CategorySidebar from "../components/sportsbook/CategorySidebar";
+import OddsBoard from "../components/sportsbook/OddsBoard";
+import VoteSlip from "../components/sportsbook/VoteSlip";
+import PromoStrip from "../components/sportsbook/PromoStrip";
+import {
+  MobileCategoryDrawer,
+  MobileVoteSlipChip,
+} from "../components/sportsbook/MobileDrawers";
+import { VoteSlipProvider } from "../context/VoteSlipContext";
 
 const HomePage: React.FC = () => {
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
-  // Data fetching
   const {
     data: betsResponse,
     loading: betsLoading,
@@ -30,7 +32,7 @@ const HomePage: React.FC = () => {
     error: categoriesError,
     apiError: categoriesApiError,
     refetch: refetchCategories,
-  } = useCategories({ limit: 100 });
+  } = useCategories(CATEGORIES_LIST_PARAMS);
 
   const bets = useMemo((): Bet[] => {
     if (!betsResponse) return [];
@@ -64,22 +66,8 @@ const HomePage: React.FC = () => {
     return [];
   }, [categoriesResponse]);
 
-  const handleBetCreated = useCallback(() => {
-    refetchBets();
-    setShowCreateModal(false);
-  }, [refetchBets]);
-
-  const handleCategoryCreated = useCallback(() => {
-    refetchCategories();
-  }, [refetchCategories]);
-
   const groupedBets = useMemo(() => {
-    if (
-      !Array.isArray(bets) ||
-      !Array.isArray(categories) ||
-      !bets.length ||
-      !categories.length
-    ) {
+    if (!Array.isArray(bets) || !bets.length) {
       return [];
     }
 
@@ -93,9 +81,11 @@ const HomePage: React.FC = () => {
 
     groups.set("uncategorized", { bets: [] });
 
-    categories.forEach((category: Category) => {
-      groups.set(category.id, { category, bets: [] });
-    });
+    if (Array.isArray(categories)) {
+      categories.forEach((category: Category) => {
+        groups.set(category.id, { category, bets: [] });
+      });
+    }
 
     bets.forEach((bet: Bet) => {
       if (bet.categoryId && groups.has(bet.categoryId)) {
@@ -119,356 +109,76 @@ const HomePage: React.FC = () => {
     return groupedBets.filter((group) => group.id === selectedCategory);
   }, [groupedBets, selectedCategory]);
 
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<number | "all" | "uncategorized", number>();
+    counts.set("all", bets.length);
+    groupedBets.forEach((group) => {
+      if (group.id === "uncategorized") {
+        counts.set("uncategorized", group.bets.length);
+      } else {
+        counts.set(group.id as number, group.bets.length);
+      }
+    });
+    categories.forEach((category) => {
+      if (!counts.has(category.id)) {
+        counts.set(category.id, 0);
+      }
+    });
+    return counts;
+  }, [bets.length, groupedBets, categories]);
+
   const isLoading = betsLoading || categoriesLoading;
   const hasError = betsError || categoriesError;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 text-white">
-      <Navigation
-        onOpenCreateModal={() => setShowCreateModal(true)}
-        onCategoryCreated={handleCategoryCreated}
-      />
-
-      <CreateBetModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onBetCreated={handleBetCreated}
-      />
-
-      <HeroSection onOpenCreateModal={() => setShowCreateModal(true)} />
-
-      <CategoryFilter
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        loading={categoriesLoading}
-        error={categoriesError}
-      />
-
-      {isLoading ? (
-        <div className="bg-neutral-900 min-h-screen">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <BetCardSkeleton key={index} />
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : hasError ? (
-        <div className="bg-neutral-900 min-h-screen flex items-center justify-center">
-          <ErrorMessage
-            error={betsError || categoriesError || "Falha ao carregar dados"}
-            apiError={betsApiError || categoriesApiError}
-            onRetry={() => {
-              refetchBets();
-              refetchCategories();
-            }}
-          />
-        </div>
-      ) : (
-        <BetsList
-          groupedBets={filteredBets}
-          onOpenCreateModal={() => setShowCreateModal(true)}
+  if (hasError && !isLoading) {
+    return (
+      <div className="min-h-screen bg-sportsbook-bg flex items-center justify-center p-4">
+        <ErrorMessage
+          error={betsError || categoriesError || "Falha ao carregar dados"}
+          apiError={betsApiError || categoriesApiError}
+          onRetry={() => {
+            refetchBets();
+            refetchCategories();
+          }}
         />
-      )}
-    </div>
-  );
-};
-
-interface HeroProps {
-  onOpenCreateModal: () => void;
-}
-
-const HeroSection: React.FC<HeroProps> = ({ onOpenCreateModal }) => (
-  <section className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-20 lg:py-32 overflow-hidden">
-    <div className="absolute inset-0 opacity-10">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
-    </div>
-
-    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        <div className="md:col-span-12 max-w-4xl mx-auto text-center">
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-warning-400 to-orange-500 rounded-full mb-6 shadow-2xl">
-              <svg
-                className="w-10 h-10 text-black"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-warning-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-                SarradaBet
-              </span>
-              <br />
-              <span className="text-white text-3xl sm:text-4xl lg:text-5xl">
-                Sua Plataforma de Apostas
-              </span>
-            </h1>
-
-            <p className="text-lg sm:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Crie mercados de apostas personalizados, vote nas suas previsões
-              favoritas e acompanhe odds em tempo real. A plataforma definitiva
-              para entusiastas de apostas.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              onClick={onOpenCreateModal}
-              variant="primary"
-              size="lg"
-              leftIcon={Plus}
-              className="group bg-gradient-to-r from-warning-400 to-orange-500 text-black hover:from-warning-300 hover:to-orange-400 shadow-2xl hover:shadow-warning-500/25 transform hover:-translate-y-1 hover:scale-105"
-            >
-              Criar Nova Aposta
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="lg"
-              leftIcon={Info}
-              className="border-2 border-gray-600 text-gray-300 hover:border-gray-500 hover:text-white hover:bg-gray-800/50"
-            >
-              Como Funciona
-            </Button>
-          </div>
-
-          <div className="md:col-span-12 mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-warning-400 mb-2">
-                1000+
-              </div>
-              <div className="text-gray-400">Apostas Ativas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-500 mb-2">
-                500+
-              </div>
-              <div className="text-gray-400">Usuários Ativos</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-red-500 mb-2">99.9%</div>
-              <div className="text-gray-400">Uptime</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-interface CategoryFilterProps {
-  categories: Category[];
-  selectedCategory: number | null;
-  onSelectCategory: (id: number | null) => void;
-  loading: boolean;
-  error: string | null;
-}
-
-const CategoryFilter: React.FC<CategoryFilterProps> = ({
-  categories,
-  selectedCategory,
-  onSelectCategory,
-  loading,
-  error,
-}) => {
-  if (loading) {
-    return (
-      <div className="bg-gray-800 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <LoadingSpinner size="sm" text="Carregando categorias..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-gray-800 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ErrorMessage error={error} />
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-r from-neutral-800 to-neutral-900 border-b border-neutral-700 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <div className="md:col-span-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="text-lg font-semibold text-white">
-              Filtrar por Categoria
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={() => onSelectCategory(null)}
-                variant={selectedCategory === null ? "primary" : "secondary"}
-                size="md"
-                className={
-                  selectedCategory === null
-                    ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg shadow-yellow-500/25 hover:from-yellow-300 hover:to-orange-400"
-                    : "bg-gray-700 text-white hover:bg-gray-600 shadow-md hover:shadow-lg border-gray-600"
-                }
-                aria-pressed={selectedCategory === null}
-              >
-                <span className="flex items-center space-x-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                    />
-                  </svg>
-                  <span>Todas</span>
-                </span>
-              </Button>
-              {Array.isArray(categories) &&
-                categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    onClick={() => onSelectCategory(category.id)}
-                    variant={
-                      selectedCategory === category.id ? "primary" : "secondary"
-                    }
-                    size="md"
-                    className={
-                      selectedCategory === category.id
-                        ? "bg-gradient-to-r from-warning-400 to-orange-500 text-black shadow-lg shadow-warning-500/25 hover:from-warning-300 hover:to-orange-400"
-                        : "bg-neutral-700 text-white hover:bg-neutral-600 shadow-md hover:shadow-lg border-neutral-600"
-                    }
-                    aria-pressed={selectedCategory === category.id}
-                  >
-                    <span className="flex items-center space-x-2">
-                      <div
-                        className="w-2 h-2 rounded-full bg-current opacity-60"
-                        aria-hidden="true"
-                      ></div>
-                      <span>{category.title}</span>
-                    </span>
-                  </Button>
-                ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <VoteSlipProvider>
+      <SportsbookLayout
+        header={
+          <Navigation
+            mobileCategoryTrigger={
+              <MobileCategoryDrawer
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                categoryCounts={categoryCounts}
+                categoriesLoading={categoriesLoading}
+              />
+            }
+          />
+        }
+        promo={<PromoStrip />}
+        sidebar={
+          <CategorySidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            categoryCounts={categoryCounts}
+            loading={categoriesLoading}
+          />
+        }
+        board={
+          <OddsBoard groupedBets={filteredBets} loading={isLoading} />
+        }
+        slip={<VoteSlip />}
+        mobileSlipChip={<MobileVoteSlipChip />}
+      />
+    </VoteSlipProvider>
   );
 };
-
-interface BetsListProps {
-  groupedBets: Array<{
-    id: number | "uncategorized";
-    name: string;
-    bets: Bet[];
-  }>;
-  onOpenCreateModal: () => void;
-}
-
-const BetsList: React.FC<BetsListProps> = ({
-  groupedBets,
-  onOpenCreateModal,
-}) => (
-  <div className="bg-neutral-900 min-h-screen">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {groupedBets.length === 0 ? (
-          <div className="md:col-span-12 text-center py-20">
-            <div className="max-w-md mx-auto">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg
-                  className="w-12 h-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-4">
-                Nenhuma aposta encontrada
-              </h2>
-              <p className="text-gray-400 text-lg mb-8">
-                Crie sua primeira aposta para começar a apostar!
-              </p>
-              <Button
-                onClick={onOpenCreateModal}
-                variant="primary"
-                size="lg"
-                leftIcon={Plus}
-                className="bg-gradient-to-r from-warning-400 to-orange-500 text-black hover:from-warning-300 hover:to-orange-400 shadow-lg hover:shadow-warning-500/25 transform hover:-translate-y-1"
-              >
-                Criar Primeira Aposta
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="md:col-span-12 space-y-12">
-            {groupedBets.map((group) => (
-              <div
-                key={group.id}
-                className="bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl border border-neutral-700 min-w-0"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 mb-6 sm:mb-8 min-w-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-warning-400 to-orange-500 rounded-xl flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-6 h-6 sm:w-7 sm:h-7 text-black"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white truncate">
-                      {group.name}
-                    </h2>
-                    <p className="text-neutral-400 mt-1">
-                      {group.bets.length} apostas ativas
-                    </p>
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                  {group.bets.map((bet) => (
-                    <BetCard key={bet.id} bet={bet} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
 
 export default HomePage;

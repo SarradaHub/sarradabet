@@ -3,6 +3,7 @@ import { BetController } from "../modules/bet/controllers/BetController";
 import { BetService } from "../modules/bet/services/BetService";
 import { BetRepository } from "../modules/bet/repositories/BetRepository";
 import { prisma } from "../config/db";
+import { authenticateAdmin } from "../core/middleware/AuthMiddleware";
 import {
   validateBody,
   validateParams,
@@ -44,12 +45,14 @@ router.get(
 
 router.post(
   "/",
+  authenticateAdmin,
   validateBody(CreateBetSchema),
   betController.create.bind(betController),
 );
 
 router.put(
   "/:id",
+  authenticateAdmin,
   validateParams(ParamIdSchema),
   validateBody(UpdateBetSchema),
   betController.update.bind(betController),
@@ -57,18 +60,21 @@ router.put(
 
 router.delete(
   "/:id",
+  authenticateAdmin,
   validateParams(ParamIdSchema),
   betController.delete.bind(betController),
 );
 
 router.patch(
   "/:id/close",
+  authenticateAdmin,
   validateParams(ParamIdSchema),
   betController.closeBet.bind(betController),
 );
 
 router.patch(
   "/:id/resolve",
+  authenticateAdmin,
   validateParams(ParamIdSchema),
   betController.resolveBet.bind(betController),
 );

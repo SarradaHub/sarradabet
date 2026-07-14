@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
+import BrandLogo from "../components/BrandLogo";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { Input } from "@sarradahub/design-system";
 
@@ -56,12 +57,6 @@ const AdminLogin: React.FC = () => {
       let payload: any = raw;
       if (hasOwn(raw, "data")) {
         const first = (raw as any).data;
-        if (first.token) {
-          localStorage.setItem("authToken", first.token);
-          if (first.refreshToken) {
-            localStorage.setItem("refreshToken", first.refreshToken);
-          }
-        }
         payload = hasOwn(first, "data") ? (first as any).data : first;
       }
 
@@ -77,6 +72,7 @@ const AdminLogin: React.FC = () => {
       }
 
       localStorage.setItem("adminToken", tokenValue);
+      localStorage.setItem("authToken", tokenValue);
       localStorage.setItem(
         "adminInfo",
         JSON.stringify({
@@ -102,65 +98,50 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-sportsbook-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-warning-400 to-orange-500 rounded-full flex items-center justify-center">
-            <svg
-              className="h-8 w-8 text-black"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-white">
+        <div className="flex flex-col items-center">
+          <BrandLogo size="lg" showText={false} />
+          <h2 className="mt-4 text-center font-display text-3xl font-bold text-white tracking-wide">
             Admin Login
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
-            Acesse o painel administrativo do SarradaBet
+          <p className="mt-2 text-center text-sm text-sportsbook-muted">
+            Painel administrativo SarradaBet
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="mt-8 space-y-6 sb-surface border sb-border rounded-xl p-6"
+          onSubmit={handleSubmit}
+        >
           <div className="space-y-4">
-            <div>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                label="Usuário ou Email"
-                required
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Digite seu usuário ou email"
-                disabled={loading}
-                aria-describedby={error ? "username-error" : undefined}
-                className="dark:bg-neutral-800 dark:border-neutral-600 dark:text-white dark:placeholder-neutral-400 dark:focus:ring-warning-400"
-              />
-            </div>
+            <Input
+              id="username"
+              name="username"
+              type="text"
+              label="Usuário ou Email"
+              required
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Digite seu usuário ou email"
+              disabled={loading}
+              aria-describedby={error ? "username-error" : undefined}
+              className="dark:bg-sportsbook-raised dark:border-sportsbook-border dark:text-white dark:placeholder-sportsbook-muted dark:focus:ring-warning-400"
+            />
 
-            <div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                label="Senha"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Digite sua senha"
-                disabled={loading}
-                aria-describedby={error ? "password-error" : undefined}
-                className="dark:bg-neutral-800 dark:border-neutral-600 dark:text-white dark:placeholder-neutral-400 dark:focus:ring-warning-400"
-              />
-            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              label="Senha"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Digite sua senha"
+              disabled={loading}
+              aria-describedby={error ? "password-error" : undefined}
+              className="dark:bg-sportsbook-raised dark:border-sportsbook-border dark:text-white dark:placeholder-sportsbook-muted dark:focus:ring-warning-400"
+            />
           </div>
 
           {error && (
@@ -169,41 +150,25 @@ const AdminLogin: React.FC = () => {
             </div>
           )}
 
-          <div>
-            <Button
-              type="submit"
-              loading={loading}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-warning-400 to-orange-500 text-black hover:from-warning-300 hover:to-orange-400 py-3 text-lg font-semibold"
-            >
-              {loading ? "Entrando..." : "Entrar"}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            loading={loading}
+            disabled={loading}
+            className="w-full sb-brand-gradient text-black hover:from-warning-300 hover:to-orange-400 py-3 text-lg font-semibold font-display tracking-wide"
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </Button>
 
           <div className="text-center">
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="text-gray-400 hover:text-white transition-colors text-sm"
+              className="text-sportsbook-muted hover:text-white transition-colors text-sm"
             >
               ← Voltar para o site
             </button>
           </div>
         </form>
-
-        <div className="mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">
-            Credenciais de Teste:
-          </h3>
-          <div className="text-xs text-gray-400 space-y-1">
-            <div>
-              <strong>Usuário:</strong> admin
-            </div>
-            <div>
-              <strong>Senha:</strong> admin123
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

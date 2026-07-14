@@ -10,19 +10,24 @@ module.exports = {
   theme: {
     extend: {
       ...designSystemConfig.theme.extend,
-      // Project-specific color overrides
-      // Note: gray-900, yellow-400, and purple-500 are now provided by design system
-      // (neutral.900, warning.400, secondary.600 respectively)
+      fontFamily: {
+        sans: ['Barlow', 'system-ui', 'sans-serif'],
+        display: ['"Barlow Condensed"', 'Barlow', 'system-ui', 'sans-serif'],
+      },
       colors: {
         ...designSystemConfig.theme.extend.colors,
-        // Pure black for high contrast needs (e.g., text on yellow backgrounds)
         black: '#000000',
-        // Purple-900 kept as project-specific brand color (not in design system)
-        purple: {
-          900: '#4C1D95',
+        sportsbook: {
+          bg: '#0a0a0b',
+          surface: '#121214',
+          raised: '#1a1a1e',
+          border: '#2a2a2e',
+          muted: '#8b8b95',
+          odds: '#22c55e',
+          'odds-hover': '#16a34a',
         },
       },
     },
   },
   plugins: [],
-}
+};

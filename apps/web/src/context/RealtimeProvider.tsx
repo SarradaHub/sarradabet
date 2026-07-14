@@ -5,6 +5,7 @@ import {
 } from "@sarradabet/types";
 import { useSocketEvent } from "../core/hooks/useSocket";
 import { queryCache } from "../core/hooks/useQueryCache";
+import { mergeOddFromVoteUpdate } from "../utils/odds";
 import { Bet } from "../types/bet";
 
 type PaginatedBetsResponse = {
@@ -45,7 +46,7 @@ function handleVoteCreated(payload: VoteCreatedPayload): void {
         totalVotes: payload.totalVotes,
         odds: bet.odds.map((odd) => {
           const updated = payload.odds.find((o) => o.id === odd.id);
-          return updated ? { ...odd, totalVotes: updated.totalVotes } : odd;
+          return updated ? mergeOddFromVoteUpdate(odd, updated) : odd;
         }),
       };
     }),

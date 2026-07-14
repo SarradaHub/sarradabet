@@ -40,11 +40,13 @@ export function useQuery<T>(
   const [isStale, setIsStale] = useState(true);
 
   const api = useApi(queryFn, { onSuccess, onError });
-  // Stabilize execute to avoid refetch identity changes on state updates
+  // Stabilize execute/setData to avoid refetch identity changes on state updates
   const executeRef = useRef(api.execute);
+  const setDataRef = useRef(api.setData);
   useEffect(() => {
     executeRef.current = api.execute;
-  }, [api.execute]);
+    setDataRef.current = api.setData;
+  }, [api.execute, api.setData]);
 
   // Keep refs to avoid stale closures and stabilize refetch
   const queryKeyRef = useRef(queryKey);
@@ -57,20 +59,30 @@ export function useQuery<T>(
     isStaleRef.current = isStale;
   }, [isStale]);
 
+  const applyResult = useCallback((result: T | null) => {
+    setDataRef.current(result);
+    setLastFetched(new Date());
+    setIsStale(false);
+    return result;
+  }, []);
+
   const refetch = useCallback(async (): Promise<T | null> => {
     const key = queryKeyRef.current;
     const currentlyStale = isStaleRef.current;
 
     const cached = queryCache.get<T>(key);
     if (cached && !currentlyStale) {
-      return cached;
+      // Sync this hook instance (important under React Strict Mode /
+      // multiple subscribers sharing the same query key).
+      return applyResult(cached);
     }
 
     if (queryCache.isPending(key)) {
       const pending = queryCache.getPending<T>(key);
       if (pending) {
         const result = await pending;
-        return queryCache.get<T>(key) ?? result;
+        const final = queryCache.get<T>(key) ?? result;
+        return applyResult(final);
       }
     }
 
@@ -80,16 +92,17 @@ export function useQuery<T>(
     try {
       const result = await promise;
 
+      queryCache.set<T | null>(key, (result as T | null) ?? null);
+      const final = queryCache.get<T | null>(key) as T | null;
+      // execute() already wrote api.data for the caller instance; still
+      // refresh fetch metadata for subscribers that awaited the pending path.
       setLastFetched(new Date());
       setIsStale(false);
-      queryCache.set<T | null>(key, (result as T | null) ?? null);
-
-      const final = queryCache.get<T | null>(key) as T | null;
       return final;
     } catch (error) {
       throw error;
     }
-  }, []);
+  }, [applyResult]);
 
   useEffect(() => {
     if (

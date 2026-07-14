@@ -1,19 +1,19 @@
 # Database Seeding
 
-This directory contains seed files to populate your database with test data for development and testing.
+This directory contains seed files to populate your database with sports betting test data for development and testing.
 
 ## Available Seed Files
 
 ### 1. `seed-simple.ts` (Recommended for quick testing)
 
-- **Purpose**: Quick setup with basic test data
-- **Content**: 3 categories, 3 bets, 7 odds, 3 votes
+- **Purpose**: Quick setup with basic sports test data
+- **Content**: 3 sports categories, 3 bets, 7 odds, 3 votes
 - **Use case**: Fast development setup, basic testing
 
 ### 2. `seed.ts` (Comprehensive testing scenarios)
 
-- **Purpose**: Comprehensive test data with various scenarios
-- **Content**: 6 categories, 8 bets with different statuses, multiple vote patterns
+- **Purpose**: Comprehensive sports test data with various scenarios
+- **Content**: 6 sports categories, 8 bets with different statuses, multiple vote patterns
 - **Use case**: Thorough testing of all features and edge cases
 
 ## How to Use
@@ -49,20 +49,29 @@ npm run db:reset
 
 ### Simple Seed (`seed-simple.ts`)
 
-- **Esportes**: Brasil vs Argentina bet with votes
-- **Política**: Presidential election bet
-- **Entretenimento**: Oscar movie bet with multiple options
+- **Futebol**: Brasil vs Argentina with votes
+- **Basquete**: NBA Finals bet
+- **MMA**: UFC 300 main event with multiple options
 
 ### Comprehensive Seed (`seed.ts`)
 
-1. **Active Sports Bet**: Brasil vs Argentina with leading favorite
-2. **Close Politics Race**: Presidential election with tight odds
-3. **Entertainment High Odds**: Oscar with various movie types
-4. **Resolved Technology Bet**: iPhone launch (already resolved)
-5. **Closed Economy Bet**: Bitcoin price prediction (closed for betting)
-6. **New Culture Bet**: Book prediction with no votes yet
-7. **Football Champions League**: Multi-team prediction
-8. **High Odds Underdog**: Série B team with 15x odds
+1. **Futebol**: Brasil vs Argentina Copa América (active, leading favorite)
+2. **Basquete**: NBA Finals with tight odds
+3. **MMA**: UFC 300 main event with high-odds options
+4. **Tênis**: Roland Garros champion (resolved)
+5. **Fórmula 1**: F1 championship (closed for betting)
+6. **Vôlei**: Superliga champion (no votes yet)
+7. **Futebol**: Champions League multi-team prediction
+8. **Futebol**: Série B Copa do Brasil underdog (15x odds)
+
+## Sports Categories
+
+- Futebol
+- Basquete
+- MMA
+- Tênis
+- Fórmula 1
+- Vôlei
 
 ## Database States Tested
 
@@ -84,11 +93,10 @@ The comprehensive seed also creates:
 
 ## Notes
 
+- All data is sports-only — no politics, entertainment, tech, or economy bets
 - All timestamps are realistic (spread over time)
 - Vote counts vary to test different UI states
 - Odds values range from 1.05x to 15x for variety
-- Categories cover major betting themes
-- Some bets are intentionally resolved/closed to test all statuses
 
 ## Troubleshooting
 
@@ -102,8 +110,8 @@ If you encounter issues:
 
 You can modify the seed files to:
 
-- Add more categories
-- Create specific bet scenarios
+- Add more sports categories
+- Create specific match scenarios
 - Adjust vote patterns
 - Change odds values
 - Add more admin users

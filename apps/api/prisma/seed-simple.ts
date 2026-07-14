@@ -1,105 +1,99 @@
 import { PrismaClient, BetStatus } from "@prisma/client";
+import { calculateOddsFromVotes } from "../src/utils/odds";
 
 const prisma = new PrismaClient();
+
+async function createOddsForBet(
+  betId: number,
+  titles: string[],
+  voteCounts: number[],
+) {
+  const values = calculateOddsFromVotes(voteCounts);
+
+  return Promise.all(
+    titles.map((title, index) =>
+      prisma.odd.create({
+        data: { title, value: values[index], betId },
+      }),
+    ),
+  );
+}
 
 async function main() {
   console.log("🌱 Starting simple database seeding...");
 
-  // Clear existing data
   console.log("🧹 Clearing existing data...");
   await prisma.vote.deleteMany();
   await prisma.odd.deleteMany();
   await prisma.bet.deleteMany();
   await prisma.category.deleteMany();
 
-  // Create basic categories
-  console.log("📂 Creating categories...");
-  const esportes = await prisma.category.create({
-    data: { title: "Esportes" },
+  console.log("📂 Creating sports categories...");
+  const futebol = await prisma.category.create({
+    data: { title: "Futebol" },
   });
 
-  const politica = await prisma.category.create({
-    data: { title: "Política" },
+  const basquete = await prisma.category.create({
+    data: { title: "Basquete" },
   });
 
-  const entretenimento = await prisma.category.create({
-    data: { title: "Entretenimento" },
+  const mma = await prisma.category.create({
+    data: { title: "MMA" },
   });
 
-  // Create sample bets
-  console.log("🎲 Creating sample bets...");
+  console.log("🎲 Creating sample sports bets...");
 
-  // Bet 1: Sports
   const bet1 = await prisma.bet.create({
     data: {
       title: "Brasil vs Argentina - Quem ganha?",
       description: "Final da Copa América 2024",
       status: BetStatus.open,
-      categoryId: esportes.id,
+      categoryId: futebol.id,
     },
   });
 
-  const bet1Odds = await Promise.all([
-    prisma.odd.create({
-      data: { title: "Brasil", value: 2.1, betId: bet1.id },
-    }),
-    prisma.odd.create({
-      data: { title: "Argentina", value: 1.8, betId: bet1.id },
-    }),
-  ]);
+  const bet1Odds = await createOddsForBet(
+    bet1.id,
+    ["Brasil", "Argentina"],
+    [2, 1],
+  );
 
-  // Add some votes
   await Promise.all([
     prisma.vote.create({ data: { oddId: bet1Odds[0].id } }),
     prisma.vote.create({ data: { oddId: bet1Odds[0].id } }),
     prisma.vote.create({ data: { oddId: bet1Odds[1].id } }),
   ]);
 
-  // Bet 2: Politics
   const bet2 = await prisma.bet.create({
     data: {
-      title: "Próximo Presidente dos EUA",
-      description: "Eleições 2024",
+      title: "Final da NBA 2024",
+      description: "Celtics ou Mavericks?",
       status: BetStatus.open,
-      categoryId: politica.id,
+      categoryId: basquete.id,
     },
   });
 
-  await Promise.all([
-    prisma.odd.create({
-      data: { title: "Candidato A", value: 1.5, betId: bet2.id },
-    }),
-    prisma.odd.create({
-      data: { title: "Candidato B", value: 1.6, betId: bet2.id },
-    }),
-  ]);
+  await createOddsForBet(bet2.id, ["Boston Celtics", "Dallas Mavericks"], [0, 0]);
 
-  // Bet 3: Entertainment
   const bet3 = await prisma.bet.create({
     data: {
-      title: "Melhor Filme do Oscar 2024",
-      description: "Qual filme ganhará?",
+      title: "UFC 300 - Vencedor do Main Event",
+      description: "Quem vence a luta principal?",
       status: BetStatus.open,
-      categoryId: entretenimento.id,
+      categoryId: mma.id,
     },
   });
 
-  await Promise.all([
-    prisma.odd.create({
-      data: { title: "Drama", value: 2.5, betId: bet3.id },
-    }),
-    prisma.odd.create({
-      data: { title: "Ação", value: 4.2, betId: bet3.id },
-    }),
-    prisma.odd.create({
-      data: { title: "Comédia", value: 6.8, betId: bet3.id },
-    }),
-  ]);
+  await createOddsForBet(
+    bet3.id,
+    ["Alex Pereira", "Jamahal Hill", "Vitória no 1º round"],
+    [0, 0, 0],
+  );
 
   console.log("✅ Seeding completed!");
   console.log("📊 Created:");
-  console.log("   - 3 categories");
-  console.log("   - 3 bets");
+  console.log("   - 3 sports categories (Futebol, Basquete, MMA)");
+  console.log("   - 3 sports bets");
   console.log("   - 7 odds");
   console.log("   - 3 votes");
 }

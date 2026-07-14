@@ -2,10 +2,28 @@ import { PrismaClient, BetStatus, OddResult } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+async function seedVotes(
+  oddId: number,
+  count: number,
+  maxAgeMs = 86400000,
+) {
+  await Promise.all(
+    Array(count)
+      .fill(null)
+      .map(() =>
+        prisma.vote.create({
+          data: {
+            oddId,
+            createdAt: new Date(Date.now() - Math.random() * maxAgeMs),
+          },
+        }),
+      ),
+  );
+}
+
 async function main() {
   console.log("🌱 Starting database seeding...");
 
-  // Clear existing data (in correct order due to foreign key constraints)
   console.log("🧹 Clearing existing data...");
   await prisma.vote.deleteMany();
   await prisma.odd.deleteMany();
@@ -14,70 +32,51 @@ async function main() {
   await prisma.adminAction.deleteMany();
   await prisma.admin.deleteMany();
 
-  // Create Categories
-  console.log("📂 Creating categories...");
+  console.log("📂 Creating sports categories...");
   const categories = await Promise.all([
     prisma.category.create({
-      data: {
-        title: "Esportes",
-        createdAt: new Date("2024-01-01"),
-      },
+      data: { title: "Futebol", createdAt: new Date("2024-01-01") },
     }),
     prisma.category.create({
-      data: {
-        title: "Política",
-        createdAt: new Date("2024-01-02"),
-      },
+      data: { title: "Basquete", createdAt: new Date("2024-01-02") },
     }),
     prisma.category.create({
-      data: {
-        title: "Entretenimento",
-        createdAt: new Date("2024-01-03"),
-      },
+      data: { title: "MMA", createdAt: new Date("2024-01-03") },
     }),
     prisma.category.create({
-      data: {
-        title: "Tecnologia",
-        createdAt: new Date("2024-01-04"),
-      },
+      data: { title: "Tênis", createdAt: new Date("2024-01-04") },
     }),
     prisma.category.create({
-      data: {
-        title: "Economia",
-        createdAt: new Date("2024-01-05"),
-      },
+      data: { title: "Fórmula 1", createdAt: new Date("2024-01-05") },
     }),
     prisma.category.create({
-      data: {
-        title: "Cultura",
-        createdAt: new Date("2024-01-06"),
-      },
+      data: { title: "Vôlei", createdAt: new Date("2024-01-06") },
     }),
   ]);
 
-  console.log(`✅ Created ${categories.length} categories`);
+  const [futebol, basquete, mma, tenis, formula1, volei] = categories;
 
-  // Create Bets with various scenarios
-  console.log("🎲 Creating bets...");
+  console.log(`✅ Created ${categories.length} sports categories`);
 
-  // Scenario 1: Active sports bet with multiple votes
-  const sportsBet = await prisma.bet.create({
+  console.log("🎲 Creating sports bets...");
+
+  // Active football final with votes
+  const copaBet = await prisma.bet.create({
     data: {
       title: "Brasil vs Argentina - Copa América 2024",
       description: "Quem será o vencedor da final da Copa América?",
       status: BetStatus.open,
-      categoryId: categories[0].id, // Esportes
+      categoryId: futebol.id,
       createdAt: new Date("2024-01-15"),
     },
   });
 
-  // Add odds for sports bet
-  const sportsOdds = await Promise.all([
+  const copaOdds = await Promise.all([
     prisma.odd.create({
       data: {
         title: "Brasil",
         value: 2.1,
-        betId: sportsBet.id,
+        betId: copaBet.id,
         createdAt: new Date("2024-01-15"),
       },
     }),
@@ -85,7 +84,7 @@ async function main() {
       data: {
         title: "Argentina",
         value: 1.8,
-        betId: sportsBet.id,
+        betId: copaBet.id,
         createdAt: new Date("2024-01-15"),
       },
     }),
@@ -93,340 +92,222 @@ async function main() {
       data: {
         title: "Empate",
         value: 3.2,
-        betId: sportsBet.id,
+        betId: copaBet.id,
         createdAt: new Date("2024-01-15"),
       },
     }),
   ]);
 
-  // Add votes to sports bet (Brasil leading)
-  await Promise.all([
-    // 5 votes for Brasil
-    ...Array(5)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: sportsOdds[0].id,
-            createdAt: new Date(Date.now() - Math.random() * 86400000), // Random time in last 24h
-          },
-        }),
-      ),
-    // 3 votes for Argentina
-    ...Array(3)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: sportsOdds[1].id,
-            createdAt: new Date(Date.now() - Math.random() * 86400000),
-          },
-        }),
-      ),
-    // 1 vote for Empate
-    prisma.vote.create({
-      data: {
-        oddId: sportsOdds[2].id,
-        createdAt: new Date(Date.now() - Math.random() * 86400000),
-      },
-    }),
-  ]);
+  await seedVotes(copaOdds[0].id, 5);
+  await seedVotes(copaOdds[1].id, 3);
+  await seedVotes(copaOdds[2].id, 1);
 
-  // Scenario 2: Politics bet with close odds
-  const politicsBet = await prisma.bet.create({
+  // Close NBA finals race
+  const nbaBet = await prisma.bet.create({
     data: {
-      title: "Próximo Presidente dos EUA - 2024",
-      description: "Quem será eleito presidente dos Estados Unidos?",
+      title: "Final da NBA 2024 - Campeão",
+      description: "Qual time será campeão da NBA?",
       status: BetStatus.open,
-      categoryId: categories[1].id, // Política
+      categoryId: basquete.id,
       createdAt: new Date("2024-01-10"),
     },
   });
 
-  const politicsOdds = await Promise.all([
+  const nbaOdds = await Promise.all([
     prisma.odd.create({
       data: {
-        title: "Candidato A",
+        title: "Boston Celtics",
         value: 1.5,
-        betId: politicsBet.id,
+        betId: nbaBet.id,
         createdAt: new Date("2024-01-10"),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Candidato B",
+        title: "Dallas Mavericks",
         value: 1.6,
-        betId: politicsBet.id,
+        betId: nbaBet.id,
         createdAt: new Date("2024-01-10"),
       },
     }),
   ]);
 
-  // Close votes for politics
-  await Promise.all([
-    // 7 votes for Candidato A
-    ...Array(7)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: politicsOdds[0].id,
-            createdAt: new Date(Date.now() - Math.random() * 172800000), // Random time in last 48h
-          },
-        }),
-      ),
-    // 8 votes for Candidato B
-    ...Array(8)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: politicsOdds[1].id,
-            createdAt: new Date(Date.now() - Math.random() * 172800000),
-          },
-        }),
-      ),
-  ]);
+  await seedVotes(nbaOdds[0].id, 7, 172800000);
+  await seedVotes(nbaOdds[1].id, 8, 172800000);
 
-  // Scenario 3: Entertainment bet with high odds
-  const entertainmentBet = await prisma.bet.create({
+  // MMA card with high odds underdog
+  const ufcBet = await prisma.bet.create({
     data: {
-      title: "Próximo filme a ganhar Oscar de Melhor Filme",
-      description: "Qual filme será o vencedor do Oscar 2024?",
+      title: "UFC 300 - Vencedor do Main Event",
+      description: "Quem vence a luta principal do UFC 300?",
       status: BetStatus.open,
-      categoryId: categories[2].id, // Entretenimento
+      categoryId: mma.id,
       createdAt: new Date("2024-01-20"),
     },
   });
 
-  const entertainmentOdds = await Promise.all([
+  const ufcOdds = await Promise.all([
     prisma.odd.create({
       data: {
-        title: "Filme Drama",
+        title: "Alex Pereira",
         value: 2.5,
-        betId: entertainmentBet.id,
+        betId: ufcBet.id,
         createdAt: new Date("2024-01-20"),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Filme Ação",
+        title: "Jamahal Hill",
         value: 4.2,
-        betId: entertainmentBet.id,
+        betId: ufcBet.id,
         createdAt: new Date("2024-01-20"),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Filme Comédia",
+        title: "Empate técnico",
         value: 6.8,
-        betId: entertainmentBet.id,
+        betId: ufcBet.id,
         createdAt: new Date("2024-01-20"),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Filme Terror",
+        title: "Vitória no 1º round",
         value: 12.5,
-        betId: entertainmentBet.id,
+        betId: ufcBet.id,
         createdAt: new Date("2024-01-20"),
       },
     }),
   ]);
 
-  // Few votes for entertainment
-  await Promise.all([
-    // 2 votes for Drama
-    ...Array(2)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: entertainmentOdds[0].id,
-            createdAt: new Date(Date.now() - Math.random() * 259200000), // Random time in last 3 days
-          },
-        }),
-      ),
-    // 1 vote for Ação
-    prisma.vote.create({
-      data: {
-        oddId: entertainmentOdds[1].id,
-        createdAt: new Date(Date.now() - Math.random() * 259200000),
-      },
-    }),
-  ]);
+  await seedVotes(ufcOdds[0].id, 2, 259200000);
+  await seedVotes(ufcOdds[1].id, 1, 259200000);
 
-  // Scenario 4: Technology bet with resolved status
-  const techBet = await prisma.bet.create({
+  // Resolved tennis Grand Slam
+  const rolandBet = await prisma.bet.create({
     data: {
-      title: "Apple lançará iPhone 16 em 2024?",
-      description: "A Apple vai lançar o iPhone 16 este ano?",
+      title: "Roland Garros 2024 - Campeão masculino",
+      description: "Quem vence o título de simples masculino?",
       status: BetStatus.resolved,
-      categoryId: categories[3].id, // Tecnologia
+      categoryId: tenis.id,
       createdAt: new Date("2024-01-05"),
       resolvedAt: new Date("2024-01-25"),
     },
   });
 
-  const techOdds = await Promise.all([
+  const rolandOdds = await Promise.all([
     prisma.odd.create({
       data: {
-        title: "Sim",
+        title: "Carlos Alcaraz",
         value: 1.2,
-        betId: techBet.id,
+        betId: rolandBet.id,
         result: OddResult.won,
         createdAt: new Date("2024-01-05"),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Não",
+        title: "Novak Djokovic",
         value: 4.5,
-        betId: techBet.id,
+        betId: rolandBet.id,
         result: OddResult.lost,
         createdAt: new Date("2024-01-05"),
       },
     }),
   ]);
 
-  // Many votes for tech bet (resolved)
-  await Promise.all([
-    // 15 votes for "Sim" (winner)
-    ...Array(15)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: techOdds[0].id,
-            createdAt: new Date(Date.now() - Math.random() * 86400000 * 7), // Random time in last week
-          },
-        }),
-      ),
-    // 3 votes for "Não" (loser)
-    ...Array(3)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: techOdds[1].id,
-            createdAt: new Date(Date.now() - Math.random() * 86400000 * 7),
-          },
-        }),
-      ),
-  ]);
+  await seedVotes(rolandOdds[0].id, 15, 86400000 * 7);
+  await seedVotes(rolandOdds[1].id, 3, 86400000 * 7);
 
-  // Scenario 5: Economy bet with closed status
-  const economyBet = await prisma.bet.create({
+  // Closed F1 championship
+  const f1Bet = await prisma.bet.create({
     data: {
-      title: "Bitcoin atingirá $100.000 em 2024?",
-      description:
-        "O Bitcoin conseguirá alcançar o valor de $100.000 este ano?",
+      title: "F1 2024 - Campeão do Mundial",
+      description: "Quem será campeão da Fórmula 1 em 2024?",
       status: BetStatus.closed,
-      categoryId: categories[4].id, // Economia
+      categoryId: formula1.id,
       createdAt: new Date("2024-01-08"),
     },
   });
 
-  const economyOdds = await Promise.all([
+  const f1Odds = await Promise.all([
     prisma.odd.create({
       data: {
-        title: "Sim",
+        title: "Max Verstappen",
         value: 2.8,
-        betId: economyBet.id,
+        betId: f1Bet.id,
         createdAt: new Date("2024-01-08"),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Não",
+        title: "Lando Norris",
         value: 1.4,
-        betId: economyBet.id,
+        betId: f1Bet.id,
         createdAt: new Date("2024-01-08"),
       },
     }),
   ]);
 
-  // Moderate votes for economy bet
-  await Promise.all([
-    // 4 votes for "Sim"
-    ...Array(4)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: economyOdds[0].id,
-            createdAt: new Date(Date.now() - Math.random() * 86400000 * 5), // Random time in last 5 days
-          },
-        }),
-      ),
-    // 6 votes for "Não"
-    ...Array(6)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: economyOdds[1].id,
-            createdAt: new Date(Date.now() - Math.random() * 86400000 * 5),
-          },
-        }),
-      ),
-  ]);
+  await seedVotes(f1Odds[0].id, 4, 86400000 * 5);
+  await seedVotes(f1Odds[1].id, 6, 86400000 * 5);
 
-  // Scenario 6: Culture bet with no votes yet
-  const cultureBet = await prisma.bet.create({
+  // New volleyball bet with no votes
+  const voleiBet = await prisma.bet.create({
     data: {
-      title: "Qual será o livro mais vendido de 2024?",
-      description: "Predição sobre o bestseller do ano",
+      title: "Superliga Masculina 2024 - Campeão",
+      description: "Qual time vence a Superliga de vôlei?",
       status: BetStatus.open,
-      categoryId: categories[5].id, // Cultura
-      createdAt: new Date(Date.now() - 3600000), // 1 hour ago
+      categoryId: volei.id,
+      createdAt: new Date(Date.now() - 3600000),
     },
   });
 
   await Promise.all([
     prisma.odd.create({
       data: {
-        title: "Ficção Científica",
+        title: "Sada Cruzeiro",
         value: 3.5,
-        betId: cultureBet.id,
+        betId: voleiBet.id,
         createdAt: new Date(Date.now() - 3600000),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Romance",
+        title: "Funvic Taubaté",
         value: 2.2,
-        betId: cultureBet.id,
+        betId: voleiBet.id,
         createdAt: new Date(Date.now() - 3600000),
       },
     }),
     prisma.odd.create({
       data: {
-        title: "Não-ficção",
+        title: "Minas Tênis Clube",
         value: 4.1,
-        betId: cultureBet.id,
+        betId: voleiBet.id,
         createdAt: new Date(Date.now() - 3600000),
       },
     }),
   ]);
 
-  // Scenario 7: More sports bets for variety
-  const footballBet = await prisma.bet.create({
+  // Champions League multi-team
+  const championsBet = await prisma.bet.create({
     data: {
       title: "Campeão da Champions League 2024",
       description: "Qual time será campeão da Champions League?",
       status: BetStatus.open,
-      categoryId: categories[0].id, // Esportes
-      createdAt: new Date(Date.now() - 7200000), // 2 hours ago
+      categoryId: futebol.id,
+      createdAt: new Date(Date.now() - 7200000),
     },
   });
 
-  const footballOdds = await Promise.all([
+  const championsOdds = await Promise.all([
     prisma.odd.create({
       data: {
         title: "Real Madrid",
         value: 3.2,
-        betId: footballBet.id,
+        betId: championsBet.id,
         createdAt: new Date(Date.now() - 7200000),
       },
     }),
@@ -434,7 +315,7 @@ async function main() {
       data: {
         title: "Manchester City",
         value: 2.8,
-        betId: footballBet.id,
+        betId: championsBet.id,
         createdAt: new Date(Date.now() - 7200000),
       },
     }),
@@ -442,7 +323,7 @@ async function main() {
       data: {
         title: "Bayern Munich",
         value: 4.5,
-        betId: footballBet.id,
+        betId: championsBet.id,
         createdAt: new Date(Date.now() - 7200000),
       },
     }),
@@ -450,57 +331,28 @@ async function main() {
       data: {
         title: "PSG",
         value: 6.0,
-        betId: footballBet.id,
+        betId: championsBet.id,
         createdAt: new Date(Date.now() - 7200000),
       },
     }),
   ]);
 
-  // Some votes for football
-  await Promise.all([
-    // 3 votes for Real Madrid
-    ...Array(3)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: footballOdds[0].id,
-            createdAt: new Date(Date.now() - Math.random() * 3600000), // Random time in last hour
-          },
-        }),
-      ),
-    // 2 votes for Manchester City
-    ...Array(2)
-      .fill(null)
-      .map(() =>
-        prisma.vote.create({
-          data: {
-            oddId: footballOdds[1].id,
-            createdAt: new Date(Date.now() - Math.random() * 3600000),
-          },
-        }),
-      ),
-    // 1 vote for Bayern Munich
-    prisma.vote.create({
-      data: {
-        oddId: footballOdds[2].id,
-        createdAt: new Date(Date.now() - Math.random() * 3600000),
-      },
-    }),
-  ]);
+  await seedVotes(championsOdds[0].id, 3, 3600000);
+  await seedVotes(championsOdds[1].id, 2, 3600000);
+  await seedVotes(championsOdds[2].id, 1, 3600000);
 
-  // Scenario 8: Bet with very high odds (underdog)
+  // High odds underdog - Série B Copa do Brasil
   const underdogBet = await prisma.bet.create({
     data: {
       title: "Time da Série B será campeão da Copa do Brasil",
       description: "Um time da Série B conseguirá ganhar a Copa do Brasil?",
       status: BetStatus.open,
-      categoryId: categories[0].id, // Esportes
-      createdAt: new Date(Date.now() - 1800000), // 30 minutes ago
+      categoryId: futebol.id,
+      createdAt: new Date(Date.now() - 1800000),
     },
   });
 
-  await Promise.all([
+  const underdogOdds = await Promise.all([
     prisma.odd.create({
       data: {
         title: "Sim",
@@ -519,27 +371,23 @@ async function main() {
     }),
   ]);
 
-  // 1 brave vote for the underdog
   await prisma.vote.create({
     data: {
-      oddId: (await prisma.odd.findFirst({
-        where: { betId: underdogBet.id, title: "Sim" },
-      }))!.id,
-      createdAt: new Date(Date.now() - 900000), // 15 minutes ago
+      oddId: underdogOdds[0].id,
+      createdAt: new Date(Date.now() - 900000),
     },
   });
 
-  console.log("✅ Created various bet scenarios:");
-  console.log("  - Active sports bet with leading favorite");
-  console.log("  - Close politics race");
-  console.log("  - Entertainment with high odds options");
-  console.log("  - Resolved technology bet");
-  console.log("  - Closed economy bet");
-  console.log("  - New culture bet with no votes");
-  console.log("  - Football Champions League prediction");
-  console.log("  - High odds underdog bet");
+  console.log("✅ Created sports bet scenarios:");
+  console.log("  - Copa América final (futebol, ativa)");
+  console.log("  - NBA Finals (basquete, corrida apertada)");
+  console.log("  - UFC 300 main event (MMA, odds altas)");
+  console.log("  - Roland Garros (tênis, resolvida)");
+  console.log("  - F1 campeonato (Fórmula 1, fechada)");
+  console.log("  - Superliga vôlei (sem votos)");
+  console.log("  - Champions League (futebol)");
+  console.log("  - Zebra Série B na Copa (futebol)");
 
-  // Create an admin user for testing
   console.log("👤 Creating admin user...");
   const { hashPassword } = await import("../src/utils/auth");
   const adminPasswordHash = await hashPassword("admin123");
@@ -553,15 +401,12 @@ async function main() {
     },
   });
 
-  console.log("✅ Created admin user");
-
-  // Create some admin actions
   await prisma.adminAction.create({
     data: {
       adminId: admin.id,
       actionType: "CREATE_BET",
-      targetId: sportsBet.id,
-      description: "Created sports bet: Brasil vs Argentina",
+      targetId: copaBet.id,
+      description: "Created bet: Brasil vs Argentina - Copa América",
       createdAt: new Date("2024-01-15"),
     },
   });
@@ -570,15 +415,12 @@ async function main() {
     data: {
       adminId: admin.id,
       actionType: "RESOLVE_BET",
-      targetId: techBet.id,
-      description: "Resolved technology bet: iPhone 16 launch",
+      targetId: rolandBet.id,
+      description: "Resolved bet: Roland Garros 2024 champion",
       createdAt: new Date("2024-01-25"),
     },
   });
 
-  console.log("✅ Created admin actions");
-
-  // Summary
   const totalBets = await prisma.bet.count();
   const totalOdds = await prisma.odd.count();
   const totalVotes = await prisma.vote.count();
@@ -586,7 +428,7 @@ async function main() {
 
   console.log("\n🎉 Seeding completed successfully!");
   console.log(`📊 Database Summary:`);
-  console.log(`   - Categories: ${totalCategories}`);
+  console.log(`   - Sports categories: ${totalCategories}`);
   console.log(`   - Bets: ${totalBets}`);
   console.log(`   - Odds: ${totalOdds}`);
   console.log(`   - Votes: ${totalVotes}`);

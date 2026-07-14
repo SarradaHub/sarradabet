@@ -80,10 +80,7 @@ describe("BetService", () => {
       title: "Test Bet",
       description: "Test Description",
       categoryId: 1,
-      odds: [
-        { title: "Option 1", value: 2.0 },
-        { title: "Option 2", value: 3.0 },
-      ],
+      odds: [{ title: "Option 1" }, { title: "Option 2" }],
     };
 
     it("should create bet successfully", async () => {
@@ -91,7 +88,7 @@ describe("BetService", () => {
         id: 1,
         odds: [
           { id: 1, title: "Option 1", value: 2.0 },
-          { id: 2, title: "Option 2", value: 3.0 },
+          { id: 2, title: "Option 2", value: 2.0 },
         ],
       });
       mockRepository.create.mockResolvedValue(mockCreatedBet as any);
@@ -101,40 +98,6 @@ describe("BetService", () => {
 
       expect(result).toBe(mockCreatedBet);
       expect(mockRepository.create).toHaveBeenCalledWith(mockCreateData);
-    });
-
-    it("should throw BadRequestError for invalid odds values", async () => {
-      const invalidData = {
-        ...mockCreateData,
-        odds: [
-          { title: "Option 1", value: 0.5 }, // too low triggers min/max error
-          { title: "Option 2", value: 2.0 },
-        ],
-      };
-
-      await expect(betService.create(invalidData)).rejects.toThrow(
-        BadRequestError,
-      );
-      await expect(betService.create(invalidData)).rejects.toThrow(
-        "Odds values must be between 1.01 and 1000",
-      );
-    });
-
-    it("should throw BadRequestError for unrealistic probabilities", async () => {
-      const invalidData = {
-        ...mockCreateData,
-        odds: [
-          { title: "Option 1", value: 1.1 }, // Very high probability
-          { title: "Option 2", value: 1.1 }, // Very high probability
-        ],
-      };
-
-      await expect(betService.create(invalidData)).rejects.toThrow(
-        BadRequestError,
-      );
-      await expect(betService.create(invalidData)).rejects.toThrow(
-        "Odds values do not represent realistic probabilities",
-      );
     });
 
     it("should throw NotFoundError when category does not exist", async () => {

@@ -167,6 +167,8 @@ describe("useCategories", () => {
         data: { category: mockCreatedCategory },
       });
 
+      queryCache.set("categories-{}", [{ id: 99, title: "Stale" }]);
+
       const { result } = renderHook(() => useCreateCategory());
 
       await act(async () => {
@@ -182,6 +184,7 @@ describe("useCategories", () => {
       });
 
       expect(mockCategoryService.create).toHaveBeenCalledWith(mockCategoryData);
+      expect(queryCache.get("categories-{}")).toBe(null);
     });
 
     it("should handle creation error", async () => {

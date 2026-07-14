@@ -42,10 +42,17 @@ export type CreateBetDto = {
   categoryId: number;
   odds: Array<{
     title: string;
-    value: number;
   }>;
 };
 
-export type UpdateBetDto = Partial<CreateBetDto> & {
+export type UpdateBetDto = {
+  title?: string;
+  description?: string;
+  categoryId?: number;
   status?: BetStatus;
+  odds?: Array<{
+    id: number;
+    title?: string;
+    value: number;
+  }>;
 };

@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { BaseController } from "../../../core/base/BaseController";
+import {
+  CATEGORY_LIST_CACHE,
+  setCacheControl,
+} from "../../../core/middleware/cacheHeaders";
 import { CategoryService } from "../services/CategoryService";
 import {
   CreateCategoryInput,
@@ -24,6 +28,12 @@ export class CategoryController extends BaseController<
     try {
       const params = this.parsePaginationParams(req);
       const result = await this.categoryService.findAll(params);
+
+      if (result.data.length === 0) {
+        setCacheControl(res, { noStore: true });
+      } else {
+        setCacheControl(res, CATEGORY_LIST_CACHE);
+      }
 
       this.sendSuccess(res, result, 200, "Categories retrieved successfully");
     } catch (error) {

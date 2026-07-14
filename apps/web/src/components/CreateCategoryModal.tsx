@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useCreateCategory } from "../hooks/useCategories";
 import { CreateCategoryDto, Category } from "../types/category";
-import Modal from "./ui/Modal";
+import SportsbookModal, {
+  sportsbookFieldClass,
+} from "./ui/SportsbookModal";
 import { Button } from "./ui/Button";
 import { ErrorMessage } from "./ui/ErrorMessage";
 import { Input } from "@sarradahub/design-system";
@@ -78,13 +80,14 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
   };
 
   return (
-    <Modal
+    <SportsbookModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Criar Nova Categoria"
+      title="Nova categoria"
+      description="Organize mercados por esporte ou tema"
       size="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <Input
             id="title"
@@ -94,14 +97,13 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, title: e.target.value }))
             }
-            placeholder="Digite o título da categoria"
+            placeholder="Ex: Futebol, MMA, Basquete"
             maxLength={50}
             required
-            aria-describedby="title-help"
-            className="dark:bg-neutral-700 dark:border-neutral-600 dark:text-white dark:focus:ring-warning-400"
+            className={sportsbookFieldClass}
           />
-          <p id="title-help" className="text-xs text-gray-400 mt-1">
-            Use apenas letras, números, espaços, hífens e underscores
+          <p className="text-xs text-sportsbook-muted mt-2">
+            Letras, números, espaços, hífens e underscores
           </p>
         </div>
 
@@ -116,7 +118,7 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
           />
         )}
 
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-2 border-t sb-border">
           <Button
             type="button"
             variant="secondary"
@@ -129,12 +131,13 @@ const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
             type="submit"
             loading={createCategoryMutation.loading}
             disabled={createCategoryMutation.loading}
+            className="sb-brand-gradient text-black font-display font-semibold tracking-wide hover:from-warning-300 hover:to-orange-400"
           >
-            Criar Categoria
+            Criar categoria
           </Button>
         </div>
       </form>
-    </Modal>
+    </SportsbookModal>
   );
 };
 
