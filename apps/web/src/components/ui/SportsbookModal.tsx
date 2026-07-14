@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -59,30 +59,29 @@ const SportsbookModal = ({
     return null;
   }
 
-  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (closeOnOverlayClick && event.target === event.currentTarget) {
-      onClose();
-    }
-  };
-
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sportsbook-modal-title"
-    >
-      <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-        aria-hidden="true"
-      />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {closeOnOverlayClick ? (
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm cursor-default"
+          aria-label="Fechar modal"
+          onClick={onClose}
+        />
+      ) : (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+      )}
 
       <div
         ref={panelRef}
         tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sportsbook-modal-title"
         className={`relative w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col sb-surface-raised border sb-border rounded-lg shadow-2xl focus:outline-none`}
-        onClick={(event) => event.stopPropagation()}
       >
         <header className="flex items-center justify-between gap-3 px-5 py-4 border-b sb-border shrink-0">
           <div className="flex items-center gap-3 min-w-0">
