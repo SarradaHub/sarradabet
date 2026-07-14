@@ -1,5 +1,5 @@
 import { BaseService } from "../core/base/BaseService";
-import { Vote, CreateVoteDto } from "../types/vote";
+import { Vote, CreateVoteDto, CreateVoteResponse } from "../types/vote";
 import { ApiResponse } from "../core/interfaces/IService";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -7,6 +7,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export class VoteService extends BaseService<Vote, CreateVoteDto, never> {
   constructor() {
     super(API_BASE_URL, "votes");
+  }
+
+  async create(data: CreateVoteDto): Promise<ApiResponse<CreateVoteResponse>> {
+    return super.create(data) as Promise<ApiResponse<CreateVoteResponse>>;
   }
 
   async update(): Promise<ApiResponse<Vote>> {

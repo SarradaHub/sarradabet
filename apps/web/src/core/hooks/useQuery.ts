@@ -105,6 +105,32 @@ export function useQuery<T>(
   }, [applyResult]);
 
   useEffect(() => {
+    const unsubscribe = queryCache.subscribe((notification) => {
+      const key = queryKeyRef.current;
+      const affected = notification.keys.includes(key);
+
+      if (!affected) {
+        return;
+      }
+
+      if (notification.type === "clear") {
+        setIsStale(true);
+        if (enabled) {
+          void refetch();
+        }
+        return;
+      }
+
+      const cached = queryCache.getRaw<T>(key);
+      if (cached !== null) {
+        applyResult(cached);
+      }
+    });
+
+    return unsubscribe;
+  }, [enabled, refetch, applyResult]);
+
+  useEffect(() => {
     if (
       enabled &&
       (refetchOnMount || lastFetched === null) &&
