@@ -22,10 +22,27 @@ export const CreateOddSchema = z.object({
     .min(1, "Odd title is required")
     .max(100, "Odd title cannot exceed 100 characters")
     .trim(),
+});
+
+export const UpdateOddValueSchema = z.object({
+  id: z.number().int().positive("Odd ID must be a positive integer"),
+  title: z
+    .string()
+    .min(1, "Odd title is required")
+    .max(100, "Odd title cannot exceed 100 characters")
+    .trim()
+    .optional(),
   value: z
     .number()
     .min(1.01, "Odd value must be greater than 1.00")
     .max(1000, "Odd value cannot exceed 1000"),
+});
+
+export const UpdateBetOddsSchema = z.object({
+  odds: z
+    .array(UpdateOddValueSchema)
+    .min(2, "At least 2 odds are required")
+    .max(10, "Cannot have more than 10 odds"),
 });
 
 export const CreateAdminSchema = z.object({
@@ -119,9 +136,15 @@ export const UpdateBetSchema = z.object({
   categoryId: IdSchema.optional(),
   status: z.enum(["open", "closed", "resolved"]).optional(),
   odds: z
-    .array(CreateOddSchema)
+    .array(UpdateOddValueSchema)
     .min(2, "At least 2 odds are required")
     .max(10, "Cannot have more than 10 odds")
+    .refine((odds) => {
+      const titles = odds
+        .map((odd) => odd.title?.toLowerCase().trim())
+        .filter((title): title is string => Boolean(title));
+      return new Set(titles).size === titles.length;
+    }, "Odd titles must be unique")
     .optional(),
 });
 

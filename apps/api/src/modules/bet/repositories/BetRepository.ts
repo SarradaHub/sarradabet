@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import type { BetEntity, OddsEntity } from "../../../types/bet.types";
 import { BaseRepository } from "../../../core/base/BaseRepository";
 import { FindManyParams } from "../../../core/interfaces/IRepository";
+import { calculateOddsFromVotes } from "../../../utils/odds";
 import {
   CreateBetInput,
   UpdateBetInput,
@@ -90,6 +91,10 @@ export class BetRepository extends BaseRepository<
   }
 
   async create(data: CreateBetInput): Promise<BetWithOdds> {
+    const initialValues = calculateOddsFromVotes(
+      data.odds.map(() => 0),
+    );
+
     return this.executeTransaction(async (tx) => {
       const bet = await tx.bet.create({
         data: {
@@ -97,9 +102,9 @@ export class BetRepository extends BaseRepository<
           description: data.description,
           categoryId: data.categoryId,
           odds: {
-            create: data.odds.map((odd) => ({
+            create: data.odds.map((odd, index) => ({
               title: odd.title,
-              value: odd.value,
+              value: initialValues[index],
             })),
           },
         },
@@ -133,6 +138,64 @@ export class BetRepository extends BaseRepository<
     where: { id: number },
     data: UpdateBetInput,
   ): Promise<BetWithOdds> {
+    if (data.odds?.length) {
+      return this.executeTransaction(async (tx) => {
+        await tx.bet.update({
+          where,
+          data: {
+            ...(data.title && { title: data.title }),
+            ...(data.description !== undefined && {
+              description: data.description,
+            }),
+            ...(data.categoryId && { categoryId: data.categoryId }),
+            ...(data.status && { status: data.status }),
+          },
+        });
+
+        await Promise.all(
+          data.odds!.map((odd) =>
+            tx.odd.update({
+              where: { id: odd.id },
+              data: {
+                value: odd.value,
+                ...(odd.title && { title: odd.title }),
+              },
+            }),
+          ),
+        );
+
+        const updatedBet = await tx.bet.findUnique({
+          where,
+          include: {
+            odds: {
+              include: {
+                _count: {
+                  select: { votes: true },
+                },
+              },
+            },
+            category: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        });
+
+        if (!updatedBet) {
+          throw new Error(`Bet with id ${where.id} not found`);
+        }
+
+        return this.transformBetWithVotes(
+          updatedBet as unknown as BetEntity & {
+            odds: Array<OddsEntity & { _count: { votes: number } }>;
+            category?: { id: number; title: string };
+          },
+        );
+      });
+    }
+
     const updatedBet = await this.prisma.bet.update({
       where,
       data: {

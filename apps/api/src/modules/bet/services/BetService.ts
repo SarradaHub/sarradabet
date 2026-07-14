@@ -16,6 +16,7 @@ import {
 import { emitBetCreated, emitBetUpdated } from "../../../realtime/emitter";
 import { toBetListItem } from "../mappers/bet.mapper";
 import { cacheService } from "../../../core/cache/CacheService";
+import { validateManualOddsValues } from "../../../utils/odds";
 
 export class BetService extends BaseService<
   BetWithOdds,
@@ -64,9 +65,6 @@ export class BetService extends BaseService<
   async create(data: CreateBetInput): Promise<BetWithOdds> {
     await this.validateBusinessRules(data);
 
-    // Validate that odds values are reasonable
-    this.validateOddsValues(data.odds);
-
     // Validate that category exists (business rule)
     await this.validateCategoryExists(data.categoryId);
 
@@ -90,6 +88,8 @@ export class BetService extends BaseService<
 
     // If updating odds, validate them
     if (data.odds) {
+      const bet = await this.findById(id);
+      this.validateOddsBelongToBet(bet, data.odds);
       this.validateOddsValues(data.odds);
     }
 
@@ -209,18 +209,27 @@ export class BetService extends BaseService<
   }
 
   private validateOddsValues(odds: { value: number }[]): void {
-    // First validate bounds to provide the most specific error
-    if (odds.some((odd) => odd.value < 1.01 || odd.value > 1000)) {
-      throw new BadRequestError("Odds values must be between 1.01 and 1000");
-    }
-
-    // Then validate aggregated probability realism
-    const totalProbability = odds.reduce((sum, odd) => sum + 1 / odd.value, 0);
-
-    if (totalProbability < 0.8 || totalProbability > 1.2) {
+    try {
+      validateManualOddsValues(odds);
+    } catch (error) {
       throw new BadRequestError(
-        "Odds values do not represent realistic probabilities",
+        error instanceof Error ? error.message : "Invalid odds values",
       );
+    }
+  }
+
+  private validateOddsBelongToBet(
+    bet: BetWithOdds,
+    odds: { id: number }[],
+  ): void {
+    const betOddIds = new Set(bet.odds.map((odd) => odd.id));
+
+    for (const odd of odds) {
+      if (!betOddIds.has(odd.id)) {
+        throw new BadRequestError(
+          `Odd with id ${odd.id} does not belong to this bet`,
+        );
+      }
     }
   }
 

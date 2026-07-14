@@ -188,15 +188,12 @@ describe("Bet Routes Integration Tests", () => {
   });
 
   describe("POST /api/v1/bets", () => {
-    testIfDbAvailable("should create a new bet", async () => {
+    testIfDbAvailable("should create a new bet with auto-calculated odds", async () => {
       const betData = {
         title: "New Test Bet",
         description: "New Test Description",
         categoryId: testCategoryId,
-        odds: [
-          { title: "New Option 1", value: 2.0 },
-          { title: "New Option 2", value: 2.0 },
-        ],
+        odds: [{ title: "New Option 1" }, { title: "New Option 2" }],
       };
 
       const response = await request(app)
@@ -208,6 +205,8 @@ describe("Bet Routes Integration Tests", () => {
       expect(response.body.data.bet).toHaveProperty("id");
       expect(response.body.data.bet.title).toBe(betData.title);
       expect(response.body.data.bet.odds).toHaveLength(2);
+      expect(response.body.data.bet.odds[0].value).toBe(2);
+      expect(response.body.data.bet.odds[1].value).toBe(2);
     });
 
     testIfDbAvailable("should return 400 for invalid bet data", async () => {
@@ -226,13 +225,11 @@ describe("Bet Routes Integration Tests", () => {
       expect(response.body.errors).toBeInstanceOf(Array);
     });
 
-    testIfDbAvailable("should return 400 for invalid odds values", async () => {
+    testIfDbAvailable("should return 400 when fewer than 2 odds are provided", async () => {
       const invalidBetData = {
         title: "Test Bet",
         categoryId: testCategoryId,
-        odds: [
-          { title: "Invalid Option", value: 0.5 }, // Too low
-        ],
+        odds: [{ title: "Only Option" }],
       };
 
       const response = await request(app)
@@ -247,10 +244,7 @@ describe("Bet Routes Integration Tests", () => {
       const betData = {
         title: "Test Bet",
         categoryId: 99999,
-        odds: [
-          { title: "Option 1", value: 2.0 },
-          { title: "Option 2", value: 2.0 },
-        ],
+        odds: [{ title: "Option 1" }, { title: "Option 2" }],
       };
 
       const response = await request(app)
@@ -452,6 +446,85 @@ describe("Bet Routes Integration Tests", () => {
 
         expect(response.body.success).toBe(false);
         expect(response.body.message).toContain("already resolved");
+      },
+    );
+  });
+
+  describe("POST /api/v1/votes", () => {
+    testIfDbAvailable("should recalculate odds after voting", async () => {
+      const bet = await prisma!.bet.create({
+        data: {
+          title: "Vote Odds Bet",
+          categoryId: testCategoryId,
+          odds: {
+            create: [
+              { title: "Home", value: 2.0 },
+              { title: "Away", value: 2.0 },
+            ],
+          },
+        },
+        include: { odds: true },
+      });
+
+      const homeOdd = bet.odds[0];
+      const awayOdd = bet.odds[1];
+
+      const firstVote = await request(app)
+        .post("/api/v1/votes")
+        .send({ oddId: homeOdd.id })
+        .expect(201);
+
+      expect(firstVote.body.success).toBe(true);
+      expect(firstVote.body.data.odds).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: homeOdd.id, totalVotes: 1 }),
+          expect.objectContaining({ id: awayOdd.id, totalVotes: 0 }),
+        ]),
+      );
+
+      const homeAfterFirst = firstVote.body.data.odds.find(
+        (odd: { id: number }) => odd.id === homeOdd.id,
+      );
+      const awayAfterFirst = firstVote.body.data.odds.find(
+        (odd: { id: number }) => odd.id === awayOdd.id,
+      );
+      expect(homeAfterFirst.value).toBeLessThan(awayAfterFirst.value);
+
+      const secondVote = await request(app)
+        .post("/api/v1/votes")
+        .send({ oddId: homeOdd.id })
+        .expect(201);
+
+      const homeAfterSecond = secondVote.body.data.odds.find(
+        (odd: { id: number }) => odd.id === homeOdd.id,
+      );
+      expect(homeAfterSecond.value).toBeLessThan(homeAfterFirst.value);
+    });
+
+    testIfDbAvailable(
+      "should return 409 when voting on a closed bet",
+      async () => {
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Closed Vote Bet",
+            categoryId: testCategoryId,
+            status: "closed",
+            odds: {
+              create: [
+                { title: "Yes", value: 2.0 },
+                { title: "No", value: 2.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        const response = await request(app)
+          .post("/api/v1/votes")
+          .send({ oddId: bet.odds[0].id })
+          .expect(409);
+
+        expect(response.body.message).toContain("Only open bets accept votes");
       },
     );
   });

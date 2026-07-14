@@ -89,7 +89,10 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api/v1/categories", cacheHeaders({ maxAge: 300, staleWhileRevalidate: 60 }));
+app.use(
+  "/api/v1/categories",
+  cacheHeaders({ maxAge: 300, staleWhileRevalidate: 60 }),
+);
 app.use("/api/v1", router);
 
 app.use(notFoundHandler);
