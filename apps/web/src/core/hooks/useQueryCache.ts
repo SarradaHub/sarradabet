@@ -75,6 +75,12 @@ class QueryCache {
     }
   }
 
+  clearByPrefix(prefix: string) {
+    for (const key of this.keysMatching(prefix)) {
+      this.cache.delete(key);
+    }
+  }
+
   keysMatching(prefix: string): string[] {
     return Array.from(this.cache.keys()).filter((key) => key.startsWith(prefix));
   }

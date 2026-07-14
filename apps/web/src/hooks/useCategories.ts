@@ -1,6 +1,23 @@
 import { useQuery, useMutation } from "../core/hooks";
+import { queryCache } from "../core/hooks/useQueryCache";
 import { categoryService } from "../services/CategoryService";
 import { CreateCategoryDto, UpdateCategoryDto } from "../types/category";
+
+export const CATEGORIES_LIST_PARAMS = { limit: 100 } as const;
+
+export function getCategoriesQueryKey(params?: {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  search?: string;
+}) {
+  return `categories-${JSON.stringify(params || {})}`;
+}
+
+export function invalidateCategoriesQueries(): void {
+  queryCache.clearByPrefix("categories-");
+}
 
 export function useCategories(params?: {
   page?: number;
@@ -10,7 +27,7 @@ export function useCategories(params?: {
   search?: string;
 }) {
   return useQuery(
-    `categories-${JSON.stringify(params || {})}`,
+    getCategoriesQueryKey(params),
     () => categoryService.getCategoriesWithPagination(params),
     {
       staleTime: 5 * 60 * 1000, // 5 minutes - longer cache for categories
@@ -38,15 +55,23 @@ export function useSearchCategories(searchTerm: string) {
 }
 
 export function useCreateCategory() {
-  return useMutation((data: CreateCategoryDto) => categoryService.create(data));
+  return useMutation((data: CreateCategoryDto) => categoryService.create(data), {
+    onSuccess: () => {
+      invalidateCategoriesQueries();
+    },
+  });
 }
 
 export function useUpdateCategory() {
-  return useMutation(({ id, data }: { id: number; data: UpdateCategoryDto }) =>
-    categoryService.update(id, data),
+  return useMutation(
+    ({ id, data }: { id: number; data: UpdateCategoryDto }) =>
+      categoryService.update(id, data),
+    { onSuccess: () => invalidateCategoriesQueries() },
   );
 }
 
 export function useDeleteCategory() {
-  return useMutation((id: number) => categoryService.delete(id));
+  return useMutation((id: number) => categoryService.delete(id), {
+    onSuccess: () => invalidateCategoriesQueries(),
+  });
 }

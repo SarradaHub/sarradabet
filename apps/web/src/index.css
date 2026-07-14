@@ -5,20 +5,140 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-black text-white overflow-x-hidden;
+  :root {
+    --sb-bg: #0a0a0b;
+    --sb-surface: #121214;
+    --sb-surface-raised: #1a1a1e;
+    --sb-border: #2a2a2e;
+    --sb-border-subtle: #1f1f23;
+    --sb-text-muted: #8b8b95;
+    --sb-odds: #22c55e;
+    --sb-odds-hover: #16a34a;
+    --sb-brand-from: #facc15;
+    --sb-brand-to: #f97316;
   }
 
-  /* Custom scrollbar */
+  body {
+    @apply overflow-x-hidden;
+    background-color: var(--sb-bg);
+    color: #f4f4f5;
+    font-family: "Barlow", system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+    letter-spacing: 0.02em;
+  }
+
   ::-webkit-scrollbar {
-    @apply w-2;
+    @apply w-1.5;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-900;
+    background: var(--sb-surface);
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-purple-600 rounded-full hover:bg-purple-500;
+    background: #3f3f46;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--sb-brand-from);
+  }
+}
+
+@layer components {
+  .sb-surface {
+    background-color: var(--sb-surface);
+  }
+
+  .sb-surface-raised {
+    background-color: var(--sb-surface-raised);
+  }
+
+  .sb-border {
+    border-color: var(--sb-border);
+  }
+
+  .sb-brand-gradient {
+    @apply bg-gradient-to-r from-warning-400 to-orange-500;
+  }
+
+  .sb-brand-text {
+    @apply bg-gradient-to-r from-warning-400 to-orange-500 bg-clip-text text-transparent;
+  }
+
+  .sb-btn-secondary {
+    @apply bg-neutral-200 text-black border sb-border rounded;
+    @apply hover:bg-neutral-300 hover:text-black transition-colors;
+  }
+
+  .sb-odds-cell {
+    @apply flex flex-col items-center justify-center min-w-[4.5rem] px-2 py-1.5 rounded border transition-all duration-150;
+    background-color: var(--sb-surface-raised);
+    border-color: var(--sb-border);
+  }
+
+  .sb-odds-cell:hover:not(:disabled) {
+    border-color: var(--sb-odds);
+    background-color: rgba(34, 197, 94, 0.08);
+  }
+
+  .sb-odds-cell-selected {
+    border-color: var(--sb-brand-from) !important;
+    background-color: rgba(250, 204, 21, 0.12) !important;
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.3);
+  }
+
+  .sb-nav-active {
+    border-left: 3px solid var(--sb-brand-from);
+    background: linear-gradient(
+      90deg,
+      rgba(250, 204, 21, 0.12) 0%,
+      transparent 100%
+    );
+  }
+
+  .sb-slip-enter {
+    animation: slip-enter 0.2s ease-out;
+  }
+
+  @keyframes slip-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes odds-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.96);
+    }
+  }
+
+  .sb-odds-press {
+    animation: odds-pulse 0.15s ease-out;
+  }
+
+  .sb-modal-form label {
+    @apply text-zinc-300 font-display tracking-wide;
+  }
+
+  .sb-modal-form input,
+  .sb-modal-form textarea,
+  .sb-modal-form select {
+    @apply bg-sportsbook-raised border-sportsbook-border text-white;
   }
 }

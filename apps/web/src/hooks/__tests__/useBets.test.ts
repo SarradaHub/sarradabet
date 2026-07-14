@@ -148,7 +148,7 @@ describe("useBets", () => {
         title: "New Bet",
         description: "New Description",
         categoryId: 1,
-        odds: [{ title: "Option 1", value: 2.0 }],
+        odds: [{ title: "Option 1" }, { title: "Option 2" }],
       };
 
       const mockCreatedBet = { id: 1, ...mockBetData, totalVotes: 0 };
@@ -179,7 +179,7 @@ describe("useBets", () => {
       const mockBetData = {
         title: "New Bet",
         categoryId: 1,
-        odds: [{ title: "Option 1", value: 2.0 }],
+        odds: [{ title: "Option 1" }, { title: "Option 2" }],
       };
 
       mockBetService.create.mockRejectedValue({

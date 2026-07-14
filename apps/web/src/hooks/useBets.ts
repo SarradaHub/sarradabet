@@ -1,6 +1,14 @@
 import { useQuery, useMutation } from "../core/hooks";
+import { queryCache } from "../core/hooks/useQueryCache";
 import { betService } from "../services/BetService";
 import { CreateBetDto, UpdateBetDto } from "../types/bet";
+
+export const BETS_LIST_PARAMS = { limit: 100 } as const;
+
+export function invalidateBetsQueries(): void {
+  queryCache.clearByPrefix("bets-");
+  queryCache.clearByPrefix("bet-");
+}
 
 export function useBets(params?: {
   page?: number;
@@ -48,26 +56,35 @@ export function useBetsByCategory(categoryId: number) {
 }
 
 export function useCreateBet() {
-  return useMutation((data: CreateBetDto) => betService.create(data));
+  return useMutation((data: CreateBetDto) => betService.create(data), {
+    onSuccess: () => invalidateBetsQueries(),
+  });
 }
 
 export function useUpdateBet() {
-  return useMutation(({ id, data }: { id: number; data: UpdateBetDto }) =>
-    betService.update(id, data),
+  return useMutation(
+    ({ id, data }: { id: number; data: UpdateBetDto }) =>
+      betService.update(id, data),
+    { onSuccess: () => invalidateBetsQueries() },
   );
 }
 
 export function useDeleteBet() {
-  return useMutation((id: number) => betService.delete(id));
+  return useMutation((id: number) => betService.delete(id), {
+    onSuccess: () => invalidateBetsQueries(),
+  });
 }
 
 export function useCloseBet() {
-  return useMutation((id: number) => betService.closeBet(id));
+  return useMutation((id: number) => betService.closeBet(id), {
+    onSuccess: () => invalidateBetsQueries(),
+  });
 }
 
 export function useResolveBet() {
   return useMutation(
     ({ id, winningOddId }: { id: number; winningOddId: number }) =>
       betService.resolveBet(id, winningOddId),
+    { onSuccess: () => invalidateBetsQueries() },
   );
 }

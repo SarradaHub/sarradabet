@@ -41,8 +41,8 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
     this.api.interceptors.request.use(
       (config) => {
         const token =
-          localStorage.getItem("authToken") ||
-          localStorage.getItem("adminToken");
+          localStorage.getItem("adminToken") ||
+          localStorage.getItem("authToken");
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
