@@ -7,6 +7,20 @@ const logFormat = printf(({ level, message, timestamp, stack }) => {
   return `${timestamp} [${level}] ${stack || message}`;
 });
 
+const transports: winston.transport[] = [
+  new winston.transports.Console(),
+];
+
+// Vercel/serverless has a read-only filesystem — file logging crashes on boot.
+if (config.NODE_ENV === "development" && !process.env.VERCEL) {
+  transports.push(
+    new winston.transports.File({
+      filename: "logs/error.log",
+      level: "error",
+    }),
+  );
+}
+
 export const logger = winston.createLogger({
   level: config.NODE_ENV === "production" ? "info" : "debug",
   format: combine(
@@ -15,11 +29,5 @@ export const logger = winston.createLogger({
     config.NODE_ENV === "development" ? colorize() : winston.format.json(),
     logFormat,
   ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({
-      filename: "logs/error.log",
-      level: "error",
-    }),
-  ],
+  transports,
 });
