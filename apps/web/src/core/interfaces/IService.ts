@@ -1,7 +1,7 @@
-export interface IApiService<T, CreateInput, UpdateInput> {
+export interface IApiService<T, CreateInput, UpdateInput, CreateResult = T> {
   getAll(): Promise<ApiResponse<T[]>>;
   getById(id: number): Promise<ApiResponse<T>>;
-  create(data: CreateInput): Promise<ApiResponse<T>>;
+  create(data: CreateInput): Promise<ApiResponse<CreateResult>>;
   update(id: number, data: UpdateInput): Promise<ApiResponse<T>>;
   delete(id: number): Promise<ApiResponse<void>>;
 }

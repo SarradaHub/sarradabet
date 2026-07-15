@@ -10,8 +10,8 @@ function headerValue(
   return typeof value === "string" ? value : "";
 }
 
-export abstract class BaseService<T, CreateInput, UpdateInput>
-  implements IApiService<T, CreateInput, UpdateInput>
+export abstract class BaseService<T, CreateInput, UpdateInput, CreateResult = T>
+  implements IApiService<T, CreateInput, UpdateInput, CreateResult>
 {
   protected readonly api: AxiosInstance;
 
@@ -156,8 +156,8 @@ export abstract class BaseService<T, CreateInput, UpdateInput>
     });
   }
 
-  async create(data: CreateInput): Promise<ApiResponse<T>> {
-    const response = await this.api.post<ApiResponse<T>>("/", data);
+  async create(data: CreateInput): Promise<ApiResponse<CreateResult>> {
+    const response = await this.api.post<ApiResponse<CreateResult>>("/", data);
     return response.data;
   }
 
