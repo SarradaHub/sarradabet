@@ -56,7 +56,9 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   PORT: z.coerce.number().default(8000),
-  CORS_ORIGINS: z.string().default("http://localhost:5173"),
+  CORS_ORIGINS: z
+    .string()
+    .default("http://localhost:3002,http://localhost:5173"),
   DATABASE_URL: z
     .string()
     .regex(postgresUrlRegex)

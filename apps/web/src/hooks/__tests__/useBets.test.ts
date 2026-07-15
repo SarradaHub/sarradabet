@@ -113,6 +113,58 @@ describe("useBets", () => {
 
       expect(mockBetService.getBetsWithPagination).toHaveBeenCalledTimes(2);
     });
+
+    it("should update data when cache is patched externally", async () => {
+      const mockBets = [
+        {
+          id: 1,
+          title: "Bet 1",
+          totalVotes: 0,
+          odds: [{ id: 10, title: "A", value: 2, totalVotes: 0 }],
+        },
+      ];
+
+      mockBetService.getBetsWithPagination.mockResolvedValue({
+        success: true,
+        data: mockBets,
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
+
+      const { result } = renderHook(() => useBets());
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mockBets);
+      });
+
+      act(() => {
+        queryCache.updateByPrefix("bets-", (_key, data) => {
+          if (Array.isArray(data)) {
+            return data.map((bet) =>
+              bet.id === 1
+                ? {
+                    ...bet,
+                    totalVotes: 5,
+                    odds: bet.odds.map((odd: { id: number; title: string; value: number; totalVotes: number }) =>
+                      odd.id === 10
+                        ? { ...odd, value: 1.5, totalVotes: 3 }
+                        : odd,
+                    ),
+                  }
+                : bet,
+            );
+          }
+          return data;
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.data?.[0].totalVotes).toBe(5);
+        expect(result.current.data?.[0].odds[0].value).toBe(1.5);
+        expect(result.current.data?.[0].odds[0].totalVotes).toBe(3);
+      });
+
+      expect(mockBetService.getBetsWithPagination).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("useBet", () => {

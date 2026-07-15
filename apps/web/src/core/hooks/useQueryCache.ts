@@ -1,10 +1,36 @@
+export type QueryCacheNotification = {
+  type: "set" | "update" | "clear";
+  keys: string[];
+};
+
+type QueryCacheListener = (notification: QueryCacheNotification) => void;
+
 // Simple query cache to prevent duplicate requests
 class QueryCache {
   private cache = new Map<
     string,
     { data?: unknown; dataTimestamp?: number; promise?: Promise<unknown> }
   >();
+  private listeners = new Set<QueryCacheListener>();
   private readonly CACHE_DURATION = 30 * 1000; // 30 seconds
+
+  subscribe(listener: QueryCacheListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify(type: QueryCacheNotification["type"], keys: string[]): void {
+    if (keys.length === 0) {
+      return;
+    }
+
+    const notification: QueryCacheNotification = { type, keys };
+    for (const listener of this.listeners) {
+      listener(notification);
+    }
+  }
 
   get<T>(key: string): T | null {
     const cached = this.cache.get(key);
@@ -23,6 +49,7 @@ class QueryCache {
     const existing = this.cache.get(key);
     const promise = existing?.promise;
     this.cache.set(key, { data, dataTimestamp: Date.now(), promise });
+    this.notify("set", [key]);
   }
 
   has(key: string): boolean {
@@ -70,15 +97,20 @@ class QueryCache {
   clear(key?: string) {
     if (key) {
       this.cache.delete(key);
+      this.notify("clear", [key]);
     } else {
+      const keys = Array.from(this.cache.keys());
       this.cache.clear();
+      this.notify("clear", keys);
     }
   }
 
   clearByPrefix(prefix: string) {
-    for (const key of this.keysMatching(prefix)) {
+    const keys = this.keysMatching(prefix);
+    for (const key of keys) {
       this.cache.delete(key);
     }
+    this.notify("clear", keys);
   }
 
   keysMatching(prefix: string): string[] {
@@ -96,7 +128,11 @@ class QueryCache {
   updateData<T>(key: string, updater: (data: T) => T): void {
     const cached = this.cache.get(key);
     if (cached?.data !== undefined) {
-      this.set(key, updater(cached.data as T));
+      const updated = updater(cached.data as T);
+      const existing = this.cache.get(key);
+      const promise = existing?.promise;
+      this.cache.set(key, { data: updated, dataTimestamp: Date.now(), promise });
+      this.notify("update", [key]);
     }
   }
 
@@ -104,15 +140,26 @@ class QueryCache {
     prefix: string,
     updater: (key: string, data: T) => T | null,
   ): void {
+    const updatedKeys: string[] = [];
+
     for (const key of this.keysMatching(prefix)) {
       const data = this.getRaw<T>(key);
       if (data !== null) {
         const updated = updater(key, data);
         if (updated !== null) {
-          this.set(key, updated);
+          const existing = this.cache.get(key);
+          const promise = existing?.promise;
+          this.cache.set(key, {
+            data: updated,
+            dataTimestamp: Date.now(),
+            promise,
+          });
+          updatedKeys.push(key);
         }
       }
     }
+
+    this.notify("update", updatedKeys);
   }
 
   cleanup() {

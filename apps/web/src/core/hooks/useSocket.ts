@@ -13,6 +13,25 @@ function getSocketUrl(): string {
 }
 
 let sharedSocket: Socket | null = null;
+let socketDiagnosticsAttached = false;
+
+function attachSocketDiagnostics(socket: Socket): void {
+  if (socketDiagnosticsAttached || !import.meta.env.DEV) {
+    return;
+  }
+
+  socketDiagnosticsAttached = true;
+
+  socket.on("connect_error", (error) => {
+    console.warn("[socket.io] connect_error:", error.message);
+  });
+
+  socket.on("disconnect", (reason) => {
+    if (reason !== "io client disconnect") {
+      console.warn("[socket.io] disconnected:", reason);
+    }
+  });
+}
 
 export function getSocket(): Socket {
   if (!sharedSocket) {
@@ -24,6 +43,7 @@ export function getSocket(): Socket {
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
     });
+    attachSocketDiagnostics(sharedSocket);
   }
 
   return sharedSocket;

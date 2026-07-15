@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { voteService } from "../../services/VoteService";
 import { useVoteSlip } from "../../context/VoteSlipContext";
 import { Button } from "../ui/Button";
-import { queryCache } from "../../core/hooks/useQueryCache";
+import { patchBetsFromVote } from "../../utils/betCache";
 
 interface VoteSlipProps {
   variant?: "rail" | "sheet";
@@ -35,9 +35,17 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
       }
 
       for (const selection of openSelections) {
-        await voteService.create({ oddId: selection.oddId });
+        const response = await voteService.create({ oddId: selection.oddId });
+        if (response.success && response.data) {
+          const { betId, odds, totalVotes } = response.data;
+          patchBetsFromVote({
+            betId,
+            oddId: selection.oddId,
+            odds,
+            totalVotes,
+          });
+        }
       }
-      queryCache.clearByPrefix("bets-");
       clearSelections();
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

@@ -91,7 +91,7 @@ sequenceDiagram
   Svc->>DB: transaction + aggregate counts
   Svc->>IO: emit vote:created
   IO->>Client: push payload
-  Note over Client: RealtimeProvider patches query cache; BetCard updates odds
+  Note over Client: RealtimeProvider patches query cache; useQuery subscribers re-render; BetCard updates odds
 ```
 
 | Event | Emitter | Payload |
@@ -112,7 +112,7 @@ Event contracts: [`packages/types/src/realtime.ts`](../packages/types/src/realti
 | HTTP headers | `cacheHeaders` middleware | `GET /api/v1/categories` |
 | Response size | `bet.mapper.ts` | Slim list DTOs vs full detail |
 | Wire format | `compression` middleware | gzip above ~1KB |
-| Frontend | `useQuery` + `queryCache` | Stale-while-revalidate; `RealtimeProvider` patches cache |
+| Frontend | `useQuery` + `queryCache` | Stale-while-revalidate; `RealtimeProvider` patches cache and notifies `useQuery` subscribers |
 | Frontend UI | `OddsList` optimistic vote | Rollback on error; socket reconciles counts |
 
 ## Shared Types
@@ -425,7 +425,7 @@ export const useCategories = () => {
 };
 ```
 
-**RealtimeProvider** listens for Socket.io events and patches `queryCache` keys prefixed with `bets-`. **OddsList** applies optimistic vote counts; **BetCard** reconciles via `vote:created` events.
+**RealtimeProvider** listens for Socket.io events and patches `queryCache` keys prefixed with `bets-`. Patches notify `useQuery` subscribers so list data re-renders without refetch. **VoteSlip** applies the same patch helper from REST vote responses for immediate self-vote updates. **OddsList** flashes changed odds; **BetCard** also reconciles via `vote:created` for fast local updates.
 
 #### 3. Component Composition
 
