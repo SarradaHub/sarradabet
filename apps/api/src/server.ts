@@ -5,6 +5,9 @@ import { logger } from "./utils/logger";
 import { prisma } from "./config/db";
 import { initializeConsul } from "./config/consul";
 import { initSocketServer, closeSocketServer } from "./realtime/socket";
+import { pixPaymentService } from "./modules/payment/payment.container";
+
+const EXPIRATION_JOB_INTERVAL_MS = 60_000;
 
 const checkDatabaseConnection = async () => {
   try {
@@ -27,12 +30,21 @@ const startServer = async () => {
     const httpServer = createServer(app);
     initSocketServer(httpServer);
 
+    const expirationInterval = setInterval(() => {
+      pixPaymentService
+        .expirePendingPayments()
+        .catch((error) =>
+          logger.error("Failed to expire pending Pix payments", error),
+        );
+    }, EXPIRATION_JOB_INTERVAL_MS);
+
     httpServer.listen(PORT, () => {
       logger.info(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
     });
 
     const shutdown = async () => {
       logger.info("Shutting down server...");
+      clearInterval(expirationInterval);
       closeSocketServer();
       httpServer.close(async () => {
         await prisma.$disconnect();
@@ -49,7 +61,6 @@ const startServer = async () => {
   }
 };
 
-// Local/docker only — Vercel uses src/index.ts (default export, no listen()).
 if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   startServer();
 }

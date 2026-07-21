@@ -84,12 +84,18 @@ npm run db:reset
 - ✅ **High odds underdogs** (long shot bets)
 - ✅ **Multiple odds per bet** (2-4 options)
 
-## Admin User
+## Seed Users
 
-The comprehensive seed also creates:
+Both seeds create:
 
-- **Admin user**: username: `admin`, email: `admin@sarradabet.com`
-- **Admin actions**: Sample admin activities logged
+| Role | Username | Email | Password |
+|------|----------|-------|----------|
+| `ADMIN` | `admin` | `admin@sarradabet.com` | `admin123` |
+| `USER` | `user` | `user@sarradabet.com` | `user123` |
+
+Login via `POST /api/v1/auth/login`. Use `user` for `/coins`, Pix purchases, and protected user routes. Use `admin` for the admin dashboard.
+
+The comprehensive seed also logs sample admin activities in `user_actions`.
 
 ## Notes
 

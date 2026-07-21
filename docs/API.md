@@ -18,12 +18,105 @@ The SarradaBet API is a RESTful API built with Express.js and TypeScript, with a
 
 No authentication required:
 
-- `GET/POST` `/api/v1/bets`, `/api/v1/categories`, `POST /api/v1/votes`
+- `GET` `/api/v1/bets`, `/api/v1/categories`, `/api/v1/coins/packages`
+- `POST` `/api/v1/votes`
+- `POST` `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`
 - `GET /health`, `GET /ready`
 
-### Admin endpoints
+### User authentication
 
-Routes under `/api/v1/admin/*` require a JWT in the `Authorization: Bearer <token>` header (obtained via `POST /api/v1/admin/login`).
+User routes use a **short-lived access token** (JWT in `Authorization: Bearer <token>`) and a **refresh token** stored in an HttpOnly cookie.
+
+| Setting | Default |
+|---------|---------|
+| Access token TTL | `15m` (`JWT_ACCESS_EXPIRES_IN`) |
+| Refresh token TTL | `7d` (`JWT_REFRESH_EXPIRES_IN`) |
+| Cookie name | `refreshToken` (`REFRESH_TOKEN_COOKIE_NAME`) |
+| Cookie path | `/api/v1/auth` |
+
+**Frontend clients** must send `credentials: 'include'` on auth requests so the refresh cookie is stored and sent back.
+
+#### POST /auth/register
+
+Creates a user with role `USER`.
+
+**Request:**
+
+```json
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "username": "johndoe",
+      "email": "john@example.com",
+      "role": "USER",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    "accessToken": {
+      "token": "eyJ...",
+      "expiresIn": "15m"
+    }
+  }
+}
+```
+
+Sets `Set-Cookie: refreshToken=...; HttpOnly; Path=/api/v1/auth; SameSite=Lax`.
+
+#### POST /auth/login
+
+Same body as register (username or email in `username` field). Returns the same shape as register.
+
+#### POST /auth/refresh
+
+No body required. Reads the refresh cookie, rotates it (OWASP-style), and returns a new access token.
+
+#### POST /auth/logout
+
+Revokes the current refresh token, clears the cookie, and **blacklists the access token** when `Authorization: Bearer <accessToken>` is sent. Blacklisted tokens are rejected until their original expiry (stored in Redis with key `auth:blacklist:{jti}`).
+
+#### GET /auth/me
+
+Returns the authenticated user's profile. Requires `Authorization: Bearer <accessToken>`.
+
+### Protected endpoints
+
+Require `Authorization: Bearer <accessToken>`:
+
+| Route | Permission |
+|-------|------------|
+| `GET /api/v1/auth/me` | Any authenticated user |
+| `POST /api/v1/bets` | Any authenticated user |
+| `PUT/DELETE/PATCH /api/v1/bets/*` | User with `role: ADMIN` |
+| `POST/PUT/DELETE /api/v1/categories/*` | User with `role: ADMIN` |
+| `GET /api/v1/users` | Admin only (`role: ADMIN`) |
+| `GET /api/v1/users/:id` | Self or admin |
+| `PUT /api/v1/users/:id` | Self or admin |
+| `DELETE /api/v1/users/:id` | Admin only (cannot delete self) |
+| `GET /api/v1/coins/balance`, `GET /api/v1/coins/transactions` | Any authenticated user |
+| `POST /api/v1/payments/pix`, `GET /api/v1/payments/pix/:id` | Any authenticated user |
+| `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
+
+The admin dashboard uses the same auth flow: login via `POST /auth/login` with a user that has `role: ADMIN`.
+
+### Webhook endpoints
+
+Mercado Pago webhooks use **HMAC signature validation** (`x-signature`, `x-request-id` headers). No JWT. Invalid signatures return **401**.
+
+| Route | Auth |
+|-------|------|
+| `POST /api/v1/webhooks/mercadopago` | Mercado Pago HMAC signature |
 
 ### API key (optional, not mounted)
 
@@ -163,6 +256,9 @@ Connect to the same host as REST. Event names and payloads match [`packages/type
 | `vote:created` | `{ betId, oddId, odds[{id,totalVotes}], totalVotes }` | `POST /votes` |
 | `bet:created` | `BetListItem` | `POST /bets` |
 | `bet:updated` | `BetListItem` | bet update, close, resolve |
+| `payment:confirmed` | `{ paymentId, coinsAmount, newBalance, paidAt }` | Pix payment approved (webhook) |
+
+Authenticated sockets join room `user:{userId}` and receive `payment:confirmed` after a successful Pix purchase.
 
 ### Listener example (Node.js)
 
@@ -312,7 +408,14 @@ Retrieve a specific bet by ID.
 
 #### POST /bets
 
-Create a new bet.
+Create a new bet. **Requires user authentication** (`Authorization: Bearer <accessToken>`).
+
+**Headers:**
+
+```http
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+```
 
 **Request Body:**
 
@@ -767,6 +870,233 @@ Create a new vote.
 
 Also emits **`vote:created`** on Socket.io with the same aggregate counts.
 
+## Coin Endpoints
+
+Coin balance and ledger for authenticated users. Package listing is public.
+
+### List Coin Packages
+
+**GET** `/coins/packages`
+
+Public. Returns active purchasable packages sorted by `sortOrder`.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Pacote Básico",
+      "amountCents": 500,
+      "coinsAmount": 100,
+      "isActive": true,
+      "sortOrder": 0,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Get Coin Balance
+
+**GET** `/coins/balance`
+
+Requires user JWT.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "balance": 150
+  }
+}
+```
+
+### List Coin Transactions
+
+**GET** `/coins/transactions`
+
+Requires user JWT. Paginated ledger of credits and debits.
+
+**Query parameters:**
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `page` | `1` | Page number |
+| `limit` | `10` | Items per page |
+| `sortBy` | `createdAt` | Sort field |
+| `sortOrder` | `desc` | `asc` or `desc` |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "userId": 1,
+        "type": "CREDIT",
+        "amount": 100,
+        "balanceAfter": 100,
+        "source": "PIX_PURCHASE",
+        "referenceId": 1,
+        "externalId": "mp_payment_123456",
+        "description": "Pix purchase mp_123456",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+**Transaction sources:** `PIX_PURCHASE`, `BET_COST`, `ADMIN_ADJUSTMENT`, `REFUND`.
+
+## Payment Endpoints
+
+Pix purchases via Mercado Pago. Requires user JWT.
+
+### Create Pix Purchase
+
+**POST** `/payments/pix`
+
+**Request:**
+
+```json
+{
+  "coinPackageId": 1
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "paymentId": 1,
+    "externalId": "123456789",
+    "qrCode": "00020126...",
+    "qrCodeBase64": "iVBORw0KGgo...",
+    "copyPaste": "00020126...",
+    "ticketUrl": "https://www.mercadopago.com.br/...",
+    "expiresAt": "2024-01-01T00:30:00.000Z",
+    "coinsAmount": 100,
+    "amountCents": 500,
+    "packageName": "Pacote Básico",
+    "status": "PENDING"
+  }
+}
+```
+
+Display `qrCodeBase64` as a PNG data URL or use `copyPaste` for Pix copia-e-cola. Poll status or listen for Socket.io `payment:confirmed`.
+
+### Get Pix Payment Status
+
+**GET** `/payments/pix/:id`
+
+Returns the current status for the authenticated user's payment. Pending payments past `expiresAt` are marked `EXPIRED` on read.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "externalId": "123456789",
+    "status": "PENDING",
+    "coinsAmount": 100,
+    "amountCents": 500,
+    "packageName": "Pacote Básico",
+    "expiresAt": "2024-01-01T00:30:00.000Z",
+    "paidAt": null,
+    "qrCode": "00020126...",
+    "qrCodeBase64": "iVBORw0KGgo...",
+    "copyPaste": "00020126..."
+  }
+}
+```
+
+**Status values:** `PENDING`, `APPROVED`, `EXPIRED`, `CANCELLED`, `FAILED`.
+
+## Webhook Endpoints
+
+### Mercado Pago Payment Notification
+
+**POST** `/webhooks/mercadopago`
+
+Called by Mercado Pago when a payment status changes. Uses raw JSON body (not the global JSON parser).
+
+**Headers:**
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `x-signature` | Yes (production) | HMAC SHA256 signature |
+| `x-request-id` | Yes (production) | Request ID for manifest |
+
+**Query:** `data.id` or body `data.id` — Mercado Pago payment ID.
+
+**Response (200):**
+
+```json
+{
+  "received": true
+}
+```
+
+On valid payment notifications, the API verifies status with Mercado Pago, credits coins idempotently (`externalId`: `mp_payment_{id}`), updates `PixPayment` to `APPROVED`, and emits `payment:confirmed` to the user's Socket.io room.
+
+Invalid signatures return **401**. Non-payment webhook types return `{ "received": true, "ignored": true }`.
+
+## Admin Coin Package Endpoints
+
+Require admin JWT (`role: ADMIN`).
+
+### List All Coin Packages
+
+**GET** `/admin/coin-packages`
+
+Returns all packages including inactive.
+
+### Create Coin Package
+
+**POST** `/admin/coin-packages`
+
+**Request:**
+
+```json
+{
+  "name": "Pacote Básico",
+  "amountCents": 500,
+  "coinsAmount": 100,
+  "isActive": true,
+  "sortOrder": 0
+}
+```
+
+### Update Coin Package
+
+**PUT** `/admin/coin-packages/:id`
+
+Partial update — same fields as create, all optional.
+
+### Deactivate Coin Package
+
+**DELETE** `/admin/coin-packages/:id`
+
+Soft-deactivates the package (`isActive: false`). Does not delete historical payments.
+
 ## Error Codes
 
 ### HTTP Status Codes
@@ -810,7 +1140,9 @@ See [Performance Guide](./PERFORMANCE.md) for backend `node-cache` TTLs and Supa
 
 ## Rate Limiting
 
-- **Limit**: 100 requests per 15 minutes per IP address
+- **Global limit**: 100 requests per 15 minutes per IP address
+- **Auth login** (`POST /api/v1/auth/login`): 10 requests per 15 minutes per IP (`AUTH_LOGIN_RATE_LIMIT_MAX`)
+- **Auth register** (`POST /api/v1/auth/register`): 5 requests per 15 minutes per IP (`AUTH_REGISTER_RATE_LIMIT_MAX`)
 - **Headers**: Rate limit information included in response headers
 - **Error**: 429 status code when limit exceeded
 

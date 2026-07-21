@@ -77,6 +77,24 @@ VITE_API_URL=http://localhost:8000
 
 Use the API **base URL only** — do not append `/api/v1` (the client adds it).
 
+### Mercado Pago webhooks (local Pix testing)
+
+Mercado Pago requires HTTPS webhooks. For local Pix testing with real QR codes, use ngrok:
+
+See [LOCAL_WEBHOOKS.md](../LOCAL_WEBHOOKS.md) — summary:
+
+```bash
+# Terminal 1
+cd apps/api && npm run dev
+
+# Terminal 2
+ngrok http 8000
+
+# Terminal 3
+cd apps/api && npm run webhook:configure
+# Restart API, then create a new Pix payment
+```
+
 ### 4. Database Setup
 
 ```bash

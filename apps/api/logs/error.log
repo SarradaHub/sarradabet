@@ -83,3 +83,67 @@ Please make sure your database server is running at `localhost:5433`.
 2025-11-24 22:16:30 [[31merror[39m] Failed to deregister from Consul: not found
 2026-06-14 21:37:29 [error] Error: write EPIPE
     at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:87:19)
+2026-07-19 21:24:22 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-19 22:09:30 [[31merror[39m] Validation middleware error: Validation failed
+2026-07-19 22:11:33 [[31merror[39m] ExternalServiceError: MercadoPago: MERCADOPAGO_ACCESS_TOKEN is not configured
+    at MercadoPagoClient.getPaymentApi (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:26:13)
+    at MercadoPagoClient.createPixPayment (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:45:29)
+    at PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:42:52)
+    at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)
+2026-07-19 22:12:24 [[31merror[39m] ExternalServiceError: MercadoPago: MERCADOPAGO_ACCESS_TOKEN is not configured
+    at MercadoPagoClient.getPaymentApi (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:26:13)
+    at MercadoPagoClient.createPixPayment (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:45:29)
+    at PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:42:52)
+    at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)
+2026-07-19 22:12:37 [[31merror[39m] ExternalServiceError: MercadoPago: MERCADOPAGO_ACCESS_TOKEN is not configured
+    at MercadoPagoClient.getPaymentApi (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:26:13)
+    at MercadoPagoClient.createPixPayment (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:45:29)
+    at PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:42:52)
+    at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)
+2026-07-19 22:21:46 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+2026-07-19 22:25:12 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+2026-07-19 22:31:05 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+2026-07-20 20:32:22 [[31merror[39m] Error occurred:
+2026-07-20 20:46:34 [[31merror[39m] Error occurred:
+2026-07-20 20:48:31 [[31merror[39m] ExternalServiceError: MercadoPago: create Pix payment failed: Unauthorized use of live credentials
+    at MercadoPagoClient.toExternalServiceError (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:114:12)
+    at MercadoPagoClient.createPixPayment (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:82:18)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:42:23)
+    at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)
+2026-07-20 20:53:46 [[31merror[39m] ExternalServiceError: MercadoPago: create Pix payment failed: Unauthorized use of live credentials
+    at MercadoPagoClient.toExternalServiceError (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:114:12)
+    at MercadoPagoClient.createPixPayment (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:82:18)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:42:23)
+    at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)
+2026-07-20 20:55:39 [[31merror[39m] ExternalServiceError: MercadoPago: create Pix payment failed: Unauthorized use of live credentials
+    at MercadoPagoClient.toExternalServiceError (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:104:12)
+    at MercadoPagoClient.createPixPayment (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/MercadoPagoClient.ts:72:18)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:44:23)
+    at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)

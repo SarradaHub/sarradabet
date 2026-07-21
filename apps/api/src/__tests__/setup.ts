@@ -3,10 +3,11 @@ import { PrismaClient } from "@prisma/client";
 // Global test setup (only when DB tests are enabled)
 beforeAll(async () => {
   // Ensure env defaults for tests
-  process.env.NODE_ENV = process.env.NODE_ENV || "test";
-  process.env.DATABASE_URL =
-    process.env.DATABASE_URL ||
-    "postgresql://postgres:postgres@localhost:5432/sarradabet_test";
+  process.env.NODE_ENV = "test";
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL =
+      "postgresql://appuser:sarradabet1234@localhost:5433/sarradabet_test";
+  }
   process.env.CORS_ORIGINS =
     process.env.CORS_ORIGINS || "http://localhost:5173";
   process.env.PORT = process.env.PORT || "0";

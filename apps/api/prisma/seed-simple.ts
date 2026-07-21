@@ -1,5 +1,6 @@
-import { PrismaClient, BetStatus } from "@prisma/client";
+import { PrismaClient, BetStatus, UserRole } from "@prisma/client";
 import { calculateOddsFromVotes } from "../src/utils/odds";
+import { hashPassword } from "../src/utils/auth";
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,12 @@ async function main() {
   await prisma.odd.deleteMany();
   await prisma.bet.deleteMany();
   await prisma.category.deleteMany();
+  await prisma.pixPayment.deleteMany();
+  await prisma.coinTransaction.deleteMany();
+  await prisma.coinPackage.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.userAction.deleteMany();
+  await prisma.user.deleteMany();
 
   console.log("📂 Creating sports categories...");
   const futebol = await prisma.category.create({
@@ -90,12 +97,49 @@ async function main() {
     [0, 0, 0],
   );
 
+  console.log("👤 Creating users...");
+  const [adminPasswordHash, userPasswordHash] = await Promise.all([
+    hashPassword("admin123"),
+    hashPassword("user123"),
+  ]);
+
+  await prisma.coinPackage.create({
+    data: {
+      name: "Pacote Básico",
+      amountCents: 500,
+      coinsAmount: 100,
+      isActive: true,
+      sortOrder: 0,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      username: "admin",
+      email: "admin@sarradabet.com",
+      phone: "5511999990001",
+      passwordHash: adminPasswordHash,
+      role: UserRole.ADMIN,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      username: "user",
+      email: "user@sarradabet.com",
+      phone: "5511999990002",
+      passwordHash: userPasswordHash,
+      role: UserRole.USER,
+    },
+  });
+
   console.log("✅ Seeding completed!");
   console.log("📊 Created:");
   console.log("   - 3 sports categories (Futebol, Basquete, MMA)");
   console.log("   - 3 sports bets");
   console.log("   - 7 odds");
   console.log("   - 3 votes");
+  console.log("   - 2 users (admin / admin123, user / user123)");
 }
 
 main()

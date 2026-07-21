@@ -1,4 +1,17 @@
 import { z } from "zod";
+import {
+  isValidBrazilianPhone,
+  normalizeBrazilianPhone,
+} from "../../utils/phone";
+
+export const BrazilianPhoneSchema = z
+  .string()
+  .min(8, "Phone is required")
+  .max(20, "Phone cannot exceed 20 characters")
+  .trim()
+  .refine(isValidBrazilianPhone, "Invalid Brazilian phone number")
+  .transform(normalizeBrazilianPhone);
+
 export const IdSchema = z
   .number()
   .int()
@@ -45,7 +58,7 @@ export const UpdateBetOddsSchema = z.object({
     .max(10, "Cannot have more than 10 odds"),
 });
 
-export const CreateAdminSchema = z.object({
+export const RegisterUserSchema = z.object({
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
@@ -65,14 +78,15 @@ export const CreateAdminSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .max(100, "Password cannot exceed 100 characters"),
+  phone: BrazilianPhoneSchema,
 });
 
-export const LoginSchema = z.object({
+export const UserLoginSchema = z.object({
   username: z.string().min(1, "Username or email is required").trim(),
   password: z.string().min(1, "Password is required"),
 });
 
-export const UpdateAdminSchema = z.object({
+export const UpdateUserSchema = z.object({
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
@@ -95,6 +109,8 @@ export const UpdateAdminSchema = z.object({
     .min(6, "Password must be at least 6 characters")
     .max(100, "Password cannot exceed 100 characters")
     .optional(),
+  role: z.enum(["USER", "ADMIN"]).optional(),
+  phone: BrazilianPhoneSchema.optional(),
 });
 
 export const CreateBetSchema = z.object({
@@ -188,9 +204,32 @@ export const VoteQuerySchema = PaginationSchema.extend({
   oddId: IdSchema.optional(),
 });
 
-export const AdminLoginSchema = z.object({
-  email: z.string().email("Invalid email format").toLowerCase(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+export const AdminLoginSchema = UserLoginSchema;
+
+export const CreateCoinPackageSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name cannot exceed 100 characters")
+    .trim(),
+  amountCents: z
+    .number()
+    .int()
+    .min(100, "Amount must be at least R$ 1.00")
+    .max(1000000, "Amount cannot exceed R$ 10,000.00"),
+  coinsAmount: z
+    .number()
+    .int()
+    .min(1, "Coins amount must be at least 1")
+    .max(1000000, "Coins amount is too large"),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
+export const UpdateCoinPackageSchema = CreateCoinPackageSchema.partial();
+
+export const CreatePixPurchaseSchema = z.object({
+  coinPackageId: IdSchema,
 });
 
 export const RateLimitSchema = z.object({
@@ -221,4 +260,9 @@ export type CategoryQueryInput = z.infer<typeof CategoryQuerySchema>;
 export type VoteQueryInput = z.infer<typeof VoteQuerySchema>;
 export type PaginationInput = z.infer<typeof PaginationSchema>;
 export type AdminLoginInput = z.infer<typeof AdminLoginSchema>;
-export type CreateAdminInput = z.infer<typeof CreateAdminSchema>;
+export type RegisterUserInput = z.infer<typeof RegisterUserSchema>;
+export type UserLoginInput = z.infer<typeof UserLoginSchema>;
+export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+export type CreateCoinPackageInput = z.infer<typeof CreateCoinPackageSchema>;
+export type UpdateCoinPackageInput = z.infer<typeof UpdateCoinPackageSchema>;
+export type CreatePixPurchaseInput = z.infer<typeof CreatePixPurchaseSchema>;

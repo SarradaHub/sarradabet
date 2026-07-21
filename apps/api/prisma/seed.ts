@@ -1,4 +1,4 @@
-import { PrismaClient, BetStatus, OddResult } from "@prisma/client";
+import { PrismaClient, BetStatus, OddResult, UserRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -29,8 +29,12 @@ async function main() {
   await prisma.odd.deleteMany();
   await prisma.bet.deleteMany();
   await prisma.category.deleteMany();
-  await prisma.adminAction.deleteMany();
-  await prisma.admin.deleteMany();
+  await prisma.pixPayment.deleteMany();
+  await prisma.coinTransaction.deleteMany();
+  await prisma.coinPackage.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.userAction.deleteMany();
+  await prisma.user.deleteMany();
 
   console.log("📂 Creating sports categories...");
   const categories = await Promise.all([
@@ -388,22 +392,48 @@ async function main() {
   console.log("  - Champions League (futebol)");
   console.log("  - Zebra Série B na Copa (futebol)");
 
-  console.log("👤 Creating admin user...");
+  console.log("👤 Creating users...");
   const { hashPassword } = await import("../src/utils/auth");
-  const adminPasswordHash = await hashPassword("admin123");
+  const [adminPasswordHash, userPasswordHash] = await Promise.all([
+    hashPassword("admin123"),
+    hashPassword("user123"),
+  ]);
 
-  const admin = await prisma.admin.create({
+  await prisma.coinPackage.create({
+    data: {
+      name: "Pacote Básico",
+      amountCents: 500,
+      coinsAmount: 100,
+      isActive: true,
+      sortOrder: 0,
+    },
+  });
+
+  const admin = await prisma.user.create({
     data: {
       username: "admin",
       email: "admin@sarradabet.com",
+      phone: "5511999990001",
       passwordHash: adminPasswordHash,
+      role: UserRole.ADMIN,
       createdAt: new Date("2024-01-01"),
     },
   });
 
-  await prisma.adminAction.create({
+  await prisma.user.create({
     data: {
-      adminId: admin.id,
+      username: "user",
+      email: "user@sarradabet.com",
+      phone: "5511999990002",
+      passwordHash: userPasswordHash,
+      role: UserRole.USER,
+      createdAt: new Date("2024-01-02"),
+    },
+  });
+
+  await prisma.userAction.create({
+    data: {
+      userId: admin.id,
       actionType: "CREATE_BET",
       targetId: copaBet.id,
       description: "Created bet: Brasil vs Argentina - Copa América",
@@ -411,9 +441,9 @@ async function main() {
     },
   });
 
-  await prisma.adminAction.create({
+  await prisma.userAction.create({
     data: {
-      adminId: admin.id,
+      userId: admin.id,
       actionType: "RESOLVE_BET",
       targetId: rolandBet.id,
       description: "Resolved bet: Roland Garros 2024 champion",
@@ -432,7 +462,7 @@ async function main() {
   console.log(`   - Bets: ${totalBets}`);
   console.log(`   - Odds: ${totalOdds}`);
   console.log(`   - Votes: ${totalVotes}`);
-  console.log(`   - Admins: 1`);
+  console.log(`   - Users: 2 (admin, user)`);
   console.log("\n🚀 Your database is now ready for testing!");
 }
 

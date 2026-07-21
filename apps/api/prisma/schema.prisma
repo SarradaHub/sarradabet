@@ -11,11 +11,11 @@ datasource db {
 }
 
 model Category {
-  id    Int    @id @default(autoincrement())
-  title String @db.VarChar(50)
-  bet   Bet[]
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(50)
+  bet       Bet[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 }
 
 model Bet {
@@ -66,31 +66,111 @@ model Vote {
   @@map("votes")
 }
 
-model Admin {
-  id           Int           @id @default(autoincrement())
-  username     String        @unique
-  email        String        @unique
-  passwordHash String        @map("password_hash")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  actions      AdminAction[]
+model User {
+  id               Int               @id @default(autoincrement())
+  username         String            @unique @db.VarChar(50)
+  email            String            @unique @db.VarChar(255)
+  phone            String            @unique @db.VarChar(20)
+  passwordHash     String            @map("password_hash")
+  role             UserRole          @default(USER)
+  coinBalance      Int               @default(0) @map("coin_balance")
+  refreshTokens    RefreshToken[]
+  actions          UserAction[]
+  coinTransactions CoinTransaction[]
+  pixPayments      PixPayment[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
 
-  @@map("admins")
+  @@map("users")
 }
 
-model AdminAction {
+model UserAction {
   id          Int      @id @default(autoincrement())
-  adminId     Int
-  actionType  String
-  targetId    Int
+  userId      Int      @map("user_id")
+  actionType  String   @map("action_type")
+  targetId    Int      @map("target_id")
   description String?
   createdAt   DateTime @default(now()) @map("created_at")
 
-  admin Admin @relation(fields: [adminId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([adminId])
+  @@index([userId])
   @@index([actionType])
-  @@map("admin_actions")
+  @@map("user_actions")
+}
+
+model RefreshToken {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @map("user_id")
+  tokenHash         String    @unique @map("token_hash")
+  expiresAt         DateTime  @map("expires_at")
+  revokedAt         DateTime? @map("revoked_at")
+  replacedByTokenId Int?      @map("replaced_by_token_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model CoinPackage {
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(100)
+  amountCents Int          @map("amount_cents")
+  coinsAmount Int          @map("coins_amount")
+  isActive    Boolean      @default(true) @map("is_active")
+  sortOrder   Int          @default(0) @map("sort_order")
+  pixPayments PixPayment[]
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("coin_packages")
+}
+
+model CoinTransaction {
+  id           Int                   @id @default(autoincrement())
+  userId       Int                   @map("user_id")
+  type         CoinTransactionType
+  amount       Int
+  balanceAfter Int                   @map("balance_after")
+  source       CoinTransactionSource
+  referenceId  Int?                  @map("reference_id")
+  externalId   String?               @unique @map("external_id")
+  description  String?
+  createdAt    DateTime              @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("coin_transactions")
+}
+
+model PixPayment {
+  id             Int              @id @default(autoincrement())
+  userId         Int              @map("user_id")
+  coinPackageId  Int              @map("coin_package_id")
+  amountCents    Int              @map("amount_cents")
+  coinsAmount    Int              @map("coins_amount")
+  status         PixPaymentStatus @default(PENDING)
+  externalId     String           @unique @map("external_id")
+  qrCode         String?          @map("qr_code") @db.Text
+  qrCodeBase64   String?          @map("qr_code_base64") @db.Text
+  ticketUrl      String?          @map("ticket_url")
+  expiresAt      DateTime         @map("expires_at")
+  paidAt         DateTime?        @map("paid_at")
+  idempotencyKey String           @unique @map("idempotency_key")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coinPackage CoinPackage @relation(fields: [coinPackageId], references: [id])
+
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@map("pix_payments")
 }
 
 enum BetStatus {
@@ -103,4 +183,29 @@ enum OddResult {
   pending
   won
   lost
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum CoinTransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum CoinTransactionSource {
+  PIX_PURCHASE
+  BET_COST
+  ADMIN_ADJUSTMENT
+  REFUND
+}
+
+enum PixPaymentStatus {
+  PENDING
+  APPROVED
+  EXPIRED
+  CANCELLED
+  FAILED
 }
