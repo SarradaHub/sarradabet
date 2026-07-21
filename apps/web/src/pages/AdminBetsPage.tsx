@@ -229,7 +229,11 @@ const AdminBetsPage: React.FC = () => {
               </TableRow>
             ) : (
               filteredBets.map((bet) => (
-                <TableRow key={bet.id} hoverable>
+                <TableRow
+                  key={bet.id}
+                  hoverable
+                  className="hover:[&_td]:text-neutral-900 hover:[&_td.text-sportsbook-odds]:text-green-700"
+                >
                   <TableCell className="text-white max-w-[200px] truncate">
                     {bet.title}
                   </TableCell>

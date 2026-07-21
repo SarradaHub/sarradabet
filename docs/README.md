@@ -14,6 +14,16 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 - **[Architecture Documentation](./ARCHITECTURE.md)** - Clean architecture, realtime data flow, and patterns
 - **[API Documentation](./API.md)** - REST reference, Socket.io events, and schemas
 
+### Feature Implementation Guides
+
+- **[Feature Guides Index](./features/README.md)** - Status matrix, dependency graph, and links to all specs
+- **[01 — User Auth & CRUD](./features/01-user-auth-and-crud.md)** - Partial
+- **[02 — Coins & Pix Payments](./features/02-coins-and-pix-payments.md)** - Partial
+- **[03 — Bet Closure & Payout](./features/03-bet-closure-and-payout.md)** - Planned
+- **[04 — Gamification & Rewards](./features/04-gamification-and-rewards.md)** - Planned
+- **[05 — Dashboard & Analytics](./features/05-dashboard-and-analytics.md)** - Planned
+- **[06 — Mobile App & Advanced Admin](./features/06-mobile-app-and-admin-panel.md)** - Planned
+
 ### Deployment & Operations
 
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment (Docker/nginx primary)
@@ -48,7 +58,15 @@ docs/
 ├── API.md                 # REST + Socket.io API documentation
 ├── DEVELOPER_GUIDE.md     # Development setup and workflow
 ├── DEPLOYMENT.md          # Production deployment guide
-└── PERFORMANCE.md         # Performance, caching, and validation
+├── PERFORMANCE.md         # Performance, caching, and validation
+└── features/              # Implementation guides (prompt specs + codebase map)
+    ├── README.md          # Status matrix and dependency graph
+    ├── 01-user-auth-and-crud.md
+    ├── 02-coins-and-pix-payments.md
+    ├── 03-bet-closure-and-payout.md
+    ├── 04-gamification-and-rewards.md
+    ├── 05-dashboard-and-analytics.md
+    └── 06-mobile-app-and-admin-panel.md
 ```
 
 ## 🎯 Key Features Covered
@@ -73,7 +91,7 @@ docs/
 ### API Features
 
 - **RESTful API** at `/api/v1` plus **Socket.io** at `/socket.io`
-- **Public endpoints** for bets, categories, votes; **JWT** for admin routes
+- **Public endpoints** for bets (read), categories, votes; **JWT user auth** with refresh cookies and `UserRole`
 - Pagination, filtering, health checks
 - **HTTP cache headers** on category list responses
 
@@ -88,7 +106,7 @@ docs/
 - Input validation and sanitization
 - Rate limiting and security headers
 - CORS configuration (must include frontend origin for Socket.io)
-- JWT admin authentication
+- JWT user authentication with refresh token rotation
 
 ### Deployment
 
@@ -142,11 +160,13 @@ docs/
 ### Features
 
 - [x] **Real-time Updates** — Socket.io (see [ARCHITECTURE.md](./ARCHITECTURE.md) and [API.md](./API.md))
-- [ ] **User Authentication** — end-user JWT (admin JWT exists today)
-- [ ] **Advanced Analytics** — betting analytics and reporting
-- [ ] **Mobile App** — React Native mobile application
-- [ ] **Payment Integration** — payment processing capabilities
-- [ ] **Admin Dashboard** — enhanced admin interface
+- [x] **User Authentication** — partial; see [Feature 01](./features/01-user-auth-and-crud.md)
+- [x] **Payment Integration (Pix)** — partial; Mercado Pago; see [Feature 02](./features/02-coins-and-pix-payments.md)
+- [x] **Admin Dashboard (basic)** — bets, categories, coin packages; see [Feature 06](./features/06-mobile-app-and-admin-panel.md)
+- [ ] **Bet Closure & Payout** — see [Feature 03](./features/03-bet-closure-and-payout.md)
+- [ ] **Gamification & Rewards** — see [Feature 04](./features/04-gamification-and-rewards.md)
+- [ ] **Advanced Analytics** — see [Feature 05](./features/05-dashboard-and-analytics.md)
+- [ ] **Mobile App** — see [Feature 06](./features/06-mobile-app-and-admin-panel.md)
 
 ---
 

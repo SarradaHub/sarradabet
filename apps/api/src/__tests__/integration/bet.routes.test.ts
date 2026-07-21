@@ -17,7 +17,8 @@ process.env.DATABASE_URL = testDbUrl;
 
 import request from "supertest";
 import { app } from "../../app";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
+import { hashPassword } from "../../utils/auth";
 
 let prisma: PrismaClient | null = null;
 let isDatabaseAvailable = false;
@@ -54,6 +55,8 @@ const checkDatabaseConnection = async (): Promise<boolean> => {
 describe("Bet Routes Integration Tests", () => {
   let testCategoryId: number;
   let testBetId: number;
+  let userAccessToken: string;
+  let adminAccessToken: string;
 
   beforeAll(async () => {
     // Check if database is available
@@ -80,6 +83,8 @@ describe("Bet Routes Integration Tests", () => {
     await prisma.odd.deleteMany();
     await prisma.bet.deleteMany();
     await prisma.category.deleteMany();
+    await prisma.refreshToken.deleteMany();
+    await prisma.user.deleteMany();
 
     // Create test category
     const category = await prisma.category.create({
@@ -103,6 +108,43 @@ describe("Bet Routes Integration Tests", () => {
       include: { odds: true },
     });
     testBetId = bet.id;
+
+    const user = await prisma.user.create({
+      data: {
+        username: "betcreator",
+        email: "betcreator@example.com",
+        phone: "5511988880001",
+        passwordHash: await hashPassword("password123"),
+      },
+    });
+
+    const loginResponse = await request(app)
+      .post("/api/v1/auth/login")
+      .send({
+        username: user.username,
+        password: "password123",
+      });
+
+    userAccessToken = loginResponse.body.data.accessToken.token;
+
+    const admin = await prisma.user.create({
+      data: {
+        username: "betadmin",
+        email: "betadmin@example.com",
+        phone: "5511988880002",
+        passwordHash: await hashPassword("password123"),
+        role: UserRole.ADMIN,
+      },
+    });
+
+    const adminLoginResponse = await request(app)
+      .post("/api/v1/auth/login")
+      .send({
+        username: admin.username,
+        password: "password123",
+      });
+
+    adminAccessToken = adminLoginResponse.body.data.accessToken.token;
   });
 
   afterAll(async () => {
@@ -117,11 +159,15 @@ describe("Bet Routes Integration Tests", () => {
     name: string,
     fn?: jest.ProvidesCallback,
   ) => {
-    if (isDatabaseAvailable) {
-      return it(name, fn);
-    } else {
-      return it.skip(name, fn);
-    }
+    it(name, async () => {
+      if (!isDatabaseAvailable) {
+        pending("Database not available");
+      }
+
+      if (fn) {
+        await (fn as () => Promise<void>)();
+      }
+    });
   };
 
   describe("GET /api/v1/bets", () => {
@@ -188,6 +234,22 @@ describe("Bet Routes Integration Tests", () => {
   });
 
   describe("POST /api/v1/bets", () => {
+    testIfDbAvailable("should return 401 when creating bet without auth", async () => {
+      const betData = {
+        title: "Unauthorized Bet",
+        description: "Should fail",
+        categoryId: testCategoryId,
+        odds: [{ title: "Option 1" }, { title: "Option 2" }],
+      };
+
+      const response = await request(app)
+        .post("/api/v1/bets")
+        .send(betData)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+    });
+
     testIfDbAvailable("should create a new bet with auto-calculated odds", async () => {
       const betData = {
         title: "New Test Bet",
@@ -198,6 +260,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .post("/api/v1/bets")
+        .set("Authorization", `Bearer ${userAccessToken}`)
         .send(betData)
         .expect(201);
 
@@ -218,6 +281,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .post("/api/v1/bets")
+        .set("Authorization", `Bearer ${userAccessToken}`)
         .send(invalidBetData)
         .expect(400);
 
@@ -234,6 +298,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .post("/api/v1/bets")
+        .set("Authorization", `Bearer ${userAccessToken}`)
         .send(invalidBetData)
         .expect(400);
 
@@ -249,6 +314,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .post("/api/v1/bets")
+        .set("Authorization", `Bearer ${userAccessToken}`)
         .send(betData)
         .expect(404);
 
@@ -265,6 +331,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .put(`/api/v1/bets/${testBetId}`)
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .send(updateData)
         .expect(200);
 
@@ -278,6 +345,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .put("/api/v1/bets/99999")
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .send(updateData)
         .expect(404);
 
@@ -300,6 +368,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .delete(`/api/v1/bets/${bet.id}`)
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -315,6 +384,7 @@ describe("Bet Routes Integration Tests", () => {
     testIfDbAvailable("should return 404 for non-existent bet", async () => {
       const response = await request(app)
         .delete("/api/v1/bets/99999")
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(404);
 
       expect(response.body.success).toBe(false);
@@ -337,6 +407,7 @@ describe("Bet Routes Integration Tests", () => {
 
       const response = await request(app)
         .patch(`/api/v1/bets/${bet.id}/close`)
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -366,6 +437,7 @@ describe("Bet Routes Integration Tests", () => {
 
         const response = await request(app)
           .patch(`/api/v1/bets/${bet.id}/close`)
+          .set("Authorization", `Bearer ${adminAccessToken}`)
           .expect(409);
 
         expect(response.body.success).toBe(false);
@@ -397,6 +469,7 @@ describe("Bet Routes Integration Tests", () => {
       });
       const response = await request(app)
         .patch(`/api/v1/bets/${bet.id}/resolve`)
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .send({ winningOddId: firstOdd ? firstOdd.id : -1 })
         .expect(200);
 
@@ -415,6 +488,7 @@ describe("Bet Routes Integration Tests", () => {
     testIfDbAvailable("should return 400 for invalid winning odd", async () => {
       const response = await request(app)
         .patch(`/api/v1/bets/${testBetId}/resolve`)
+        .set("Authorization", `Bearer ${adminAccessToken}`)
         .send({ winningOddId: 99999 })
         .expect(400);
 
@@ -441,6 +515,7 @@ describe("Bet Routes Integration Tests", () => {
         });
         const response = await request(app)
           .patch(`/api/v1/bets/${bet.id}/resolve`)
+          .set("Authorization", `Bearer ${adminAccessToken}`)
           .send({ winningOddId: firstOdd!.id })
           .expect(409);
 

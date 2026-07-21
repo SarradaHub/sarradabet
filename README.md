@@ -308,9 +308,12 @@ npm run test:web
 - [x] Optimistic voting with rollback
 - [x] Shared types package (`@sarradabet/types`)
 - [ ] End-user authentication (admin JWT exists today)
+- [ ] User CRUD
+- [ ] Coin economy — each bet costs 1 coin; conversion rate R$5 → 100 coins
+- [x] Pix payment for coin purchases
+- [ ] Gamification with ranking
 - [ ] Advanced analytics and reporting
 - [ ] Mobile app (React Native)
-- [ ] Payment integration
 - [ ] Enhanced admin dashboard
 
 See [open issues](https://github.com/SarradaHub/sarradabet/issues) for proposed features and known bugs.

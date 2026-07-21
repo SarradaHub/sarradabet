@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "http";
 import { Server } from "socket.io";
 import { config } from "../config/env";
 import { logger } from "../utils/logger";
+import { verifyAccessToken } from "../utils/auth";
 
 let io: Server | null = null;
 
@@ -19,8 +20,33 @@ export function initSocketServer(httpServer: HttpServer): Server {
     path: "/socket.io",
   });
 
+  io.use((socket, next) => {
+    const token =
+      (socket.handshake.auth?.token as string | undefined) ??
+      socket.handshake.headers.authorization?.replace(/^Bearer\s+/i, "");
+
+    if (!token) {
+      next();
+      return;
+    }
+
+    try {
+      const payload = verifyAccessToken(token);
+      socket.data.userId = payload.userId;
+      next();
+    } catch {
+      next(new Error("Unauthorized"));
+    }
+  });
+
   io.on("connection", (socket) => {
     logger.info(`Socket connected: ${socket.id}`);
+
+    const userId = socket.data.userId as number | undefined;
+    if (userId) {
+      socket.join(`user:${userId}`);
+      logger.info(`Socket ${socket.id} joined user:${userId}`);
+    }
 
     socket.on("disconnect", () => {
       logger.info(`Socket disconnected: ${socket.id}`);

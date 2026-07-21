@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import BrandLogo from "./BrandLogo";
 import { Button } from "./ui/Button";
 import { Settings } from "@sarradahub/design-system";
+import { useAuth } from "../hooks/useAuth";
 
 interface NavigationProps {
   mobileCategoryTrigger?: ReactNode;
@@ -10,6 +11,65 @@ interface NavigationProps {
 
 const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const authButtons = (
+    <>
+      {!isAuthenticated && (
+        <>
+          <Link to="/login" onClick={closeMobileMenu}>
+            <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+              Entrar
+            </Button>
+          </Link>
+          <Link to="/register" onClick={closeMobileMenu}>
+            <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+              Cadastrar
+            </Button>
+          </Link>
+        </>
+      )}
+      {isAuthenticated && (
+        <>
+          <Link to="/profile" onClick={closeMobileMenu}>
+            <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+              {user?.username ?? "Perfil"}
+            </Button>
+          </Link>
+          <Link to="/coins" onClick={closeMobileMenu}>
+            <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+              Moedas
+            </Button>
+          </Link>
+          {isAdmin && (
+            <Link to="/admin/dashboard" onClick={closeMobileMenu}>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={Settings}
+                className="text-xs w-full md:w-auto"
+              >
+                Admin
+              </Button>
+            </Link>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="text-xs w-full md:w-auto"
+            onClick={() => {
+              closeMobileMenu();
+              void logout();
+            }}
+          >
+            Sair
+          </Button>
+        </>
+      )}
+    </>
+  );
 
   return (
     <header className="sticky top-0 z-50 sb-surface border-b sb-border shrink-0">
@@ -19,18 +79,7 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
           <BrandLogo size="sm" linkToHome />
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
-          <Link to="/admin/login">
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={Settings}
-              className="text-xs"
-            >
-              Admin
-            </Button>
-          </Link>
-        </div>
+        <div className="hidden md:flex items-center gap-2">{authButtons}</div>
 
         <button
           type="button"
@@ -50,17 +99,8 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t sb-border px-4 py-3">
-          <Link to="/admin/login" onClick={() => setIsMobileMenuOpen(false)}>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={Settings}
-              className="w-full"
-            >
-              Admin
-            </Button>
-          </Link>
+        <div className="md:hidden border-t sb-border px-4 py-3 space-y-2">
+          {authButtons}
         </div>
       )}
     </header>

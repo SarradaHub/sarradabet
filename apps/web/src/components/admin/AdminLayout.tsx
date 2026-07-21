@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Ticket, FolderOpen } from "lucide-react";
+import { LayoutDashboard, Ticket, FolderOpen, Coins, Users } from "lucide-react";
 import BrandLogo from "../BrandLogo";
 import { Button } from "../ui/Button";
 import { ErrorMessage } from "../ui/ErrorMessage";
@@ -12,6 +12,8 @@ const navItems = [
   { to: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/admin/bets", label: "Apostas", icon: Ticket },
   { to: "/admin/categories", label: "Categorias", icon: FolderOpen },
+  { to: "/admin/coin-packages", label: "Pacotes", icon: Coins },
+  { to: "/admin/users", label: "Usuários", icon: Users },
 ];
 
 const AdminLayout: React.FC = () => {
