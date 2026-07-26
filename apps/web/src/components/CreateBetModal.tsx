@@ -16,6 +16,8 @@ import { Button } from "./ui/Button";
 import { ErrorMessage } from "./ui/ErrorMessage";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Input, Textarea, Select } from "@sarradahub/design-system";
+import { fromDatetimeLocalValue } from "../utils/datetimeLocal";
+import ScheduleFields from "./admin/ScheduleFields";
 
 interface CreateBetModalProps {
   isOpen: boolean;
@@ -35,7 +37,11 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
     description: "",
     categoryId: undefined,
     odds: defaultOdds(),
+    startTime: undefined,
+    closesAt: undefined,
   });
+  const [startTimeLocal, setStartTimeLocal] = useState("");
+  const [closesAtLocal, setClosesAtLocal] = useState("");
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -55,7 +61,11 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
         description: "",
         categoryId: undefined,
         odds: defaultOdds(),
+        startTime: undefined,
+        closesAt: undefined,
       });
+      setStartTimeLocal("");
+      setClosesAtLocal("");
       setValidationErrors([]);
       queryCache.clear(getCategoriesQueryKey(CATEGORIES_LIST_PARAMS));
       void refetchCategories();
@@ -96,6 +106,14 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
       errors.push("Títulos das odds devem ser únicos");
     }
 
+    if (startTimeLocal && closesAtLocal) {
+      const start = new Date(startTimeLocal);
+      const close = new Date(closesAtLocal);
+      if (close <= start) {
+        errors.push("Encerramento deve ser posterior ao início");
+      }
+    }
+
     setValidationErrors(errors);
     return errors.length === 0;
   };
@@ -111,6 +129,8 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
       const betData = {
         ...formData,
         categoryId: Number(formData.categoryId),
+        startTime: fromDatetimeLocalValue(startTimeLocal),
+        closesAt: fromDatetimeLocalValue(closesAtLocal),
       } as CreateBetDto;
 
       const result = await createBetMutation.mutateAsync(betData);
@@ -223,6 +243,13 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
             />
           )}
         </div>
+
+        <ScheduleFields
+          startTimeLocal={startTimeLocal}
+          closesAtLocal={closesAtLocal}
+          onStartTimeChange={setStartTimeLocal}
+          onClosesAtChange={setClosesAtLocal}
+        />
 
         <section className="sb-surface border sb-border rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">

@@ -4,7 +4,16 @@ export type CoinTransactionSource =
   | "PIX_PURCHASE"
   | "BET_COST"
   | "ADMIN_ADJUSTMENT"
-  | "REFUND";
+  | "REFUND"
+  | "WIN"
+  | "TAKEOUT"
+  | "REWARD_REDEMPTION";
+
+export interface HouseTreasurySummary {
+  balance: number;
+  takeoutRate: number;
+  takeoutPercent: number;
+}
 
 export interface CoinBalance {
   balance: number;

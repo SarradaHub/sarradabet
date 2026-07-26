@@ -5,6 +5,7 @@ import BrandLogo from "../components/BrandLogo";
 import { Button } from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useAuth } from "../hooks/useAuth";
 
 const LoginPage: React.FC = () => {
@@ -64,6 +65,7 @@ const LoginPage: React.FC = () => {
               }))
             }
             required
+            className={sportsbookFieldClass}
           />
           <PasswordInput
             id="login-password"
@@ -77,6 +79,7 @@ const LoginPage: React.FC = () => {
               }))
             }
             required
+            className={sportsbookFieldClass}
           />
 
           <Button type="submit" className="w-full" disabled={loading}>

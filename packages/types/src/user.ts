@@ -11,6 +11,14 @@ export interface UserPublic {
   updatedAt: string;
 }
 
+export interface UpdateUserDto {
+  username?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  role?: UserRole;
+}
+
 export interface AuthTokensResponse {
   user: UserPublic;
   accessToken: {

@@ -1,9 +1,11 @@
 import {
   RealtimeEvents,
   type BetListItem,
+  type BetResolvedPayload,
   type PaymentConfirmedPayload,
   type RealtimeEventName,
   type RealtimePayloadMap,
+  type RewardValidatedPayload,
   type VoteCreatedPayload,
 } from "@sarradabet/types";
 import { getSocketServer } from "./socket";
@@ -51,4 +53,18 @@ export function emitPaymentConfirmed(
   payload: PaymentConfirmedPayload,
 ): void {
   emitToUser(userId, RealtimeEvents.PAYMENT_CONFIRMED, payload);
+}
+
+export function emitBetResolved(
+  userId: number,
+  payload: BetResolvedPayload,
+): void {
+  emitToUser(userId, RealtimeEvents.BET_RESOLVED, payload);
+}
+
+export function emitRewardValidated(
+  userId: number,
+  payload: RewardValidatedPayload,
+): void {
+  emitToUser(userId, RealtimeEvents.REWARD_VALIDATED, payload);
 }

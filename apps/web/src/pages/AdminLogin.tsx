@@ -5,6 +5,7 @@ import BrandLogo from "../components/BrandLogo";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import PasswordInput from "../components/ui/PasswordInput";
 import { Input } from "@sarradahub/design-system";
+import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useAuth } from "../hooks/useAuth";
 
 interface LoginForm {
@@ -92,7 +93,7 @@ const AdminLogin: React.FC = () => {
               placeholder="Digite seu usuário ou email"
               disabled={loading}
               aria-describedby={error ? "username-error" : undefined}
-              className="dark:bg-sportsbook-raised dark:border-sportsbook-border dark:text-white dark:placeholder-sportsbook-muted dark:focus:ring-warning-400"
+              className={sportsbookFieldClass}
             />
 
             <PasswordInput
@@ -105,7 +106,7 @@ const AdminLogin: React.FC = () => {
               placeholder="Digite sua senha"
               disabled={loading}
               aria-describedby={error ? "password-error" : undefined}
-              className="dark:bg-sportsbook-raised dark:border-sportsbook-border dark:text-white dark:placeholder-sportsbook-muted dark:focus:ring-warning-400"
+              className={sportsbookFieldClass}
             />
           </div>
 

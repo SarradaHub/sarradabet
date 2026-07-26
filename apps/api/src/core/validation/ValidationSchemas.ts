@@ -128,6 +128,8 @@ export const CreateBetSchema = z.object({
     .number()
     .int()
     .positive("Category ID must be a positive integer"),
+  startTime: z.string().datetime().optional(),
+  closesAt: z.string().datetime().optional(),
   odds: z
     .array(CreateOddSchema)
     .min(2, "At least 2 odds are required")
@@ -150,7 +152,9 @@ export const UpdateBetSchema = z.object({
     .optional()
     .nullable(),
   categoryId: IdSchema.optional(),
-  status: z.enum(["open", "closed", "resolved"]).optional(),
+  status: z.enum(["scheduled", "open", "closed", "resolved"]).optional(),
+  startTime: z.string().datetime().nullable().optional(),
+  closesAt: z.string().datetime().nullable().optional(),
   odds: z
     .array(UpdateOddValueSchema)
     .min(2, "At least 2 odds are required")
@@ -183,10 +187,18 @@ export const UpdateCategorySchema = z.object({
 
 export const CreateVoteSchema = z.object({
   oddId: IdSchema,
+  amount: z
+    .number()
+    .int()
+    .positive("Stake amount must be at least 1 coin"),
+});
+
+export const ResolveBetSchema = z.object({
+  winningOddId: IdSchema,
 });
 
 export const BetQuerySchema = PaginationSchema.extend({
-  status: z.enum(["open", "closed", "resolved"]).optional(),
+  status: z.enum(["scheduled", "open", "closed", "resolved"]).optional(),
   categoryId: z.coerce
     .number()
     .int()
@@ -232,6 +244,62 @@ export const CreatePixPurchaseSchema = z.object({
   coinPackageId: IdSchema,
 });
 
+export const CreateRewardSchema = z.object({
+  title: z
+    .string()
+    .min(2, "Title must be at least 2 characters")
+    .max(255, "Title cannot exceed 255 characters")
+    .trim(),
+  description: z.string().max(1000).optional(),
+  coinCost: z
+    .number()
+    .int()
+    .min(1, "Coin cost must be at least 1")
+    .max(1000000, "Coin cost is too large"),
+  stock: z.number().int().min(0, "Stock cannot be negative"),
+  imageUrl: z.string().url().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const UpdateRewardSchema = CreateRewardSchema.partial();
+
+export const ParamTicketCodeSchema = z.object({
+  code: z.string().uuid("Invalid ticket code"),
+});
+
+export const LeaderboardQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(100),
+});
+
+export const DashboardQuerySchema = PaginationSchema.pick({
+  page: true,
+  limit: true,
+});
+
+const AnalyticsDateRangeSchema = z.object({
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
+  categoryId: z.coerce.number().int().positive().optional(),
+});
+
+export const AnalyticsQuerySchema = AnalyticsDateRangeSchema.extend({
+  format: z.enum(["csv"]).optional(),
+}).refine((data) => data.startDate <= data.endDate, {
+  message: "Data de início deve ser anterior à data de fim",
+  path: ["startDate"],
+});
+
+export const AnalyticsExportQuerySchema = AnalyticsDateRangeSchema.extend({
+  format: z.enum(["csv"]).default("csv"),
+}).refine((data) => data.startDate <= data.endDate, {
+  message: "Data de início deve ser anterior à data de fim",
+  path: ["startDate"],
+});
+
 export const RateLimitSchema = z.object({
   windowMs: z.number().int().min(1000).max(3600000).default(900000), // 15 minutes
   maxRequests: z.number().int().min(1).max(10000).default(100),
@@ -266,3 +334,9 @@ export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 export type CreateCoinPackageInput = z.infer<typeof CreateCoinPackageSchema>;
 export type UpdateCoinPackageInput = z.infer<typeof UpdateCoinPackageSchema>;
 export type CreatePixPurchaseInput = z.infer<typeof CreatePixPurchaseSchema>;
+export type CreateRewardInput = z.infer<typeof CreateRewardSchema>;
+export type UpdateRewardInput = z.infer<typeof UpdateRewardSchema>;
+export type LeaderboardQueryInput = z.infer<typeof LeaderboardQuerySchema>;
+export type DashboardQueryInput = z.infer<typeof DashboardQuerySchema>;
+export type AnalyticsQueryInput = z.infer<typeof AnalyticsQuerySchema>;
+export type AnalyticsExportQueryInput = z.infer<typeof AnalyticsExportQuerySchema>;

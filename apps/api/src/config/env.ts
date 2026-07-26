@@ -117,11 +117,33 @@ const envSchema = z.object({
     .default(30),
   MERCADOPAGO_MOCK_PIX: z.coerce.boolean().default(false),
   REDIS_URL: z.string().default("redis://localhost:6379"),
+  BET_TAKEOUT_RATE: z.coerce
+    .number()
+    .min(0)
+    .max(0.5)
+    .default(0.25),
   AUTH_LOGIN_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
   AUTH_REGISTER_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
+  HOUSE_USER_USERNAME: z.string().min(1).default("house"),
+  RANKING_WIN_WEIGHT: z.coerce.number().positive().default(10),
+  RANKING_BALANCE_WEIGHT: z.coerce.number().nonnegative().default(0.1),
+  TIER_SILVER_MIN: z.coerce.number().nonnegative().default(50),
+  TIER_GOLD_MIN: z.coerce.number().nonnegative().default(200),
+  LEADERBOARD_CACHE_TTL: z.coerce.number().int().positive().default(300),
+  PUBLIC_WEB_URL: z.string().url().optional(),
+  TICKET_IMAGE_CACHE_TTL: z.coerce.number().int().positive().default(3600),
+  TICKET_IMAGE_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
 });
 
-export const config = envSchema.parse(process.env);
+const parsed = envSchema.parse(process.env);
+
+export const config = {
+  ...parsed,
+  PUBLIC_WEB_URL:
+    parsed.PUBLIC_WEB_URL ??
+    parsed.CORS_ORIGINS.split(",")[0]?.trim() ??
+    "http://localhost:3002",
+};
 
 if (config.MERCADOPAGO_MOCK_PIX && config.NODE_ENV === "production") {
   throw new Error("MERCADOPAGO_MOCK_PIX cannot be enabled in production");

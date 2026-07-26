@@ -25,6 +25,8 @@ model Bet {
   status      BetStatus @default(open)
   categoryId  Int
   odds        Odd[]
+  startTime   DateTime? @map("start_time")
+  closesAt    DateTime? @map("closes_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   resolvedAt  DateTime? @map("resolved_at")
@@ -35,6 +37,8 @@ model Bet {
   @@index([createdAt])
   @@index([categoryId])
   @@index([status, createdAt(sort: Desc)])
+  @@index([startTime])
+  @@index([closesAt])
   @@map("bets")
 }
 
@@ -56,32 +60,92 @@ model Odd {
 }
 
 model Vote {
-  id        Int      @id @default(autoincrement())
-  oddId     Int
-  createdAt DateTime @default(now()) @map("created_at")
+  id            Int        @id @default(autoincrement())
+  oddId         Int
+  userId        Int        @map("user_id")
+  amount        Int
+  status        VoteStatus @default(pending)
+  payoutAmount  Int?       @map("payout_amount")
+  paidAt        DateTime?  @map("paid_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
 
-  odd Odd @relation(fields: [oddId], references: [id])
+  odd  Odd  @relation(fields: [oddId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([oddId])
+  @@index([userId])
+  @@index([userId, oddId])
+  @@index([status])
   @@map("votes")
 }
 
 model User {
-  id               Int               @id @default(autoincrement())
-  username         String            @unique @db.VarChar(50)
-  email            String            @unique @db.VarChar(255)
-  phone            String            @unique @db.VarChar(20)
-  passwordHash     String            @map("password_hash")
-  role             UserRole          @default(USER)
-  coinBalance      Int               @default(0) @map("coin_balance")
+  id               Int                @id @default(autoincrement())
+  username         String             @unique @db.VarChar(50)
+  email            String             @unique @db.VarChar(255)
+  phone            String             @unique @db.VarChar(20)
+  passwordHash     String             @map("password_hash")
+  role             UserRole           @default(USER)
+  coinBalance      Int                @default(0) @map("coin_balance")
   refreshTokens    RefreshToken[]
   actions          UserAction[]
   coinTransactions CoinTransaction[]
   pixPayments      PixPayment[]
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
+  votes            Vote[]
+  stats            UserStats?
+  rewardRedemptions RewardRedemption[]
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model UserStats {
+  userId       Int      @id @map("user_id")
+  totalBets    Int      @default(0) @map("total_bets")
+  wonBets      Int      @default(0) @map("won_bets")
+  lostBets     Int      @default(0) @map("lost_bets")
+  winRate      Float    @default(0) @map("win_rate")
+  rankingScore Float    @default(0) @map("ranking_score")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([rankingScore(sort: Desc)])
+  @@map("user_stats")
+}
+
+model Reward {
+  id          Int                @id @default(autoincrement())
+  title       String             @db.VarChar(255)
+  description String?
+  coinCost    Int                @map("coin_cost")
+  stock       Int                @default(0)
+  imageUrl    String?            @map("image_url")
+  isActive    Boolean            @default(true) @map("is_active")
+  redemptions RewardRedemption[]
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("rewards")
+}
+
+model RewardRedemption {
+  id          Int       @id @default(autoincrement())
+  rewardId    Int       @map("reward_id")
+  userId      Int       @map("user_id")
+  ticketCode  String    @unique @map("ticket_code") @db.VarChar(36)
+  redeemedAt  DateTime  @default(now()) @map("redeemed_at")
+  validatedAt DateTime? @map("validated_at")
+  validatedBy Int?      @map("validated_by")
+
+  reward Reward @relation(fields: [rewardId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([rewardId])
+  @@map("reward_redemptions")
 }
 
 model UserAction {
@@ -174,6 +238,7 @@ model PixPayment {
 }
 
 enum BetStatus {
+  scheduled
   open
   closed
   resolved
@@ -182,6 +247,12 @@ enum BetStatus {
 enum OddResult {
   pending
   won
+  lost
+}
+
+enum VoteStatus {
+  pending
+  paid
   lost
 }
 
@@ -200,6 +271,9 @@ enum CoinTransactionSource {
   BET_COST
   ADMIN_ADJUSTMENT
   REFUND
+  WIN
+  TAKEOUT
+  REWARD_REDEMPTION
 }
 
 enum PixPaymentStatus {

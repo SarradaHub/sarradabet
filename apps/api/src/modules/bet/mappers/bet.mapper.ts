@@ -10,12 +10,16 @@ export function toBetListItem(bet: BetWithOdds): BetListItem {
     categoryId: bet.categoryId,
     category: bet.category,
     totalVotes: bet.totalVotes,
+    totalStake: bet.totalStake,
+    startTime: bet.startTime,
+    closesAt: bet.closesAt,
     createdAt: bet.createdAt,
-    odds: bet.odds.map(({ id, title, value, totalVotes }) => ({
+    odds: bet.odds.map(({ id, title, value, totalVotes, totalStake }) => ({
       id,
       title,
       value,
       totalVotes,
+      totalStake,
     })),
   };
 }
@@ -26,11 +30,12 @@ export function toBetDetail(bet: BetWithOdds): BetDetail {
     updatedAt: bet.updatedAt,
     resolvedAt: bet.resolvedAt,
     odds: bet.odds.map(
-      ({ id, title, value, totalVotes, result, betId }) => ({
+      ({ id, title, value, totalVotes, totalStake, result, betId }) => ({
         id,
         title,
         value,
         totalVotes,
+        totalStake,
         result,
         betId,
       }),

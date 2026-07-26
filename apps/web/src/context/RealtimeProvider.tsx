@@ -1,7 +1,9 @@
 import {
   RealtimeEvents,
   type BetListItem,
+  type BetResolvedPayload,
   type PaymentConfirmedPayload,
+  type RewardValidatedPayload,
   type VoteCreatedPayload,
 } from "@sarradabet/types";
 import { useSocketEvent } from "../core/hooks/useSocket";
@@ -23,6 +25,21 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     RealtimeEvents.PAYMENT_CONFIRMED,
     () => {
       window.dispatchEvent(new CustomEvent("payment:confirmed"));
+    },
+  );
+
+  useSocketEvent<BetResolvedPayload>(RealtimeEvents.BET_RESOLVED, (payload) => {
+    window.dispatchEvent(
+      new CustomEvent("bet:resolved", { detail: payload }),
+    );
+  });
+
+  useSocketEvent<RewardValidatedPayload>(
+    RealtimeEvents.REWARD_VALIDATED,
+    (payload) => {
+      window.dispatchEvent(
+        new CustomEvent("reward:validated", { detail: payload }),
+      );
     },
   );
 

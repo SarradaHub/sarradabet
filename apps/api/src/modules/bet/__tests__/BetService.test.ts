@@ -11,6 +11,9 @@ import { BetStatus } from "../../../types/bet.types";
 
 // Mock the repository
 jest.mock("../repositories/BetRepository");
+jest.mock("../../../jobs/payout.worker", () => ({
+  enqueuePayoutJobs: jest.fn().mockResolvedValue(0),
+}));
 
 describe("BetService", () => {
   let betService: BetService;
@@ -204,7 +207,7 @@ describe("BetService", () => {
     it("should resolve bet successfully", async () => {
       const mockBet: any = betWithOddsFactory.build({
         id: 1,
-        status: BetStatus.open,
+        status: BetStatus.closed,
         odds: [
           { id: 1, title: "Option 1", value: 2.0 },
           { id: 2, title: "Option 2", value: 3.0 },
@@ -234,7 +237,7 @@ describe("BetService", () => {
 
       await expect(betService.resolveBet(1, 1)).rejects.toThrow(ConflictError);
       await expect(betService.resolveBet(1, 1)).rejects.toThrow(
-        "Bet is already resolved",
+        "Aposta já foi resolvida",
       );
     });
 
@@ -242,7 +245,7 @@ describe("BetService", () => {
       const mockBet = {
         id: 1,
         title: "Test Bet",
-        status: "open",
+        status: BetStatus.closed,
         odds: [{ id: 1, title: "Option 1", value: 2.0 }],
         totalVotes: 0,
       };

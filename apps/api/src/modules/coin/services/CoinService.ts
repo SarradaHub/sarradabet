@@ -10,6 +10,7 @@ import {
   CoinRepository,
   CreditDebitMetadata,
 } from "../repositories/CoinRepository";
+import { invalidateDashboardCache } from "../../dashboard/services/DashboardService";
 
 export class CoinService {
   constructor(private readonly coinRepository: CoinRepository = new CoinRepository()) {}
@@ -43,30 +44,53 @@ export class CoinService {
     }
 
     if (txClient) {
-      return this.coinRepository.creditCoins(txClient, userId, amount, metadata);
+      const result = await this.coinRepository.creditCoins(
+        txClient,
+        userId,
+        amount,
+        metadata,
+      );
+      await invalidateDashboardCache(userId);
+      return result;
     }
 
-    return prisma.$transaction(async (tx) =>
+    const result = await prisma.$transaction(async (tx) =>
       this.coinRepository.creditCoins(tx, userId, amount, metadata),
     );
+    await invalidateDashboardCache(userId);
+    return result;
   }
 
   async debitCoins(
     userId: number,
     amount: number,
     metadata: CreditDebitMetadata,
+    txClient?: Prisma.TransactionClient,
   ): Promise<CoinTransaction> {
     if (amount <= 0) {
       throw new BadRequestError("Amount must be greater than zero");
     }
 
     try {
-      return await prisma.$transaction(async (tx) =>
+      if (txClient) {
+        const result = await this.coinRepository.debitCoins(
+          txClient,
+          userId,
+          amount,
+          metadata,
+        );
+        await invalidateDashboardCache(userId);
+        return result;
+      }
+
+      const result = await prisma.$transaction(async (tx) =>
         this.coinRepository.debitCoins(tx, userId, amount, metadata),
       );
+      await invalidateDashboardCache(userId);
+      return result;
     } catch (error) {
       if (error instanceof Error && error.message === "INSUFFICIENT_BALANCE") {
-        throw new BadRequestError("Insufficient coin balance");
+        throw new BadRequestError("Saldo insuficiente");
       }
       throw error;
     }

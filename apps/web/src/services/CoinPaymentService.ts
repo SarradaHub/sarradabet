@@ -3,6 +3,7 @@ import type {
   CoinPackage,
   CoinTransaction,
   CreatePixPurchaseResponse,
+  HouseTreasurySummary,
   PixPaymentStatusResponse,
 } from "@sarradabet/types";
 import type { ApiResponse } from "../core/interfaces/IService";
@@ -127,7 +128,19 @@ class AdminCoinPackageService {
   }
 }
 
+class AdminHouseService {
+  private readonly api = createApiClient("admin/house");
+
+  async getSummary(): Promise<HouseTreasurySummary> {
+    const response = await this.api.get<ApiResponse<HouseTreasurySummary>>(
+      "/summary",
+    );
+    return response.data.data;
+  }
+}
+
 export const coinService = new CoinService();
 export const paymentService = new PaymentService();
 export const authService = new AuthService();
 export const adminCoinPackageService = new AdminCoinPackageService();
+export const adminHouseService = new AdminHouseService();

@@ -1,4 +1,4 @@
-import type { UserPublic } from "@sarradabet/types";
+import type { UpdateUserDto, UserPublic } from "@sarradabet/types";
 import type { ApiResponse } from "../core/interfaces/IService";
 import { createApiClient } from "./apiClient";
 
@@ -12,6 +12,11 @@ class UserService {
 
   async listUsers(): Promise<UserPublic[]> {
     const response = await this.api.get<ApiResponse<UserPublic[]>>("/");
+    return response.data.data;
+  }
+
+  async updateUser(id: number, data: UpdateUserDto): Promise<UserPublic> {
+    const response = await this.api.put<ApiResponse<UserPublic>>(`/${id}`, data);
     return response.data.data;
   }
 

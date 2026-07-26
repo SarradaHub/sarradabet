@@ -147,3 +147,315 @@ Please make sure your database server is running at `localhost:5432`.
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     at async PixPaymentService.createPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:44:23)
     at async createPixPurchase (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/controllers/PaymentController.ts:18:22)
+2026-07-26 13:31:14 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.bet.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:30:40
+
+  27 async findMany(params?: FindManyParams): Promise<BetWithOdds[]> {
+  28   const { skip, take, orderBy, include, where } = params || {};
+  29 
+→ 30   const bets = await this.prisma.bet.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `this.prisma.bet.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:30:40
+
+  27 async findMany(params?: FindManyParams): Promise<BetWithOdds[]> {
+  28   const { skip, take, orderBy, include, where } = params || {};
+  29 
+→ 30   const bets = await this.prisma.bet.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async BetRepository.findMany (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:30:18)
+    at async Promise.all (index 0)
+    at async BetRepository.findManyWithPagination (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/base/BaseRepository.ts:34:27)
+    at async BetController.findAll (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/controllers/BetController.ts:31:22)
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.bet.count()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:275:28
+
+  272 }
+  273 
+  274 async count(where?: Record<string, unknown>): Promise<number> {
+→ 275   return this.prisma.bet.count(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.category.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:29:47
+
+  26 async findMany(params?: FindManyParams): Promise<CategoryWithStats[]> {
+  27   const { skip, take, orderBy, include, where } = params || {};
+  28 
+→ 29   const result = await this.prisma.category.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `this.prisma.category.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:29:47
+
+  26 async findMany(params?: FindManyParams): Promise<CategoryWithStats[]> {
+  27   const { skip, take, orderBy, include, where } = params || {};
+  28 
+→ 29   const result = await this.prisma.category.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async CategoryRepository.findMany (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:29:20)
+    at async Promise.all (index 0)
+    at async CategoryRepository.findManyWithPagination (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/base/BaseRepository.ts:34:27)
+    at async CategoryService.findAll (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/services/CategoryService.ts:45:9)
+    at async CategoryController.findAll (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/controllers/CategoryController.ts:30:22)
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.category.count()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:116:33
+
+  113 }
+  114 
+  115 async count(where?: Record<string, unknown>): Promise<number> {
+→ 116   return this.prisma.category.count(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.bet.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:30:40
+
+  27 async findMany(params?: FindManyParams): Promise<BetWithOdds[]> {
+  28   const { skip, take, orderBy, include, where } = params || {};
+  29 
+→ 30   const bets = await this.prisma.bet.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `this.prisma.bet.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:30:40
+
+  27 async findMany(params?: FindManyParams): Promise<BetWithOdds[]> {
+  28   const { skip, take, orderBy, include, where } = params || {};
+  29 
+→ 30   const bets = await this.prisma.bet.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async BetRepository.findMany (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/repositories/BetRepository.ts:30:18)
+    at async Promise.all (index 0)
+    at async BetRepository.findManyWithPagination (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/base/BaseRepository.ts:34:27)
+    at async BetController.findAll (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/controllers/BetController.ts:31:22)
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.category.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:29:47
+
+  26 async findMany(params?: FindManyParams): Promise<CategoryWithStats[]> {
+  27   const { skip, take, orderBy, include, where } = params || {};
+  28 
+→ 29   const result = await this.prisma.category.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `this.prisma.category.findMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:29:47
+
+  26 async findMany(params?: FindManyParams): Promise<CategoryWithStats[]> {
+  27   const { skip, take, orderBy, include, where } = params || {};
+  28 
+→ 29   const result = await this.prisma.category.findMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async CategoryRepository.findMany (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:29:20)
+    at async Promise.all (index 0)
+    at async CategoryRepository.findManyWithPagination (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/base/BaseRepository.ts:34:27)
+    at async CategoryService.findAll (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/services/CategoryService.ts:45:9)
+    at async CategoryController.findAll (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/controllers/CategoryController.ts:30:22)
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `this.prisma.category.count()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/category/repositories/CategoryRepository.ts:116:33
+
+  113 }
+  114 
+  115 async count(where?: Record<string, unknown>): Promise<number> {
+→ 116   return this.prisma.category.count(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] Prisma Error: 
+Invalid `prisma.pixPayment.updateMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/repositories/PixPaymentRepository.ts:54:30
+
+  51 }
+  52 
+  53 async expirePendingPayments(before: Date) {
+→ 54   return prisma.pixPayment.updateMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:31:15 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `prisma.pixPayment.updateMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/repositories/PixPaymentRepository.ts:54:30
+
+  51 }
+  52 
+  53 async expirePendingPayments(before: Date) {
+→ 54   return prisma.pixPayment.updateMany(
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async PixPaymentService.expirePendingPayments (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/payment/services/PixPaymentService.ts:251:5)
+2026-07-26 13:45:30 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-07-26 13:50:18 [[31merror[39m] Validation middleware error: Validation failed
+2026-07-26 13:51:11 [[31merror[39m] Validation middleware error: Validation failed
+2026-07-26 13:51:11 [[31merror[39m] Validation middleware error: Validation failed
+2026-07-26 14:56:00 [[31merror[39m] Prisma Error: 
+Invalid `prisma.bet.updateMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/jobs/bet-status.worker.ts:16:44
+
+  13 }> {
+  14   const now = new Date();
+  15 
+→ 16   const scheduledToOpen = await prisma.bet.updateMany({
+         where: {
+           status: "scheduled",
+                   ~~~~~~~~~~~
+           startTime: {
+             lte: new Date("2026-07-26T17:56:00.005Z")
+           }
+         },
+         data: {
+           status: "open"
+         }
+       })
+
+Invalid value for argument `status`. Expected BetStatus.
+2026-07-26 14:56:01 [[31merror[39m] Prisma Error: 
+Invalid `prisma.bet.updateMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/jobs/bet-status.worker.ts:16:44
+
+  13 }> {
+  14   const now = new Date();
+  15 
+→ 16   const scheduledToOpen = await prisma.bet.updateMany({
+         where: {
+           status: "scheduled",
+                   ~~~~~~~~~~~
+           startTime: {
+             lte: new Date("2026-07-26T17:56:01.024Z")
+           }
+         },
+         data: {
+           status: "open"
+         }
+       })
+
+Invalid value for argument `status`. Expected BetStatus.
+2026-07-26 14:56:04 [[31merror[39m] Prisma Error: 
+Invalid `prisma.bet.updateMany()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/jobs/bet-status.worker.ts:16:44
+
+  13 }> {
+  14   const now = new Date();
+  15 
+→ 16   const scheduledToOpen = await prisma.bet.updateMany({
+         where: {
+           status: "scheduled",
+                   ~~~~~~~~~~~
+           startTime: {
+             lte: new Date("2026-07-26T17:56:04.029Z")
+           }
+         },
+         data: {
+           status: "open"
+         }
+       })
+
+Invalid value for argument `status`. Expected BetStatus.
+2026-07-26 15:52:04 [[31merror[39m] Error: listen EADDRINUSE: address already in use :::8000
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at startServer (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/server.ts:43:16)
+2026-07-26 15:55:49 [[31merror[39m] Error: Not allowed by CORS
+    at origin (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:178:14)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:328:13)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:280:10)
+    at sanitizeRequest (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:159:3)
+2026-07-26 15:55:49 [[31merror[39m] Error: Not allowed by CORS
+    at origin (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:178:14)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:328:13)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:280:10)
+    at sanitizeRequest (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:159:3)
+2026-07-26 15:57:09 [[31merror[39m] Error: Not allowed by CORS
+    at origin (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:178:14)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:328:13)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:280:10)
+    at sanitizeRequest (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:159:3)
+2026-07-26 15:57:16 [[31merror[39m] Error: Not allowed by CORS
+    at origin (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:178:14)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:328:13)
+    at /home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/express/lib/router/index.js:280:10)
+    at sanitizeRequest (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/SecurityMiddleware.ts:159:3)
+2026-07-26 16:39:56 [[31merror[39m] Validation middleware error: Validation failed
+2026-07-26 17:54:13 [[31merror[39m] Prisma Error: 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.

@@ -57,6 +57,6 @@ describe("CoinService", () => {
       service.debitCoins(10, 50, {
         source: CoinTransactionSource.BET_COST,
       }),
-    ).rejects.toThrow("Insufficient coin balance");
+    ).rejects.toThrow("Saldo insuficiente");
   });
 });

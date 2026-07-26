@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
 import type { UserPublic } from "@sarradabet/types";
 import { Button } from "../components/ui/Button";
+import EditUserModal from "../components/admin/EditUserModal";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { Modal } from "../components/ui/Modal";
@@ -18,6 +20,7 @@ const AdminUsersPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [confirmUser, setConfirmUser] = useState<UserPublic | null>(null);
+  const [editingUser, setEditingUser] = useState<UserPublic | null>(null);
 
   const loadUsers = async () => {
     try {
@@ -56,6 +59,17 @@ const AdminUsersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <EditUserModal
+        isOpen={Boolean(editingUser)}
+        onClose={() => setEditingUser(null)}
+        user={editingUser}
+        currentUserId={currentUser?.id}
+        onUserUpdated={() => {
+          setEditingUser(null);
+          void loadUsers();
+        }}
+      />
+
       <div>
         <h1 className="font-display text-2xl font-bold text-white">Usuários</h1>
         <p className="text-sportsbook-muted text-sm">
@@ -91,16 +105,26 @@ const AdminUsersPage: React.FC = () => {
                   <td className="px-4 py-3">{user.coinBalance}</td>
                   <td className="px-4 py-3">{formatDate(user.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      disabled={
-                        user.id === currentUser?.id || deletingId === user.id
-                      }
-                      onClick={() => setConfirmUser(user)}
-                    >
-                      Excluir
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingUser(user)}
+                        className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+                        aria-label={`Editar ${user.username}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        disabled={
+                          user.id === currentUser?.id || deletingId === user.id
+                        }
+                        onClick={() => setConfirmUser(user)}
+                      >
+                        Excluir
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

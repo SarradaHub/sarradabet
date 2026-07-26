@@ -31,5 +31,21 @@ export function useCoinBalance() {
     void refetch();
   }, [refetch]);
 
+  useEffect(() => {
+    const handleBalanceRefresh = () => {
+      void refetch();
+    };
+
+    window.addEventListener("payment:confirmed", handleBalanceRefresh);
+    window.addEventListener("bet:resolved", handleBalanceRefresh);
+    window.addEventListener("bet:staked", handleBalanceRefresh);
+
+    return () => {
+      window.removeEventListener("payment:confirmed", handleBalanceRefresh);
+      window.removeEventListener("bet:resolved", handleBalanceRefresh);
+      window.removeEventListener("bet:staked", handleBalanceRefresh);
+    };
+  }, [refetch]);
+
   return { balance, loading, error, refetch, setBalance };
 }

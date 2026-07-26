@@ -18,7 +18,7 @@ const sizeClasses = {
 };
 
 export const sportsbookFieldClass =
-  "bg-sportsbook-raised border-sportsbook-border text-white placeholder:text-sportsbook-muted focus:ring-warning-400/40 focus:border-warning-400/60";
+  "bg-black border-sportsbook-border text-white placeholder:text-sportsbook-muted focus:ring-warning-400/40 focus:border-warning-400/60";
 
 const SportsbookModal = ({
   isOpen,

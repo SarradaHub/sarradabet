@@ -7,6 +7,7 @@ import Navigation from "../components/Navigation";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useSocketEvent } from "../core/hooks/useSocket";
 import { useCoinBalance } from "../hooks/useCoinBalance";
 import { useCoinTransactions } from "../hooks/useCoinTransactions";
@@ -36,6 +37,9 @@ const SOURCE_LABELS: Record<CoinTransactionSource, string> = {
   BET_COST: "Aposta",
   ADMIN_ADJUSTMENT: "Ajuste admin",
   REFUND: "Reembolso",
+  WIN: "Prêmio",
+  TAKEOUT: "Taxa da casa",
+  REWARD_REDEMPTION: "Resgate de recompensa",
 };
 
 const STATUS_LABELS: Record<PixPaymentStatus, string> = {
@@ -259,7 +263,7 @@ const CoinsPage: React.FC = () => {
                 <textarea
                   readOnly
                   value={status.copyPaste}
-                  className="w-full min-h-24 rounded-lg bg-sportsbook-raised border sb-border px-3 py-2 text-sm"
+                  className={`w-full min-h-24 rounded-lg px-3 py-2 text-sm ${sportsbookFieldClass}`}
                 />
               </div>
             )}

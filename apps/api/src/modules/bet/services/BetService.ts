@@ -16,7 +16,13 @@ import {
 import { emitBetCreated, emitBetUpdated } from "../../../realtime/emitter";
 import { toBetListItem } from "../mappers/bet.mapper";
 import { cacheService } from "../../../core/cache/CacheService";
-import { validateManualOddsValues } from "../../../utils/odds";
+import { validateManualOddsValues } from "../../../utils/parimutuel";
+import { enqueuePayoutJobs } from "../../../jobs/payout.worker";
+import { resolveStatusAfterScheduleChange } from "../../../utils/betSchedule";
+import { houseTreasuryService } from "../../coin/services/HouseTreasuryService";
+import { UserStatsService } from "../../stats/services/UserStatsService";
+import { prisma } from "../../../config/db";
+import { VoteStatus } from "@prisma/client";
 
 export class BetService extends BaseService<
   BetWithOdds,
@@ -98,6 +104,21 @@ export class BetService extends BaseService<
       await this.validateCategoryExists(data.categoryId);
     }
 
+    const existingBet = await this.findById(id);
+    const nextStartTime =
+      data.startTime !== undefined
+        ? data.startTime
+          ? new Date(data.startTime)
+          : null
+        : existingBet.startTime;
+    const syncedStatus = resolveStatusAfterScheduleChange(
+      existingBet.status,
+      nextStartTime,
+    );
+    if (syncedStatus && !data.status) {
+      data.status = syncedStatus;
+    }
+
     const updatedBet = await this.betRepository.update({ id }, data);
     const result = this.executeBusinessLogic
       ? await this.executeBusinessLogic(updatedBet)
@@ -161,24 +182,24 @@ export class BetService extends BaseService<
 
     const bet = await this.findById(id);
     if (bet.status === "resolved") {
-      throw new ConflictError("Bet is already resolved");
+      throw new ConflictError("Aposta já foi resolvida");
     }
 
-    // Validate that the winning odd belongs to this bet
+    if (bet.status !== "closed") {
+      throw new ConflictError("Only closed bets can be resolved");
+    }
+
     const winningOdd = bet.odds.find((odd) => odd.id === winningOddId);
     if (!winningOdd) {
       throw new BadRequestError("Winning odd does not belong to this bet");
     }
 
-    // Update all odds with their results
     await this.betRepository.executeTransaction(async (tx) => {
-      // Mark winning odd as won
       await tx.odd.update({
         where: { id: winningOddId },
         data: { result: "won" },
       });
 
-      // Mark other odds as lost
       await tx.odd.updateMany({
         where: {
           betId: id,
@@ -187,7 +208,14 @@ export class BetService extends BaseService<
         data: { result: "lost" },
       });
 
-      // Mark bet as resolved
+      await tx.vote.updateMany({
+        where: {
+          odd: { betId: id, id: { not: winningOddId } },
+          status: "pending",
+        },
+        data: { status: "lost" },
+      });
+
       await tx.bet.update({
         where: { id },
         data: {
@@ -195,7 +223,24 @@ export class BetService extends BaseService<
           resolvedAt: new Date(),
         },
       });
+
+      await houseTreasuryService.creditTakeoutForBet(tx, id);
     });
+
+    await enqueuePayoutJobs(id, winningOddId);
+
+    const losingVotes = await prisma.vote.findMany({
+      where: {
+        odd: { betId: id, id: { not: winningOddId } },
+        status: VoteStatus.lost,
+      },
+      select: { userId: true },
+    });
+
+    const userStatsService = new UserStatsService();
+    await Promise.all(
+      losingVotes.map((vote) => userStatsService.recordLoss(vote.userId)),
+    );
 
     const resolved = await this.findById(id);
     this.publishBetUpdate(resolved);

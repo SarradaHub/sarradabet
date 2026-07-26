@@ -45,8 +45,9 @@ export type BetWithOddsAttrs = {
   categoryId?: number;
   createdAt?: Date;
   updatedAt?: Date;
-  odds?: Array<OddAttrs & { totalVotes?: number }>;
+  odds?: Array<OddAttrs & { totalVotes?: number; totalStake?: number }>;
   totalVotes?: number;
+  totalStake?: number;
 };
 
 export const betWithOddsFactory = Factory.define<BetWithOddsAttrs>(
@@ -55,7 +56,7 @@ export const betWithOddsFactory = Factory.define<BetWithOddsAttrs>(
       associations.categoryId ?? faker.number.int({ min: 1, max: 1000 });
     const odds = oddFactory
       .buildList(2)
-      .map((o) => ({ ...o, betId: sequence, totalVotes: 0 }));
+      .map((o) => ({ ...o, betId: sequence, totalVotes: 0, totalStake: 0 }));
     return {
       id: sequence,
       title: faker.commerce.productName(),
@@ -66,6 +67,7 @@ export const betWithOddsFactory = Factory.define<BetWithOddsAttrs>(
       updatedAt: faker.date.recent(),
       odds,
       totalVotes: odds.reduce((s, o) => s + (o.totalVotes ?? 0), 0),
+      totalStake: odds.reduce((s, o) => s + (o.totalStake ?? 0), 0),
     };
   },
 );

@@ -3,6 +3,7 @@ import {
   formatOddValue,
   estimateSiblingOddValues,
   impliedProbabilityTotal,
+  TARGET_IMPLIED_TOTAL,
 } from "../odds";
 
 describe("mergeOddFromVoteUpdate", () => {
@@ -53,12 +54,12 @@ describe("formatOddValue", () => {
 describe("estimateSiblingOddValues", () => {
   it("suggests complementary odd for two-outcome markets", () => {
     const estimates = estimateSiblingOddValues(
-      [{ value: 2 }, { value: 2 }],
+      [{ value: 1.5 }, { value: 1.5 }],
       0,
     );
 
     expect(estimates[0]).toBeNull();
-    expect(estimates[1]).toBe(2);
+    expect(estimates[1]).toBe(1.5);
   });
 
   it("keeps proportional balance for three outcomes", () => {
@@ -68,13 +69,16 @@ describe("estimateSiblingOddValues", () => {
     );
 
     expect(estimates[0]).toBeNull();
-    expect(estimates[1]).toBe(6);
-    expect(estimates[2]).toBe(6);
+    expect(estimates[1]).toBe(3);
+    expect(estimates[2]).toBe(3);
   });
 });
 
 describe("impliedProbabilityTotal", () => {
   it("sums inverse odds", () => {
-    expect(impliedProbabilityTotal([2, 2])).toBeCloseTo(1, 2);
+    expect(impliedProbabilityTotal([1.5, 1.5])).toBeCloseTo(
+      TARGET_IMPLIED_TOTAL,
+      2,
+    );
   });
 });

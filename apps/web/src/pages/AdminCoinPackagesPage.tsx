@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
 import type { CoinPackage } from "@sarradabet/types";
 import { Button } from "../components/ui/Button";
+import EditCoinPackageModal from "../components/admin/EditCoinPackageModal";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { adminCoinPackageService } from "../services/CoinPaymentService";
 
 function formatCurrency(cents: number): string {
@@ -26,6 +29,7 @@ const AdminCoinPackagesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<CoinPackage | null>(null);
 
   const loadPackages = async () => {
     try {
@@ -83,6 +87,16 @@ const AdminCoinPackagesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <EditCoinPackageModal
+        isOpen={Boolean(editingPackage)}
+        onClose={() => setEditingPackage(null)}
+        coinPackage={editingPackage}
+        onPackageUpdated={() => {
+          setEditingPackage(null);
+          void loadPackages();
+        }}
+      />
+
       <div>
         <h1 className="font-display text-2xl font-bold text-white">
           Pacotes de moedas
@@ -99,7 +113,7 @@ const AdminCoinPackagesPage: React.FC = () => {
         className="sb-surface border sb-border rounded-2xl p-5 grid gap-4 md:grid-cols-2"
       >
         <input
-          className="rounded-lg bg-sportsbook-raised border sb-border px-3 py-2"
+          className={`rounded-lg px-3 py-2 ${sportsbookFieldClass}`}
           placeholder="Nome do pacote"
           value={form.name}
           onChange={(event) =>
@@ -108,7 +122,7 @@ const AdminCoinPackagesPage: React.FC = () => {
           required
         />
         <input
-          className="rounded-lg bg-sportsbook-raised border sb-border px-3 py-2"
+          className={`rounded-lg px-3 py-2 ${sportsbookFieldClass}`}
           placeholder="Preço em reais"
           value={form.amountReais}
           onChange={(event) =>
@@ -120,7 +134,7 @@ const AdminCoinPackagesPage: React.FC = () => {
           required
         />
         <input
-          className="rounded-lg bg-sportsbook-raised border sb-border px-3 py-2"
+          className={`rounded-lg px-3 py-2 ${sportsbookFieldClass}`}
           placeholder="Quantidade de moedas"
           value={form.coinsAmount}
           onChange={(event) =>
@@ -132,7 +146,7 @@ const AdminCoinPackagesPage: React.FC = () => {
           required
         />
         <input
-          className="rounded-lg bg-sportsbook-raised border sb-border px-3 py-2"
+          className={`rounded-lg px-3 py-2 ${sportsbookFieldClass}`}
           placeholder="Ordem"
           value={form.sortOrder}
           onChange={(event) =>
@@ -186,12 +200,22 @@ const AdminCoinPackagesPage: React.FC = () => {
                   moedas/R$
                 </p>
               </div>
-              <Button
-                variant={coinPackage.isActive ? "danger" : "secondary"}
-                onClick={() => void toggleActive(coinPackage)}
-              >
-                {coinPackage.isActive ? "Desativar" : "Ativar"}
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setEditingPackage(coinPackage)}
+                  className="p-2 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+                  aria-label={`Editar ${coinPackage.name}`}
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <Button
+                  variant={coinPackage.isActive ? "danger" : "secondary"}
+                  onClick={() => void toggleActive(coinPackage)}
+                >
+                  {coinPackage.isActive ? "Desativar" : "Ativar"}
+                </Button>
+              </div>
             </div>
           ))}
         </div>

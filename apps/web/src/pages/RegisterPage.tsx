@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Input } from "@sarradahub/design-system";
 import BrandLogo from "../components/BrandLogo";
 import { Button } from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
-import { Input } from "@sarradahub/design-system";
+import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useAuth } from "../hooks/useAuth";
 
 const RegisterPage: React.FC = () => {
@@ -60,6 +61,7 @@ const RegisterPage: React.FC = () => {
               }))
             }
             required
+            className={sportsbookFieldClass}
           />
           <Input
             label="E-mail"
@@ -72,6 +74,7 @@ const RegisterPage: React.FC = () => {
               }))
             }
             required
+            className={sportsbookFieldClass}
           />
           <Input
             label="Telefone"
@@ -84,6 +87,7 @@ const RegisterPage: React.FC = () => {
               }))
             }
             required
+            className={sportsbookFieldClass}
           />
           <PasswordInput
             id="register-password"
@@ -97,6 +101,7 @@ const RegisterPage: React.FC = () => {
               }))
             }
             required
+            className={sportsbookFieldClass}
           />
 
           <Button type="submit" className="w-full" disabled={loading}>

@@ -18,7 +18,7 @@ The SarradaBet API is a RESTful API built with Express.js and TypeScript, with a
 
 No authentication required:
 
-- `GET` `/api/v1/bets`, `/api/v1/categories`, `/api/v1/coins/packages`
+- `GET` `/api/v1/bets`, `/api/v1/categories`, `/api/v1/coins/packages`, `/api/v1/leaderboard`, `/api/v1/rewards`
 - `POST` `/api/v1/votes`
 - `POST` `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`
 - `GET /health`, `GET /ready`
@@ -107,6 +107,7 @@ Require `Authorization: Bearer <accessToken>`:
 | `GET /api/v1/coins/balance`, `GET /api/v1/coins/transactions` | Any authenticated user |
 | `POST /api/v1/payments/pix`, `GET /api/v1/payments/pix/:id` | Any authenticated user |
 | `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
+| `GET /api/v1/admin/house/summary` | Admin only |
 
 The admin dashboard uses the same auth flow: login via `POST /auth/login` with a user that has `role: ADMIN`.
 
@@ -256,9 +257,11 @@ Connect to the same host as REST. Event names and payloads match [`packages/type
 | `vote:created` | `{ betId, oddId, odds[{id,totalVotes}], totalVotes }` | `POST /votes` |
 | `bet:created` | `BetListItem` | `POST /bets` |
 | `bet:updated` | `BetListItem` | bet update, close, resolve |
+| `bet:resolved` | `{ betId, winningOddId, amount, newBalance }` | bet payout to winning voter |
 | `payment:confirmed` | `{ paymentId, coinsAmount, newBalance, paidAt }` | Pix payment approved (webhook) |
+| `reward:validated` | `{ redemptionId, rewardTitle, ticketCode, redeemedAt, validatedAt }` | admin validates reward ticket |
 
-Authenticated sockets join room `user:{userId}` and receive `payment:confirmed` after a successful Pix purchase.
+Authenticated sockets join room `user:{userId}` and receive user-scoped events (`payment:confirmed`, `bet:resolved`, `reward:validated`).
 
 ### Listener example (Node.js)
 
@@ -960,7 +963,9 @@ Requires user JWT. Paginated ledger of credits and debits.
 }
 ```
 
-**Transaction sources:** `PIX_PURCHASE`, `BET_COST`, `ADMIN_ADJUSTMENT`, `REFUND`.
+**Transaction sources:** `PIX_PURCHASE`, `BET_COST`, `ADMIN_ADJUSTMENT`, `REFUND`, `WIN`, `TAKEOUT`.
+
+`TAKEOUT` credits the system `house` user when a bet is resolved (parimutuel house share = `totalPool - netPool`).
 
 ## Payment Endpoints
 
@@ -1096,6 +1101,372 @@ Partial update — same fields as create, all optional.
 **DELETE** `/admin/coin-packages/:id`
 
 Soft-deactivates the package (`isActive: false`). Does not delete historical payments.
+
+## Leaderboard and User Stats
+
+### Get leaderboard
+
+**GET** `/leaderboard?limit=100`
+
+Public. Returns top users ordered by `rankingScore` descending. Cached in Redis (`leaderboard:top100`, TTL from `LEADERBOARD_CACHE_TTL`, default 300s).
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "rank": 1,
+      "userId": 10,
+      "username": "player1",
+      "rankingScore": 80,
+      "winRate": 0.6,
+      "tier": "silver"
+    }
+  ]
+}
+```
+
+Tier bands (from `rankingScore`): `bronze` (default), `silver` (≥ `TIER_SILVER_MIN`), `gold` (≥ `TIER_GOLD_MIN`).
+
+### Get my stats
+
+**GET** `/users/me/stats`
+
+Requires user JWT.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 10,
+    "totalBets": 5,
+    "wonBets": 3,
+    "lostBets": 2,
+    "winRate": 0.6,
+    "rankingScore": 80,
+    "tier": "silver",
+    "updatedAt": "2026-07-26T12:00:00.000Z"
+  }
+}
+```
+
+Ranking formula: `(wonBets × RANKING_WIN_WEIGHT) + (coinBalance × RANKING_BALANCE_WEIGHT)`.
+
+Stats update after bet resolution (win via payout worker, loss on resolve) and after reward redemption (score recalc).
+
+### Get my dashboard
+
+**GET** `/users/me/dashboard?page=1&limit=10`
+
+Requires user JWT. Returns unified dashboard payload with Redis cache (TTL 60s, key `dashboard:user:{userId}:{page}:{limit}`). Cache invalidates on coin transactions, votes, and stats updates.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "balance": 150,
+    "stats": {
+      "totalBets": 42,
+      "wonBets": 18,
+      "lostBets": 24,
+      "winRate": 0.43
+    },
+    "ranking": {
+      "score": 195,
+      "position": 12
+    },
+    "recentBets": {
+      "data": [],
+      "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 0,
+        "totalPages": 0
+      }
+    },
+    "recentTransactions": {
+      "data": [],
+      "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 0,
+        "totalPages": 0
+      }
+    }
+  }
+}
+```
+
+### Admin analytics overview
+
+**GET** `/admin/analytics/overview?startDate=2026-01-01&endDate=2026-01-31&categoryId=1`
+
+Requires admin JWT. Query params: `startDate`, `endDate` (YYYY-MM-DD), optional `categoryId`.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "activeUsers": 12,
+    "totalBets": 48,
+    "totalCoinVolume": 3200,
+    "pixRevenue": 199.9,
+    "averageBetsPerUser": 4
+  }
+}
+```
+
+### Admin analytics bets by category
+
+**GET** `/admin/analytics/bets-by-category?startDate=2026-01-01&endDate=2026-01-31`
+
+### Admin analytics Pix revenue
+
+**GET** `/admin/analytics/pix-revenue?startDate=2026-01-01&endDate=2026-01-31`
+
+Returns time series: `{ day, revenueCents, paymentCount }[]`.
+
+### Admin analytics peak hours
+
+**GET** `/admin/analytics/peak-hours?startDate=2026-01-01&endDate=2026-01-31`
+
+Returns 24 buckets: `{ hour, betCount }[]`.
+
+### Admin analytics CSV export
+
+**GET** `/admin/analytics/export?startDate=2026-01-01&endDate=2026-01-31&format=csv`
+
+Returns `text/csv` attachment with bet/category/revenue columns.
+
+Materialized views `daily_bet_stats` and `daily_pix_revenue` refresh hourly via Bull (`analytics:refresh`) and can be triggered manually at `POST /api/v1/jobs/analytics-refresh/run` (admin, dev/test).
+
+### Get my pending reward redemptions
+
+**GET** `/users/me/redemptions`
+
+Requires user JWT. Returns rewards redeemed by the current user that have **not** yet been validated by an admin (`validatedAt` is null).
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "ticketCode": "550e8400-e29b-41d4-a716-446655440000",
+      "redeemedAt": "2026-07-15T18:00:00.000Z",
+      "reward": {
+        "id": 3,
+        "title": "Caneca Exclusiva",
+        "description": "Caneca térmica edição limitada",
+        "coinCost": 250,
+        "imageUrl": null
+      }
+    }
+  ]
+}
+```
+
+Validated redemptions are omitted from this list.
+
+### Get my validated reward redemptions
+
+**GET** `/users/me/redemptions/validated`
+
+Requires user JWT. Returns rewards redeemed by the current user that have been validated by an admin.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "ticketCode": "550e8400-e29b-41d4-a716-446655440000",
+      "redeemedAt": "2026-07-15T18:00:00.000Z",
+      "validatedAt": "2026-07-16T12:00:00.000Z",
+      "reward": {
+        "id": 3,
+        "title": "Caneca Exclusiva",
+        "description": "Caneca térmica edição limitada",
+        "coinCost": 250,
+        "imageUrl": null
+      }
+    }
+  ]
+}
+```
+
+When an admin validates a ticket, the user receives a realtime `reward:validated` event (user-scoped Socket.io room).
+
+## Rewards
+
+### List active rewards
+
+**GET** `/rewards`
+
+Public. Returns active rewards with `stock > 0`.
+
+### Redeem reward
+
+**POST** `/rewards/:id/redeem`
+
+Requires user JWT. Atomically debits coins (`REWARD_REDEMPTION`), decrements stock, creates UUID ticket.
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "ticketCode": "550e8400-e29b-41d4-a716-446655440000",
+    "reward": { "id": 1, "title": "Camisa Oficial", "coinCost": 1000, "stock": 4 },
+    "newBalance": 500,
+    "ticketImageUrl": "/api/v1/rewards/tickets/550e8400-e29b-41d4-a716-446655440000/image"
+  }
+}
+```
+
+**Errors:** `400` — insufficient balance, out of stock, inactive reward.
+
+### Download redemption ticket image
+
+**GET** `/rewards/tickets/:code/image`
+
+Requires user JWT. Owner only. Returns PNG (480×800, mobile-first portrait) with QR code, PT-BR watermark `APENAS RETIRADA`, reward details, and masked user identity.
+
+**Headers:** `Content-Type: image/png`, `Content-Disposition: attachment; filename="ticket_{uuid}.png"`
+
+**Rate limit:** 5 requests/minute per user.
+
+**Errors:** `403` — not ticket owner; `404` — ticket not found.
+
+### Download validation ticket image (admin)
+
+**GET** `/admin/rewards/tickets/:code/validate-image`
+
+Requires admin JWT. Ticket must already be validated (`validatedAt` set). Returns PNG with watermark `VALIDADO PELA ADMINISTRAÇÃO` and VALIDADO stamp.
+
+**Errors:** `400` — ticket not yet validated; `404` — ticket not found.
+
+### Download validation ticket image (owner)
+
+**GET** `/rewards/tickets/:code/validate-image`
+
+Requires user JWT. Ticket owner only; ticket must be validated. Same PNG as the admin validation image.
+
+**Errors:** `403` — not ticket owner; `400` — not yet validated; `404` — ticket not found.
+
+### Verify ticket (public)
+
+**GET** `/tickets/verify/:code`
+
+Public. Returns ticket status and masked owner email.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "ticketCode": "550e8400-e29b-41d4-a716-446655440000",
+    "isValid": true,
+    "status": "VALIDATED",
+    "rewardTitle": "Camisa Oficial",
+    "userEmail": "p***@sarradabet.com",
+    "redeemedAt": "2026-07-15T18:00:00.000Z",
+    "validatedAt": "2026-07-26T21:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` — ticket not found.
+
+QR codes on ticket images encode `{PUBLIC_WEB_URL}/tickets/verify/{uuid}`.
+
+## Admin Rewards
+
+Require admin JWT (`role: ADMIN`).
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/admin/rewards` | List all rewards |
+| POST | `/admin/rewards` | Create reward |
+| PUT | `/admin/rewards/:id` | Update reward |
+| DELETE | `/admin/rewards/:id` | Deactivate reward |
+| POST | `/admin/rewards/tickets/:code/validate` | Validate redemption ticket once |
+| GET | `/admin/rewards/tickets/:code/validate-image` | Download validated ticket PNG |
+
+**Create body:**
+
+```json
+{
+  "title": "Camisa Oficial",
+  "description": "Camisa autografada",
+  "coinCost": 1000,
+  "stock": 10,
+  "imageUrl": "https://example.com/shirt.png",
+  "isActive": true
+}
+```
+
+**Validate ticket response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "valid": true,
+    "message": "Ticket validado com sucesso",
+    "rewardTitle": "Caneca Exclusiva",
+    "username": "pedro",
+    "redeemedAt": "2026-07-15T18:00:00.000Z",
+    "validatedAt": "2026-07-26T21:00:00.000Z",
+    "validateImageUrl": "/api/v1/admin/rewards/tickets/550e8400-e29b-41d4-a716-446655440000/validate-image",
+    "redemption": {
+      "ticketCode": "550e8400-e29b-41d4-a716-446655440000",
+      "validatedAt": "2026-07-26T21:00:00.000Z"
+    }
+  }
+}
+```
+
+## Admin House Treasury
+
+Require admin JWT (`role: ADMIN`).
+
+### House takeout summary
+
+**GET** `/admin/house/summary`
+
+Returns accumulated parimutuel takeout credited to the system `house` user, plus the configured takeout rate.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "balance": 138,
+    "takeoutRate": 0.25,
+    "takeoutPercent": 25
+  }
+}
+```
+
+- `balance` — `coinBalance` of the internal `house` user (`HOUSE_USER_USERNAME`, default `house`)
+- `takeoutRate` — from `BET_TAKEOUT_RATE` (default `0.25`)
+- Takeout is credited once per resolved bet (`externalId`: `takeout:bet:{betId}`)
 
 ## Error Codes
 

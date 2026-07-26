@@ -1,19 +1,21 @@
 import type { Server as HttpServer } from "http";
 import { Server } from "socket.io";
-import { config } from "../config/env";
+import { isOriginAllowed } from "../config/cors";
 import { logger } from "../utils/logger";
 import { verifyAccessToken } from "../utils/auth";
 
 let io: Server | null = null;
 
-function getAllowedOrigins(): string[] {
-  return config.CORS_ORIGINS.split(",").map((origin) => origin.trim());
-}
-
 export function initSocketServer(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: {
-      origin: getAllowedOrigins(),
+      origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(new Error("Not allowed by CORS"));
+      },
       credentials: true,
       methods: ["GET", "POST"],
     },

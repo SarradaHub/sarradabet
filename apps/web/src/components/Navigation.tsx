@@ -15,8 +15,24 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
+  const publicLinks = (
+    <>
+      <Link to="/leaderboard" onClick={closeMobileMenu}>
+        <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+          Ranking
+        </Button>
+      </Link>
+      <Link to="/rewards" onClick={closeMobileMenu}>
+        <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+          Recompensas
+        </Button>
+      </Link>
+    </>
+  );
+
   const authButtons = (
     <>
+      {publicLinks}
       {!isAuthenticated && (
         <>
           <Link to="/login" onClick={closeMobileMenu}>
@@ -36,6 +52,11 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
           <Link to="/profile" onClick={closeMobileMenu}>
             <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
               {user?.username ?? "Perfil"}
+            </Button>
+          </Link>
+          <Link to="/dashboard" onClick={closeMobileMenu}>
+            <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+              Dashboard
             </Button>
           </Link>
           <Link to="/coins" onClick={closeMobileMenu}>
