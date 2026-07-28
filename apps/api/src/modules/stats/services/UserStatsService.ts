@@ -1,6 +1,5 @@
 import { UserStatsRepository } from "../repositories/UserStatsRepository";
 import { LeaderboardService } from "./LeaderboardService";
-import { invalidateDashboardCache } from "../../dashboard/services/DashboardService";
 
 export class UserStatsService {
   constructor(
@@ -43,7 +42,6 @@ export class UserStatsService {
     );
 
     await this.leaderboardService.invalidateCache();
-    await invalidateDashboardCache(userId);
     return this.repository.toDto(stats);
   }
 
@@ -66,7 +64,6 @@ export class UserStatsService {
     );
 
     await this.leaderboardService.invalidateCache();
-    await invalidateDashboardCache(userId);
     return this.repository.toDto(stats);
   }
 
@@ -88,7 +85,6 @@ export class UserStatsService {
     );
 
     await this.leaderboardService.invalidateCache();
-    await invalidateDashboardCache(userId);
     return this.repository.toDto(stats);
   }
 }
