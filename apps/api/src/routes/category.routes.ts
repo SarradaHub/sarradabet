@@ -3,7 +3,8 @@ import { CategoryController } from "../modules/category/controllers/CategoryCont
 import { CategoryService } from "../modules/category/services/CategoryService";
 import { CategoryRepository } from "../modules/category/repositories/CategoryRepository";
 import { prisma } from "../config/db";
-import { authenticateAdmin } from "../core/middleware/AuthMiddleware";
+import { authenticateUser, requireUserRole } from "../core/middleware/AuthMiddleware";
+import { UserRole } from "@prisma/client";
 import {
   validateBody,
   validateParams,
@@ -39,14 +40,16 @@ router.get(
 
 router.post(
   "/",
-  authenticateAdmin,
+  authenticateUser,
+  requireUserRole(UserRole.ADMIN),
   validateBody(CreateCategorySchema),
   categoryController.create.bind(categoryController),
 );
 
 router.put(
   "/:id",
-  authenticateAdmin,
+  authenticateUser,
+  requireUserRole(UserRole.ADMIN),
   validateParams(ParamIdSchema),
   validateBody(UpdateCategorySchema),
   categoryController.update.bind(categoryController),
@@ -54,7 +57,8 @@ router.put(
 
 router.delete(
   "/:id",
-  authenticateAdmin,
+  authenticateUser,
+  requireUserRole(UserRole.ADMIN),
   validateParams(ParamIdSchema),
   categoryController.delete.bind(categoryController),
 );

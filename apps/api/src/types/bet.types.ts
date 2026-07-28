@@ -2,6 +2,7 @@ import { CreateOddSchema, OddEntity } from "./odd.types";
 import { z } from "zod";
 
 export enum BetStatus {
+  scheduled = "scheduled",
   open = "open",
   closed = "closed",
   resolved = "resolved",
@@ -13,6 +14,8 @@ export interface BetEntity {
   description: string | null;
   status: BetStatus;
   categoryId: number;
+  startTime: Date | null;
+  closesAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   resolvedAt: Date | null;
@@ -21,8 +24,9 @@ export interface BetEntity {
 export type OddsEntity = OddEntity;
 
 export type BetResponse = BetEntity & {
-  odds: (OddsEntity & { totalVotes: number })[];
+  odds: (OddsEntity & { totalVotes: number; totalStake: number })[];
   totalVotes?: number;
+  totalStake?: number;
 };
 
 export type BetQueryParams = {

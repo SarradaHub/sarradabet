@@ -12,8 +12,6 @@ vi.mock("../../services/apiClient", () => ({
   refreshAccessTokenRequest: vi.fn(),
   logoutRequest: vi.fn(),
   registerAuthHandlers: vi.fn(),
-  fetchCsrfToken: vi.fn().mockResolvedValue("test-csrf-token"),
-  clearCsrfToken: vi.fn(),
 }));
 
 vi.mock("../../core/hooks/useSocket", () => ({

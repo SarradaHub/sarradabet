@@ -15,7 +15,7 @@ function getCookieSecure(): boolean {
   return config.COOKIE_SECURE ?? config.NODE_ENV === "production";
 }
 
-export function getCsrfCookieName(): string {
+function getCsrfCookieName(): string {
   return getCookieSecure()
     ? "__Host-sarradabet.x-csrf-token"
     : "x-csrf-token";
@@ -46,7 +46,6 @@ const {
   doubleCsrfProtection,
   generateCsrfToken,
   invalidCsrfTokenError,
-  validateRequest,
 } = doubleCsrf({
   getSecret: () => getCsrfSecret(),
   getSessionIdentifier,
@@ -64,45 +63,13 @@ const {
   skipCsrfProtection: shouldSkipCsrfProtection,
 });
 
-export {
-  doubleCsrfProtection,
-  generateCsrfToken,
-  invalidCsrfTokenError,
-  validateRequest,
-};
-
-function readCsrfTokens(req: Request): {
-  csrfHeaderToken: string | undefined;
-  csrfCookieToken: string | undefined;
-} {
-  const csrfHeaderToken = req.headers["x-csrf-token"];
-  const csrfCookieToken = req.cookies?.[getCsrfCookieName()];
-
-  return {
-    csrfHeaderToken:
-      typeof csrfHeaderToken === "string" ? csrfHeaderToken : undefined,
-    csrfCookieToken:
-      typeof csrfCookieToken === "string" ? csrfCookieToken : undefined,
-  };
-}
+export { generateCsrfToken, invalidCsrfTokenError };
 
 export const csrfProtection = (
   req: Request,
   res: Response,
   next: NextFunction,
 ): void => {
-  const { csrfHeaderToken, csrfCookieToken } = readCsrfTokens(req);
-
-  if (
-    csrfHeaderToken !== undefined &&
-    csrfCookieToken !== undefined &&
-    csrfHeaderToken === csrfCookieToken &&
-    !validateRequest(req)
-  ) {
-    next(new ForbiddenError("Invalid CSRF token"));
-    return;
-  }
-
   doubleCsrfProtection(req, res, (error?: unknown) => {
     if (error === invalidCsrfTokenError) {
       next(new ForbiddenError("Invalid CSRF token"));

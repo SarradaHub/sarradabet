@@ -30,6 +30,7 @@ import {
 import { Bet, BetStatus } from "../types/bet";
 import { Category } from "../types/category";
 import { unwrapList } from "../utils/apiData";
+import { formatScheduleDate } from "../utils/formatSchedule";
 import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 
 const AdminBetsPage: React.FC = () => {
@@ -177,6 +178,7 @@ const AdminBetsPage: React.FC = () => {
           }
           options={[
             { value: "all", label: "Todos" },
+            { value: "scheduled", label: "Agendadas" },
             { value: "open", label: "Abertas" },
             { value: "closed", label: "Fechadas" },
             { value: "resolved", label: "Resolvidas" },
@@ -210,6 +212,8 @@ const AdminBetsPage: React.FC = () => {
               <TableHead className="text-sportsbook-muted">Título</TableHead>
               <TableHead className="text-sportsbook-muted">Categoria</TableHead>
               <TableHead className="text-sportsbook-muted">Status</TableHead>
+              <TableHead className="text-sportsbook-muted">Início</TableHead>
+              <TableHead className="text-sportsbook-muted">Encerramento</TableHead>
               <TableHead className="text-sportsbook-muted">Votos</TableHead>
               <TableHead className="text-sportsbook-muted">Criada</TableHead>
               <TableHead className="text-sportsbook-muted text-right">
@@ -221,7 +225,7 @@ const AdminBetsPage: React.FC = () => {
             {filteredBets.length === 0 ? (
               <TableRow hoverable={false}>
                 <TableCell
-                  colSpan={6}
+                  colSpan={8}
                   className="text-center text-sportsbook-muted py-8"
                 >
                   Nenhuma aposta encontrada
@@ -229,7 +233,11 @@ const AdminBetsPage: React.FC = () => {
               </TableRow>
             ) : (
               filteredBets.map((bet) => (
-                <TableRow key={bet.id} hoverable>
+                <TableRow
+                  key={bet.id}
+                  hoverable
+                  className="hover:[&_td]:text-neutral-900 hover:[&_td.text-sportsbook-odds]:text-green-700"
+                >
                   <TableCell className="text-white max-w-[200px] truncate">
                     {bet.title}
                   </TableCell>
@@ -238,6 +246,12 @@ const AdminBetsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <BetStatusBadge status={bet.status} />
+                  </TableCell>
+                  <TableCell className="text-sportsbook-muted text-xs tabular-nums">
+                    {formatScheduleDate(bet.startTime)}
+                  </TableCell>
+                  <TableCell className="text-sportsbook-muted text-xs tabular-nums">
+                    {formatScheduleDate(bet.closesAt)}
                   </TableCell>
                   <TableCell className="text-sportsbook-odds tabular-nums">
                     {bet.totalVotes}

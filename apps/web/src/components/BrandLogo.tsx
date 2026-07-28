@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 const LOGO_SRC = "/sarradabet_logo.png";
 

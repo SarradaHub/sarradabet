@@ -37,17 +37,17 @@ app.use(
   }),
 );
 
+app.use(cookieParser());
+app.use(csrfProtection);
+
+app.use("/api/v1/webhooks", webhookRoutes);
+
 if (config.NODE_ENV !== "test") {
   app.use(morgan(config.NODE_ENV === "development" ? "dev" : "combined"));
 }
 
-app.use("/api/v1/webhooks", webhookRoutes);
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-app.use(cookieParser());
-app.use(csrfProtection);
 
 app.get("/health", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -78,6 +78,7 @@ app.get("/ready", async (req, res) => {
   }
 });
 
+// Root route handler
 app.get("/", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.status(200).json({

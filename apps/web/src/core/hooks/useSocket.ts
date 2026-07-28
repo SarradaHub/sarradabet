@@ -1,19 +1,27 @@
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import { getApiRootUrl } from "../../services/apiClient";
 
 function getSocketUrl(): string {
-  const directApiUrl = import.meta.env.VITE_API_URL;
-  if (directApiUrl) {
-    return directApiUrl;
-  }
-
-  const apiGatewayUrl =
-    import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:8000";
-  return apiGatewayUrl;
+  return getApiRootUrl();
 }
 
 let sharedSocket: Socket | null = null;
 let socketDiagnosticsAttached = false;
+let socketToken: string | null = null;
+
+export function setSocketAuthToken(token: string | null): void {
+  socketToken = token;
+
+  if (!sharedSocket) {
+    return;
+  }
+
+  sharedSocket.auth = token ? { token } : {};
+  if (token && !sharedSocket.connected) {
+    sharedSocket.connect();
+  }
+}
 
 function attachSocketDiagnostics(socket: Socket): void {
   if (socketDiagnosticsAttached || !import.meta.env.DEV) {
@@ -42,8 +50,14 @@ export function getSocket(): Socket {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      auth: socketToken ? { token: socketToken } : undefined,
     });
     attachSocketDiagnostics(sharedSocket);
+  } else if (socketToken) {
+    sharedSocket.auth = { token: socketToken };
+    if (!sharedSocket.connected) {
+      sharedSocket.connect();
+    }
   }
 
   return sharedSocket;

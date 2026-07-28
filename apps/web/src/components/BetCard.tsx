@@ -37,9 +37,13 @@ const BetCard = ({ bet }: BetCardProps) => {
   const statusLabel =
     bet.status === "open"
       ? "Ativa"
-      : bet.status === "resolved"
-        ? "Resolvida"
-        : "Inativa";
+      : bet.status === "scheduled"
+        ? "Agendada"
+        : bet.status === "closed"
+          ? "Fechada"
+          : bet.status === "resolved"
+            ? "Resolvida"
+            : "Inativa";
 
   const statusColor =
     bet.status === "open"
@@ -82,6 +86,9 @@ const BetCard = ({ bet }: BetCardProps) => {
           betTitle={bet.title}
           categoryTitle={categoryTitle}
           betStatus={bet.status}
+          startTime={bet.startTime}
+          closesAt={bet.closesAt}
+          totalStakeOnBet={bet.totalStake ?? 0}
         />
       </div>
     </article>

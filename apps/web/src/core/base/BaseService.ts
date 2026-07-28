@@ -1,6 +1,7 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { AxiosInstance, AxiosResponse } from "axios";
 import { IApiService, ApiResponse, ApiError } from "../interfaces/IService";
 import { requestDeduplicator } from "../utils/requestDeduplicator";
+import { createApiClient } from "../../services/apiClient";
 
 function headerValue(
   headers: AxiosResponse["headers"],
@@ -15,42 +16,12 @@ export abstract class BaseService<T, CreateInput, UpdateInput, CreateResult = T>
 {
   protected readonly api: AxiosInstance;
 
-  constructor(baseURL: string, endpoint: string) {
-    const apiGatewayUrl =
-      import.meta.env.VITE_API_GATEWAY_URL || "http://localhost";
-    const directApiUrl = import.meta.env.VITE_API_URL;
-
-    const fullBaseURL = baseURL
-      ? `${baseURL}/api/v1/${endpoint}`
-      : directApiUrl
-        ? `${directApiUrl}/api/v1/${endpoint}`
-        : `${apiGatewayUrl}/api/v1/${endpoint}`;
-
-    this.api = axios.create({
-      baseURL: fullBaseURL,
-      timeout: 10000,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
+  constructor(_baseURL: string, endpoint: string) {
+    this.api = createApiClient(endpoint);
     this.setupInterceptors();
   }
 
   private setupInterceptors(): void {
-    this.api.interceptors.request.use(
-      (config) => {
-        const token =
-          localStorage.getItem("adminToken") ||
-          localStorage.getItem("authToken");
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error),
-    );
-
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
         const contentType = headerValue(response.headers, "content-type");

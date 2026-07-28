@@ -48,13 +48,21 @@
     "on-headers": ">=1.1.0",
     "@eslint/plugin-kit": ">=0.3.4",
     "esbuild": ">=0.28.1",
-    "minimatch": "^3.1.5",
+    "minimatch": "^10.2.1",
+    "uuid": "11.1.1",
+    "postcss": "^8.5.18",
+    "bull": {
+      "uuid": "11.1.1"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^10.2.1"
+    },
     "test-exclude": {
-      "minimatch": "^3.1.5"
+      "minimatch": "^10.2.1",
+      "glob": "^11.0.0"
     },
     "@vitest/coverage-v8": {
-      "test-exclude": "^6.0.0",
-      "minimatch": "^3.1.5"
+      "test-exclude": "^7.0.2"
     }
   }
 }
