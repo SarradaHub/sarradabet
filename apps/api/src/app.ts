@@ -44,7 +44,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(cookieParser());
-app.use(csrfProtection);
 
 app.get("/health", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -98,7 +97,7 @@ app.use(
   "/api/v1/categories",
   cacheHeaders({ maxAge: 300, staleWhileRevalidate: 60 }),
 );
-app.use("/api/v1", router);
+app.use("/api/v1", csrfProtection, router);
 
 app.use(notFoundHandler);
 
