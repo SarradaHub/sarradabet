@@ -24,7 +24,9 @@
     "test:api:integration": "npm run -w apps/api test:integration",
     "test:web": "npm run -w apps/web test",
     "test:web:watch": "npm run -w apps/web test:watch",
-    "test:web:coverage": "npm run -w apps/web test:coverage"
+    "test:web:coverage": "npm run -w apps/web test:coverage",
+    "test:e2e": "npm run -w e2e test",
+    "test:e2e:smoke": "npm run -w e2e test:smoke"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
@@ -39,7 +41,8 @@
   "packageManager": "npm@10.9.0",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "e2e"
   ],
   "overrides": {
     "on-headers": ">=1.1.0",

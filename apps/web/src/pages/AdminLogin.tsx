@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "../components/ui/Button";
 import BrandLogo from "../components/BrandLogo";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import PasswordInput from "../components/ui/PasswordInput";
 import { Input } from "@sarradahub/design-system";
+import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
+import { useAuth } from "../hooks/useAuth";
 
 interface LoginForm {
   username: string;
@@ -18,7 +21,17 @@ const AdminLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const { login, logout, isAuthenticated, isAdmin, status } = useAuth();
+
+  useEffect(() => {
+    if (status === "loading") {
+      return;
+    }
+
+    if (isAuthenticated && isAdmin) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [status, isAuthenticated, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,65 +39,19 @@ const AdminLogin: React.FC = () => {
     setError(null);
 
     try {
-      const url = API_BASE_URL
-        ? `${API_BASE_URL}/api/v1/admin/login`
-        : "/api/v1/admin/login";
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
-      });
+      const user = await login(formData.username, formData.password);
 
-      const raw = await response.json();
-
-      if (!response.ok) {
-        const message =
-          (raw && typeof raw === "object" && (raw.message as string)) ||
-          "Erro ao fazer login";
-        throw new Error(message);
+      if (user.role !== "ADMIN") {
+        await logout();
+        setError("Acesso restrito a administradores");
+        return;
       }
-
-      const hasOwn = (obj: unknown, key: string) =>
-        !!obj &&
-        typeof obj === "object" &&
-        Object.prototype.hasOwnProperty.call(obj, key);
-
-      let payload: any = raw;
-      if (hasOwn(raw, "data")) {
-        const first = (raw as any).data;
-        payload = hasOwn(first, "data") ? (first as any).data : first;
-      }
-
-      const tokenValue =
-        payload &&
-        typeof payload === "object" &&
-        (payload as any).token &&
-        (payload as any).token.token
-          ? (payload as any).token.token
-          : (payload as any)?.token;
-      if (typeof tokenValue !== "string") {
-        throw new Error("Token inválido na resposta da API");
-      }
-
-      localStorage.setItem("adminToken", tokenValue);
-      localStorage.setItem("authToken", tokenValue);
-      localStorage.setItem(
-        "adminInfo",
-        JSON.stringify({
-          id: payload.id,
-          username: payload.username,
-          email: payload.email,
-        }),
-      );
 
       navigate("/admin/dashboard");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Erro desconhecido");
+    } catch (loginError) {
+      setError(
+        loginError instanceof Error ? loginError.message : "Erro desconhecido",
+      );
     } finally {
       setLoading(false);
     }
@@ -126,13 +93,12 @@ const AdminLogin: React.FC = () => {
               placeholder="Digite seu usuário ou email"
               disabled={loading}
               aria-describedby={error ? "username-error" : undefined}
-              className="dark:bg-sportsbook-raised dark:border-sportsbook-border dark:text-white dark:placeholder-sportsbook-muted dark:focus:ring-warning-400"
+              className={sportsbookFieldClass}
             />
 
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               label="Senha"
               required
               value={formData.password}
@@ -140,7 +106,7 @@ const AdminLogin: React.FC = () => {
               placeholder="Digite sua senha"
               disabled={loading}
               aria-describedby={error ? "password-error" : undefined}
-              className="dark:bg-sportsbook-raised dark:border-sportsbook-border dark:text-white dark:placeholder-sportsbook-muted dark:focus:ring-warning-400"
+              className={sportsbookFieldClass}
             />
           </div>
 

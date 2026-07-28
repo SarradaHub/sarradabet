@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { isOriginAllowed } from "../../config/cors";
 import { logger } from "../../utils/logger";
 import { BadRequestError, TooManyRequestsError } from "../errors/AppError";
 
@@ -164,13 +165,7 @@ export const corsOptions = {
     origin: string | undefined,
     callback: (error: Error | null, allow?: boolean) => void,
   ) => {
-    const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [
-      "http://localhost:8000",
-    ];
-
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       return callback(null, true);
     }
 
@@ -180,5 +175,10 @@ export const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "X-CSRF-Token",
+  ],
 };
