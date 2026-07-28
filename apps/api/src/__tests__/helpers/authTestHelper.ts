@@ -53,9 +53,6 @@ export const testIfDbAvailable = (
 };
 
 export const cleanupAuthData = async (prisma: PrismaClient): Promise<void> => {
-  await prisma.pixPayment.deleteMany();
-  await prisma.coinTransaction.deleteMany();
-  await prisma.coinPackage.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.user.deleteMany();
 };

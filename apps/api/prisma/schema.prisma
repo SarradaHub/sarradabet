@@ -114,6 +114,7 @@ model RefreshToken {
 }
 
 enum BetStatus {
+  scheduled
   open
   closed
   resolved
