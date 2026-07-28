@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import type { TicketVerifyResponse } from "@sarradabet/types";
 import Navigation from "../components/Navigation";
 import { ErrorMessage } from "../components/ui/ErrorMessage";

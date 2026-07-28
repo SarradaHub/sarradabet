@@ -14,13 +14,6 @@ interface PixRevenueChartProps {
   data: PixRevenuePoint[];
 }
 
-function formatCurrency(cents: number): string {
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
 const PixRevenueChart: React.FC<PixRevenueChartProps> = ({ data }) => {
   if (data.length === 0) {
     return (
@@ -43,13 +36,17 @@ const PixRevenueChart: React.FC<PixRevenueChartProps> = ({ data }) => {
         <XAxis dataKey="day" stroke="#8b8b95" fontSize={12} />
         <YAxis stroke="#8b8b95" fontSize={12} />
         <Tooltip
-          formatter={(value: number) => [
-            value.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            }),
-            "Receita",
-          ]}
+          formatter={(value) => {
+            const amount =
+              typeof value === "number" ? value : Number(value ?? 0);
+            return [
+              amount.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }),
+              "Receita",
+            ];
+          }}
           contentStyle={{
             backgroundColor: "#1a1a1e",
             border: "1px solid #2a2a2e",

@@ -3,6 +3,7 @@ import { AuthController } from "../controllers/AuthController";
 import { validateBody } from "../../../core/middleware/ValidationMiddleware";
 import { authenticateUser } from "../../../core/middleware/AuthMiddleware";
 import { createRateLimit } from "../../../core/middleware/SecurityMiddleware";
+import { csrfTokenHandler } from "../../../core/middleware/CsrfMiddleware";
 import { config } from "../../../config/env";
 import {
   RegisterUserSchema,
@@ -27,6 +28,8 @@ const registerRateLimit = createRateLimit({
   message: "Too many registration attempts, please try again later",
   skipSuccessfulRequests: false,
 });
+
+router.get("/csrf-token", csrfTokenHandler);
 
 router.post(
   "/register",

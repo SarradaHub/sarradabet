@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { CoinPackage, CoinTransactionSource, PixPaymentStatus } from "@sarradabet/types";
 import { RealtimeEvents } from "@sarradabet/types";
 import { PixQrCode } from "../components/PixQrCode";

@@ -75,7 +75,7 @@ async function main(): Promise<void> {
 
   console.log(`Using Mercado Pago user_id=${userId}`);
 
-  let store =
+  const store =
     (await client.searchStoreByExternalId(
       userId,
       setupConfig.storeExternalId,

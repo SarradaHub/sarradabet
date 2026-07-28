@@ -12,6 +12,7 @@ import {
   sanitizeRequest,
   corsOptions,
 } from "./core/middleware/SecurityMiddleware";
+import { csrfProtection } from "./core/middleware/CsrfMiddleware";
 import { cacheHeaders } from "./core/middleware/cacheHeaders";
 import router from "./routes";
 import webhookRoutes from "./routes/webhook.routes";
@@ -45,6 +46,7 @@ if (config.NODE_ENV !== "test") {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
+app.use(csrfProtection);
 
 app.get("/health", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");

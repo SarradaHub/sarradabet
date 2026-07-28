@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Navigation from "../components/Navigation";
 import { RankTierBadge } from "../components/gamification/RankTierBadge";
 import { StatsCard } from "../components/gamification/StatsCard";

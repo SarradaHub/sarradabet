@@ -17,6 +17,50 @@ let authHandlers: AuthHandlers = {
 };
 
 let refreshPromise: Promise<string | null> | null = null;
+let csrfToken: string | null = null;
+let csrfTokenPromise: Promise<string | null> | null = null;
+
+const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
+
+function isMutatingMethod(method: string | undefined): boolean {
+  return MUTATING_METHODS.has((method ?? "get").toLowerCase());
+}
+
+export function clearCsrfToken(): void {
+  csrfToken = null;
+}
+
+export async function fetchCsrfToken(): Promise<string | null> {
+  if (csrfToken) {
+    return csrfToken;
+  }
+
+  if (csrfTokenPromise) {
+    return csrfTokenPromise;
+  }
+
+  csrfTokenPromise = (async () => {
+    try {
+      const response = await axios.get(
+        `${getApiRootUrl()}/api/v1/auth/csrf-token`,
+        {
+          withCredentials: true,
+          timeout: 10000,
+        },
+      );
+      const token = response.data?.data?.csrfToken;
+      csrfToken = typeof token === "string" ? token : null;
+      return csrfToken;
+    } catch {
+      csrfToken = null;
+      return null;
+    } finally {
+      csrfTokenPromise = null;
+    }
+  })();
+
+  return csrfTokenPromise;
+}
 
 export function registerAuthHandlers(handlers: AuthHandlers): void {
   authHandlers = handlers;
@@ -49,11 +93,19 @@ function isAuthEndpoint(url: string | undefined): boolean {
 }
 
 function attachAuthInterceptors(client: AxiosInstance): void {
-  client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  client.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     const token = authHandlers.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (isMutatingMethod(config.method)) {
+      const csrf = csrfToken ?? (await fetchCsrfToken());
+      if (csrf) {
+        config.headers["X-CSRF-Token"] = csrf;
+      }
+    }
+
     return config;
   });
 
@@ -115,12 +167,16 @@ export async function refreshAccessTokenRequest(): Promise<{
   user: unknown;
 } | null> {
   try {
+    const csrf = csrfToken ?? (await fetchCsrfToken());
     const response = await axios.post(
       `${getApiRootUrl()}/api/v1/auth/refresh`,
       {},
       {
         withCredentials: true,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+        },
         timeout: 10000,
       },
     );
@@ -129,6 +185,9 @@ export async function refreshAccessTokenRequest(): Promise<{
     if (!data?.accessToken?.token) {
       return null;
     }
+
+    clearCsrfToken();
+    await fetchCsrfToken();
 
     return {
       accessToken: data.accessToken.token as string,
@@ -141,16 +200,19 @@ export async function refreshAccessTokenRequest(): Promise<{
 
 export async function logoutRequest(accessToken: string | null): Promise<void> {
   try {
+    const csrf = csrfToken ?? (await fetchCsrfToken());
     await axios.post(
       `${getApiRootUrl()}/api/v1/auth/logout`,
       {},
       {
         withCredentials: true,
-        headers: accessToken
-          ? { Authorization: `Bearer ${accessToken}` }
-          : undefined,
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+        },
       },
     );
+    clearCsrfToken();
   } catch {
     // ignore logout network errors
   }

@@ -10,6 +10,8 @@ import React, {
 import type { AuthTokensResponse, UserPublic } from "@sarradabet/types";
 import {
   authApiClient,
+  clearCsrfToken,
+  fetchCsrfToken,
   logoutRequest,
   refreshAccessTokenRequest,
   registerAuthHandlers,
@@ -77,6 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshSession, clearSession]);
 
   useEffect(() => {
+    void fetchCsrfToken();
+  }, []);
+
+  useEffect(() => {
     void refreshSession();
   }, [refreshSession]);
 
@@ -91,6 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         { username, password },
       );
       const payload = response.data.data;
+      clearCsrfToken();
+      await fetchCsrfToken();
       setSession(payload.accessToken.token, payload.user);
       return payload.user;
     },
@@ -109,6 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data,
       );
       const payload = response.data.data;
+      clearCsrfToken();
+      await fetchCsrfToken();
       setSession(payload.accessToken.token, payload.user);
       return payload.user;
     },

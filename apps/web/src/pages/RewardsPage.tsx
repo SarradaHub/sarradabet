@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { Reward } from "@sarradabet/types";
 import Navigation from "../components/Navigation";
 import { Button } from "../components/ui/Button";

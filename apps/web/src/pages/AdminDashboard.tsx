@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Plus } from "@sarradahub/design-system";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";

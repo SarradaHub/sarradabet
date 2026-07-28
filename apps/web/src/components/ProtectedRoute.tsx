@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { useAuth } from "../hooks/useAuth";
 

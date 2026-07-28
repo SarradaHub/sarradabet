@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useState, type ReactNode } from "react";
 import BrandLogo from "./BrandLogo";
 import { Button } from "./ui/Button";

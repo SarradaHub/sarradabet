@@ -1,5 +1,40 @@
 const API_URL = process.env.E2E_API_URL ?? "http://localhost:8000";
 
+type ApiEnvelope<T> = {
+  success: boolean;
+  data?: T;
+  message?: string;
+};
+
+let cachedCsrfToken: string | null = null;
+
+async function fetchCsrfToken(): Promise<string> {
+  if (cachedCsrfToken) {
+    return cachedCsrfToken;
+  }
+
+  const response = await fetch(`${API_URL}/api/v1/auth/csrf-token`, {
+    credentials: "include",
+  });
+  const body = (await response.json()) as ApiEnvelope<{ csrfToken: string }>;
+  if (!response.ok || !body.success || !body.data?.csrfToken) {
+    throw new Error(`CSRF token fetch failed: ${body.message ?? response.status}`);
+  }
+
+  cachedCsrfToken = body.data.csrfToken;
+  return cachedCsrfToken;
+}
+
+function clearCsrfToken(): void {
+  cachedCsrfToken = null;
+}
+
+function isMutatingMethod(method: string | undefined): boolean {
+  return ["POST", "PUT", "PATCH", "DELETE"].includes(
+    (method ?? "GET").toUpperCase(),
+  );
+}
+
 export async function assertApiHealthy(): Promise<void> {
   const response = await fetch(`${API_URL}/health`);
   if (!response.ok) {
@@ -17,12 +52,6 @@ export const SEED_USERS = {
 } as const;
 
 export type SeedRole = keyof typeof SEED_USERS;
-
-type ApiEnvelope<T> = {
-  success: boolean;
-  data?: T;
-  message?: string;
-};
 
 type AuthPayload = {
   user: { id: number; username: string; email: string; role: string };
@@ -46,9 +75,14 @@ export type TestUser = {
 
 export async function loginViaApi(role: SeedRole): Promise<string> {
   const credentials = SEED_USERS[role];
+  const csrfToken = await fetchCsrfToken();
   const response = await fetch(`${API_URL}/api/v1/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+    },
     body: JSON.stringify({
       username: credentials.username,
       password: credentials.password,
@@ -62,6 +96,8 @@ export async function loginViaApi(role: SeedRole): Promise<string> {
     );
   }
 
+  clearCsrfToken();
+  await fetchCsrfToken();
   return extractAccessToken(body.data.accessToken);
 }
 
@@ -75,9 +111,14 @@ export async function createUserViaApi(data: {
   phone?: string;
   password?: string;
 }): Promise<TestUser> {
+  const csrfToken = await fetchCsrfToken();
   const response = await fetch(`${API_URL}/api/v1/auth/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+    },
     body: JSON.stringify({
       username: data.username,
       email: data.email,
@@ -93,6 +134,7 @@ export async function createUserViaApi(data: {
     );
   }
 
+  clearCsrfToken();
   return {
     id: body.data.user.id,
     username: body.data.user.username,
@@ -121,12 +163,18 @@ async function apiRequest<T>(
   path: string,
   options: RequestInit & { token?: string } = {},
 ): Promise<T> {
-  const { token, headers, ...rest } = options;
+  const { token, headers, method, ...rest } = options;
+  const csrfToken = isMutatingMethod(method)
+    ? await fetchCsrfToken()
+    : undefined;
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
+    method,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
       ...(headers ?? {}),
     },
   });
@@ -294,9 +342,14 @@ export async function setUserCoinBalanceViaApi(
 }
 
 export async function getUserIdByUsername(username: string): Promise<number> {
+  const csrfToken = await fetchCsrfToken();
   const response = await fetch(`${API_URL}/api/v1/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrfToken,
+    },
     body: JSON.stringify({
       username,
       password: SEED_USERS[username as SeedRole]?.password ?? "user123",
@@ -320,11 +373,14 @@ export async function voteViaApi(
   userToken: string,
   data: { oddId: number; amount: number },
 ): Promise<{ voteId: number }> {
+  const csrfToken = await fetchCsrfToken();
   const response = await fetch(`${API_URL}/api/v1/votes`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${userToken}`,
+      "X-CSRF-Token": csrfToken,
     },
     body: JSON.stringify(data),
   });
@@ -361,9 +417,14 @@ export async function createPayoutBetViaApi(
   await voteViaApi(userToken, { oddId: losingOddId, amount: 100 });
   await voteViaApi(adminToken, { oddId: losingOddId, amount: 100 });
 
+  const csrfToken = await fetchCsrfToken();
   await fetch(`${API_URL}/api/v1/bets/${bet.id}/close`, {
     method: "PATCH",
-    headers: { Authorization: `Bearer ${adminToken}` },
+    credentials: "include",
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+      "X-CSRF-Token": csrfToken,
+    },
   });
 
   return { betId: bet.id, winningOddId, title };

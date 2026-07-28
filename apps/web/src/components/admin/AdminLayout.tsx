@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router";
 import { LayoutDashboard, Ticket, FolderOpen, Coins, Users, Gift } from "lucide-react";
 import BrandLogo from "../BrandLogo";
 import { Button } from "../ui/Button";

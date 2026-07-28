@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Button } from "../components/ui/Button";
 import BrandLogo from "../components/BrandLogo";
 import { ErrorMessage } from "../components/ui/ErrorMessage";

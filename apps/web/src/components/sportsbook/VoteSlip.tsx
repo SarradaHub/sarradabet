@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { formatOddValue } from "../../utils/odds";
 import { X } from "lucide-react";
 import { voteService } from "../../services/VoteService";
