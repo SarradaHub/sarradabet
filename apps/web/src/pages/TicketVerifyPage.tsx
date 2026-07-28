@@ -1,0 +1,137 @@
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router";
+import type { TicketVerifyResponse } from "@sarradabet/types";
+import Navigation from "../components/Navigation";
+import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import axios from "axios";
+import { ticketService } from "../services/ticketService";
+import { getApiErrorMessage } from "../utils/apiError";
+
+function formatDate(value: string): string {
+  return new Date(value).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const TicketVerifyPage: React.FC = () => {
+  const { code } = useParams<{ code: string }>();
+  const [result, setResult] = useState<TicketVerifyResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!code) {
+        setError("Código do ticket inválido");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await ticketService.verify(code);
+        setResult(response);
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
+          setResult({
+            ticketCode: code,
+            isValid: false,
+            status: "NOT_FOUND",
+            message: "Ticket não encontrado",
+          });
+        } else {
+          setError(getApiErrorMessage(err));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+  }, [code]);
+
+  const isValidated = result?.status === "VALIDATED";
+
+  return (
+    <div className="min-h-screen bg-sportsbook-bg text-white">
+      <Navigation />
+      <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Verificação de ticket</h1>
+          <p className="text-sm text-sportsbook-muted mt-1">
+            Confira a autenticidade de um ticket SarradaBet
+          </p>
+        </div>
+
+        {loading && <LoadingSpinner text="Verificando ticket..." />}
+        {error && <ErrorMessage error={error} />}
+
+        {result && (
+          <div
+            className={`sb-surface border rounded-2xl p-6 space-y-4 ${
+              result.status === "NOT_FOUND"
+                ? "border-red-500/40"
+                : isValidated
+                  ? "border-green-500/40"
+                  : "border-amber-500/40"
+            }`}
+          >
+            {result.status === "NOT_FOUND" ? (
+              <p className="text-red-300">{result.message}</p>
+            ) : (
+              <>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display text-xl font-bold">
+                {result.rewardTitle ?? "Ticket SarradaBet"}
+              </h2>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                  isValidated
+                    ? "border border-green-500/40 bg-green-500/10 text-green-300"
+                    : "border border-amber-500/40 bg-amber-500/10 text-amber-300"
+                }`}
+              >
+                {isValidated ? "Validado" : "Resgatado"}
+              </span>
+            </div>
+
+            <dl className="grid gap-3 text-sm">
+              <div>
+                <dt className="text-sportsbook-muted">Ticket</dt>
+                <dd className="font-mono break-all">{result.ticketCode}</dd>
+              </div>
+              {result.userEmail && (
+                <div>
+                  <dt className="text-sportsbook-muted">Usuário</dt>
+                  <dd>{result.userEmail}</dd>
+                </div>
+              )}
+              {result.redeemedAt && (
+                <div>
+                  <dt className="text-sportsbook-muted">Resgatado em</dt>
+                  <dd>{formatDate(result.redeemedAt)}</dd>
+                </div>
+              )}
+              {result.validatedAt && (
+                <div>
+                  <dt className="text-sportsbook-muted">Validado em</dt>
+                  <dd>{formatDate(result.validatedAt)}</dd>
+                </div>
+              )}
+            </dl>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TicketVerifyPage;
