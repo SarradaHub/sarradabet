@@ -5,6 +5,8 @@ import {
 } from "../repositories/vote.repository";
 import { emitVoteCreated } from "../realtime/emitter";
 import { cacheService } from "../core/cache/CacheService";
+import { invalidateDashboardCache } from "../modules/dashboard/services/DashboardService";
+
 export const createVote = async (
   data: CreateVoteDTO,
   userId: number,
@@ -13,6 +15,7 @@ export const createVote = async (
 
   cacheService.invalidateBet(result.betId);
   cacheService.invalidatePattern("bets:");
+  await invalidateDashboardCache(userId);
 
   emitVoteCreated({
     betId: result.betId,

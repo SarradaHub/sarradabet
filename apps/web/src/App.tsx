@@ -26,10 +26,10 @@ const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminBetsPage = lazy(() => import("./pages/AdminBetsPage"));
 const AdminCategoriesPage = lazy(() => import("./pages/AdminCategoriesPage"));
-const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminCoinPackagesPage = lazy(
   () => import("./pages/AdminCoinPackagesPage"),
 );
+const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminRewardsPage = lazy(() => import("./pages/AdminRewardsPage"));
 
 function App() {
@@ -62,10 +62,7 @@ function App() {
               />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/rewards" element={<RewardsPage />} />
-              <Route
-                path="/tickets/verify/:code"
-                element={<TicketVerifyPage />}
-              />
+              <Route path="/tickets/verify/:code" element={<TicketVerifyPage />} />
               <Route
                 path="/admin/login"
                 element={
