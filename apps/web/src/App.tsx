@@ -12,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import CoinsPage from "./pages/CoinsPage";
 import { AuthProvider } from "./context/AuthProvider";
 import { RealtimeProvider } from "./context/RealtimeProvider";
+import PayoutNotification from "./components/PayoutNotification";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PageSkeleton from "./components/ui/PageSkeleton";
 import "./App.css";
@@ -31,6 +32,7 @@ function App() {
     <Router>
       <AuthProvider>
         <RealtimeProvider>
+          <PayoutNotification />
           <main>
             <Routes>
               <Route path="/" element={<HomePage />} />

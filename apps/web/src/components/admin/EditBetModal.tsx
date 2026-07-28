@@ -19,7 +19,13 @@ import {
   estimateSiblingOddValues,
   formatOddValue,
   impliedProbabilityTotal,
+  TARGET_IMPLIED_TOTAL,
 } from "../../utils/odds";
+import {
+  fromDatetimeLocalValue,
+  toDatetimeLocalValue,
+} from "../../utils/datetimeLocal";
+import ScheduleFields from "./ScheduleFields";
 
 interface EditableOdd {
   id: number;
@@ -48,6 +54,8 @@ const EditBetModal: React.FC<EditBetModalProps> = ({
     null,
   );
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [startTimeLocal, setStartTimeLocal] = useState("");
+  const [closesAtLocal, setClosesAtLocal] = useState("");
 
   const {
     data: categoriesResponse,
@@ -72,6 +80,8 @@ const EditBetModal: React.FC<EditBetModalProps> = ({
           value: odd.value,
         })),
       );
+      setStartTimeLocal(toDatetimeLocalValue(bet.startTime));
+      setClosesAtLocal(toDatetimeLocalValue(bet.closesAt));
       setValidationErrors([]);
       setLastEditedOddIndex(null);
       queryCache.clear(getCategoriesQueryKey(CATEGORIES_LIST_PARAMS));
@@ -155,10 +165,21 @@ const EditBetModal: React.FC<EditBetModalProps> = ({
       (sum, odd) => sum + (odd.value > 0 ? 1 / odd.value : 0),
       0,
     );
-    if (totalProbability < 0.8 || totalProbability > 1.2) {
+    if (
+      totalProbability < TARGET_IMPLIED_TOTAL * 0.8 ||
+      totalProbability > TARGET_IMPLIED_TOTAL * 1.2
+    ) {
       errors.push(
-        "Valores das odds devem representar probabilidades realistas (soma de 1/odd entre 0.8 e 1.2)",
+        `Valores das odds devem representar probabilidades realistas (soma de 1/odd entre ${(TARGET_IMPLIED_TOTAL * 0.8).toFixed(2)} e ${(TARGET_IMPLIED_TOTAL * 1.2).toFixed(2)})`,
       );
+    }
+
+    if (startTimeLocal && closesAtLocal) {
+      const start = new Date(startTimeLocal);
+      const close = new Date(closesAtLocal);
+      if (close <= start) {
+        errors.push("Encerramento deve ser posterior ao início");
+      }
     }
 
     setValidationErrors(errors);
@@ -181,6 +202,8 @@ const EditBetModal: React.FC<EditBetModalProps> = ({
             title: odd.title.trim(),
             value: odd.value,
           })),
+          startTime: fromDatetimeLocalValue(startTimeLocal) ?? null,
+          closesAt: fromDatetimeLocalValue(closesAtLocal) ?? null,
         },
       });
 
@@ -259,6 +282,15 @@ const EditBetModal: React.FC<EditBetModalProps> = ({
           />
         )}
 
+        <ScheduleFields
+          startId="edit-startTime"
+          closesId="edit-closesAt"
+          startTimeLocal={startTimeLocal}
+          closesAtLocal={closesAtLocal}
+          onStartTimeChange={setStartTimeLocal}
+          onClosesAtChange={setClosesAtLocal}
+        />
+
         <section className="sb-surface border sb-border rounded-lg p-4 space-y-3">
           <div>
             <h3 className="text-sm font-display font-semibold tracking-wide text-white uppercase">
@@ -270,7 +302,9 @@ const EditBetModal: React.FC<EditBetModalProps> = ({
             </p>
             {lastEditedOddIndex != null && (
               <p className="text-[11px] text-sportsbook-muted mt-2 tabular-nums">
-                Soma 1/odd: {impliedTotal.toFixed(2)} · meta: 0.80–1.20
+                Soma 1/odd: {impliedTotal.toFixed(2)} · meta:{" "}
+                {(TARGET_IMPLIED_TOTAL * 0.8).toFixed(2)}–
+                {(TARGET_IMPLIED_TOTAL * 1.2).toFixed(2)} (com takeout 25%)
               </p>
             )}
           </div>

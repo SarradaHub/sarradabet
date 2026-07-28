@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { formatOddValue } from "../../utils/odds";
 import { X } from "lucide-react";
 import { voteService } from "../../services/VoteService";
 import { useVoteSlip } from "../../context/VoteSlipContext";
+import { useAuth } from "../../hooks/useAuth";
+import { useCoinBalance } from "../../hooks/useCoinBalance";
 import { Button } from "../ui/Button";
+import { sportsbookFieldClass } from "../ui/SportsbookModal";
 import { patchBetsFromVote } from "../../utils/betCache";
+import BetReturnExplainer from "./BetReturnExplainer";
+import { getApiErrorMessage } from "../../utils/apiError";
+import { canAcceptWagers } from "../../utils/betSchedule";
 
 interface VoteSlipProps {
   variant?: "rail" | "sheet";
@@ -13,58 +20,115 @@ interface VoteSlipProps {
 
 const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
   const { selections, removeSelection, clearSelections, count } = useVoteSlip();
+  const { isAuthenticated } = useAuth();
+  const { balance, loading: balanceLoading } = useCoinBalance();
+  const [stakes, setStakes] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const getStake = (oddId: number) => {
+    const value = stakes[oddId];
+    if (value == null || value === "") {
+      return 0;
+    }
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  };
+
+  const handleStakeChange = (oddId: number, value: string) => {
+    if (/^\d*$/.test(value)) {
+      setStakes((current) => ({ ...current, [oddId]: value }));
+    }
+  };
+
+  const votableSelections = useMemo(
+    () =>
+      selections.filter((selection) =>
+        canAcceptWagers({
+          status: selection.betStatus,
+          startTime: selection.startTime,
+          closesAt: selection.closesAt,
+        }),
+      ),
+    [selections],
+  );
+
+  const blockedSelections = selections.length - votableSelections.length;
+
   const handleConfirm = async () => {
     if (submitting || count === 0) return;
+
+    if (!isAuthenticated) {
+      setError("Faça login para apostar com moedas.");
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const openSelections = selections.filter(
-        (selection) => selection.betStatus === "open",
-      );
-
-      if (openSelections.length === 0) {
-        setError("Não é possível votar em apostas inativas.");
+      if (votableSelections.length === 0) {
+        setError("Não é possível votar em apostas que ainda não abriram.");
         return;
       }
 
-      for (const selection of openSelections) {
-        const response = await voteService.create({ oddId: selection.oddId });
+      for (const selection of votableSelections) {
+        const amount = getStake(selection.oddId);
+        if (amount <= 0) {
+          setError("Informe um valor de aposta válido para cada seleção.");
+          return;
+        }
+
+        const response = await voteService.create({
+          oddId: selection.oddId,
+          amount,
+        });
         if (response.success && response.data) {
-          const { betId, odds, totalVotes } = response.data;
+          const { betId, odds, totalVotes, totalStake } = response.data;
           patchBetsFromVote({
             betId,
             oddId: selection.oddId,
             odds,
             totalVotes,
+            totalStake,
           });
         }
       }
       clearSelections();
+      setStakes({});
       setSuccess(true);
+      window.dispatchEvent(new CustomEvent("bet:staked"));
       setTimeout(() => setSuccess(false), 3000);
       onClose?.();
-    } catch {
-      setError("Não foi possível registrar seus votos. Tente novamente.");
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, "Não foi possível registrar seus votos. Tente novamente."),
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   const isSheet = variant === "sheet";
+  const returnLines = useMemo(
+    () =>
+      selections
+        .map((selection) => ({
+          stake: getStake(selection.oddId),
+          displayOdd: selection.oddValue,
+        }))
+        .filter((line) => line.stake > 0),
+    [selections, stakes],
+  );
 
   return (
     <div
       className={`flex flex-col h-full ${isSheet ? "max-h-[70vh]" : "min-h-0"}`}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b sb-border shrink-0">
-        <div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b sb-border shrink-0">
+        <div className="min-w-0">
           <h2 className="font-display text-lg font-bold tracking-wide text-white">
             Cupom de Votos
           </h2>
@@ -74,16 +138,28 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
               : `${count} seleção${count > 1 ? "ões" : ""}`}
           </p>
         </div>
-        {isSheet && onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
-            aria-label="Fechar cupom"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {isAuthenticated && (
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide text-sportsbook-muted">
+                Saldo
+              </p>
+              <p className="text-sm font-bold text-warning-400 tabular-nums">
+                {balanceLoading ? "…" : `${balance ?? 0}`} moedas
+              </p>
+            </div>
+          )}
+          {isSheet && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+              aria-label="Fechar cupom"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 min-h-0">
@@ -110,10 +186,17 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
           </div>
         ) : (
           <ul className="space-y-2">
-            {selections.map((selection) => (
+            {selections.map((selection) => {
+              const selectionOpen = canAcceptWagers({
+                status: selection.betStatus,
+                startTime: selection.startTime,
+                closesAt: selection.closesAt,
+              });
+
+              return (
               <li
                 key={selection.oddId}
-                className="sb-slip-enter sb-surface-raised border sb-border rounded-lg p-3"
+                className={`sb-slip-enter sb-surface-raised border sb-border rounded-lg p-3 ${selectionOpen ? "" : "opacity-60"}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -128,6 +211,11 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
                     <p className="text-sm font-medium text-white truncate mt-0.5">
                       {selection.oddTitle}
                     </p>
+                    {!selectionOpen && (
+                      <p className="text-[11px] text-warning-400 mt-1">
+                        Mercado ainda não aberto para apostas
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -138,18 +226,52 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="mt-2 flex justify-end">
+                <div className="mt-2 flex items-end justify-between gap-3">
+                  <label className="flex-1">
+                    <span className="text-[10px] uppercase tracking-wide text-sportsbook-muted">
+                      Stake (moedas)
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={stakes[selection.oddId] ?? ""}
+                      onChange={(event) =>
+                        handleStakeChange(selection.oddId, event.target.value)
+                      }
+                      placeholder="100"
+                      className={`mt-1 w-full rounded px-2 py-1.5 text-sm tabular-nums ${sportsbookFieldClass}`}
+                    />
+                  </label>
                   <span className="text-sm font-bold text-sportsbook-odds tabular-nums">
                     {formatOddValue(selection.oddValue)}x
                   </span>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </div>
 
       <div className="shrink-0 p-3 border-t sb-border space-y-2">
+        {!isAuthenticated && count > 0 && (
+          <p className="text-xs text-warning-400">
+            <Link to="/login" className="underline hover:text-warning-300">
+              Faça login
+            </Link>{" "}
+            para apostar com moedas.
+          </p>
+        )}
+
+        {returnLines.length > 0 && <BetReturnExplainer lines={returnLines} />}
+
+        {blockedSelections > 0 && (
+          <p className="text-xs text-warning-400">
+            {blockedSelections} seleção
+            {blockedSelections > 1 ? "ões" : ""} aguardando abertura do mercado.
+          </p>
+        )}
+
         {error && (
           <p className="text-xs text-red-400" role="alert">
             {error}
@@ -171,7 +293,7 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
         )}
         <Button
           onClick={handleConfirm}
-          disabled={count === 0 || submitting}
+          disabled={count === 0 || submitting || votableSelections.length === 0}
           loading={submitting}
           className="w-full sb-brand-gradient text-black font-semibold font-display tracking-wide hover:from-warning-300 hover:to-orange-400 disabled:opacity-40"
         >

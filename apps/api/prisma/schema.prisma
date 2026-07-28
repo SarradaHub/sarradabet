@@ -25,6 +25,8 @@ model Bet {
   status      BetStatus @default(open)
   categoryId  Int
   odds        Odd[]
+  startTime   DateTime? @map("start_time")
+  closesAt    DateTime? @map("closes_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   resolvedAt  DateTime? @map("resolved_at")
@@ -35,6 +37,8 @@ model Bet {
   @@index([createdAt])
   @@index([categoryId])
   @@index([status, createdAt(sort: Desc)])
+  @@index([startTime])
+  @@index([closesAt])
   @@map("bets")
 }
 
@@ -56,13 +60,22 @@ model Odd {
 }
 
 model Vote {
-  id        Int      @id @default(autoincrement())
-  oddId     Int
-  createdAt DateTime @default(now()) @map("created_at")
+  id           Int        @id @default(autoincrement())
+  oddId        Int
+  userId       Int        @map("user_id")
+  amount       Int
+  status       VoteStatus @default(pending)
+  payoutAmount Int?       @map("payout_amount")
+  paidAt       DateTime?  @map("paid_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
 
-  odd Odd @relation(fields: [oddId], references: [id])
+  odd  Odd  @relation(fields: [oddId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([oddId])
+  @@index([userId])
+  @@index([userId, oddId])
+  @@index([status])
   @@map("votes")
 }
 
@@ -78,6 +91,7 @@ model User {
   actions          UserAction[]
   coinTransactions CoinTransaction[]
   pixPayments      PixPayment[]
+  votes            Vote[]
   createdAt        DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
@@ -174,6 +188,7 @@ model PixPayment {
 }
 
 enum BetStatus {
+  scheduled
   open
   closed
   resolved
@@ -200,6 +215,14 @@ enum CoinTransactionSource {
   BET_COST
   ADMIN_ADJUSTMENT
   REFUND
+  WIN
+  TAKEOUT
+}
+
+enum VoteStatus {
+  pending
+  paid
+  lost
 }
 
 enum PixPaymentStatus {
