@@ -11,7 +11,6 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import CoinsPage from "./pages/CoinsPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
-import UserDashboardPage from "./pages/UserDashboardPage";
 import RewardsPage from "./pages/RewardsPage";
 import TicketVerifyPage from "./pages/TicketVerifyPage";
 import { AuthProvider } from "./context/AuthProvider";
@@ -58,14 +57,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <CoinsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <UserDashboardPage />
                   </ProtectedRoute>
                 }
               />
