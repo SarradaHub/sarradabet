@@ -29,7 +29,17 @@ async function main() {
     },
   });
 
-  console.log("Simple seed completed: admin + user accounts created");
+  await prisma.coinPackage.create({
+    data: {
+      name: "Pacote Básico",
+      amountCents: 500,
+      coinsAmount: 100,
+      isActive: true,
+      sortOrder: 0,
+    },
+  });
+
+  console.log("Simple seed completed: admin + user + coin package created");
 }
 
 main()

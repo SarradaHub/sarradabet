@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import CoinsPage from "./pages/CoinsPage";
 import { AuthProvider } from "./context/AuthProvider";
 import { RealtimeProvider } from "./context/RealtimeProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,6 +22,9 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminBetsPage = lazy(() => import("./pages/AdminBetsPage"));
 const AdminCategoriesPage = lazy(() => import("./pages/AdminCategoriesPage"));
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
+const AdminCoinPackagesPage = lazy(
+  () => import("./pages/AdminCoinPackagesPage"),
+);
 
 function App() {
   return (
@@ -37,6 +41,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/coins"
+                element={
+                  <ProtectedRoute>
+                    <CoinsPage />
                   </ProtectedRoute>
                 }
               />
@@ -80,6 +92,14 @@ function App() {
                   element={
                     <Suspense fallback={<PageSkeleton />}>
                       <AdminCategoriesPage />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="coin-packages"
+                  element={
+                    <Suspense fallback={<PageSkeleton />}>
+                      <AdminCoinPackagesPage />
                     </Suspense>
                   }
                 />
