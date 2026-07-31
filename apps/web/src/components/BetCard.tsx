@@ -82,6 +82,9 @@ const BetCard = ({ bet }: BetCardProps) => {
           betTitle={bet.title}
           categoryTitle={categoryTitle}
           betStatus={bet.status}
+          startTime={bet.startTime}
+          closesAt={bet.closesAt}
+          totalStake={bet.totalStake}
         />
       </div>
     </article>

@@ -1,3 +1,4 @@
+import type { Job } from "bull";
 import { logger } from "../utils/logger";
 import {
   getBetStatusQueue,
@@ -5,6 +6,8 @@ import {
   getPayoutVoteQueue,
   getAnalyticsRefreshQueue,
   closeAllQueues,
+  type PayoutResolveBetJobData,
+  type PayoutVoteJobData,
 } from "./queues";
 import { runBetStatusTransitions } from "./bet-status.worker";
 import {
@@ -25,11 +28,11 @@ export function startJobWorkers(): void {
   betStatusQueue.process(async () => runBetStatusTransitions());
   betStatusQueue.add({}, { repeat: { every: BET_STATUS_REPEAT_MS } });
 
-  getPayoutResolveBetQueue().process(async (job) =>
+  getPayoutResolveBetQueue().process(async (job: Job<PayoutResolveBetJobData>) =>
     processPayoutResolveBetJob(job.data),
   );
 
-  getPayoutVoteQueue().process(async (job) =>
+  getPayoutVoteQueue().process(async (job: Job<PayoutVoteJobData>) =>
     processPayoutVoteJob(job.data),
   );
 

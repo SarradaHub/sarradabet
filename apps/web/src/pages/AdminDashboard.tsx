@@ -62,6 +62,7 @@ const AdminDashboard: React.FC = () => {
 
   const statusChartData = useMemo(() => {
     const counts: Record<BetStatus, number> = {
+      scheduled: 0,
       open: 0,
       closed: 0,
       resolved: 0,

@@ -17,6 +17,7 @@ export type VoteCreatedPayload = {
   oddId: number;
   odds: { id: number; totalVotes: number; value: number }[];
   totalVotes: number;
+  totalStake: number;
 };
 
 export type BetCreatedPayload = BetListItem;
