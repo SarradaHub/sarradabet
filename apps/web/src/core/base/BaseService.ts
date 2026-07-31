@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { IApiService, ApiResponse, ApiError } from "../interfaces/IService";
 import { requestDeduplicator } from "../utils/requestDeduplicator";
+import { getApiRootUrl } from "../../services/apiClient";
 
 function headerValue(
   headers: AxiosResponse["headers"],
@@ -15,16 +16,11 @@ export abstract class BaseService<T, CreateInput, UpdateInput, CreateResult = T>
 {
   protected readonly api: AxiosInstance;
 
-  constructor(baseURL: string, endpoint: string) {
-    const apiGatewayUrl =
-      import.meta.env.VITE_API_GATEWAY_URL || "http://localhost";
-    const directApiUrl = import.meta.env.VITE_API_URL;
-
-    const fullBaseURL = baseURL
-      ? `${baseURL}/api/v1/${endpoint}`
-      : directApiUrl
-        ? `${directApiUrl}/api/v1/${endpoint}`
-        : `${apiGatewayUrl}/api/v1/${endpoint}`;
+  constructor(_baseURL: string | undefined, endpoint: string) {
+    const rootUrl = getApiRootUrl();
+    const fullBaseURL = rootUrl
+      ? `${rootUrl}/api/v1/${endpoint}`
+      : `/api/v1/${endpoint}`;
 
     this.api = axios.create({
       baseURL: fullBaseURL,

@@ -18,12 +18,72 @@ The SarradaBet API is a RESTful API built with Express.js and TypeScript, with a
 
 No authentication required:
 
-- `GET/POST` `/api/v1/bets`, `/api/v1/categories`, `POST /api/v1/votes`
+- `GET` `/api/v1/bets`, `/api/v1/categories`
+- `POST` `/api/v1/votes`
+- `POST` `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`
+- `GET /api/v1/auth/csrf-token`
 - `GET /health`, `GET /ready`
 
-### Admin endpoints
+### User authentication
 
-Routes under `/api/v1/admin/*` require a JWT in the `Authorization: Bearer <token>` header (obtained via `POST /api/v1/admin/login`).
+User routes use a **short-lived access token** (JWT in `Authorization: Bearer <token>`) and a **refresh token** stored in an HttpOnly cookie. State-changing requests require a CSRF token from `GET /auth/csrf-token` sent as `X-CSRF-Token`.
+
+| Setting | Default |
+|---------|---------|
+| Access token TTL | `15m` (`JWT_ACCESS_EXPIRES_IN`) |
+| Refresh token TTL | `7d` (`JWT_REFRESH_EXPIRES_IN`) |
+| Cookie name | `refreshToken` (`REFRESH_TOKEN_COOKIE_NAME`) |
+| Cookie path | `/api/v1/auth` |
+
+**Frontend clients** must send `credentials: 'include'` on auth requests so the refresh cookie is stored and sent back.
+
+#### POST /auth/register
+
+Creates a user with role `USER`.
+
+**Request:**
+
+```json
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "phone": "5511999999999",
+  "password": "password123"
+}
+```
+
+#### POST /auth/login
+
+Same body as register (username or email in `username` field). Returns user + access token and sets refresh cookie.
+
+#### POST /auth/refresh
+
+No body required. Reads the refresh cookie, rotates it, and returns a new access token.
+
+#### POST /auth/logout
+
+Revokes the current refresh token, clears the cookie, and blacklists the access token when `Authorization: Bearer <accessToken>` is sent.
+
+#### GET /auth/me
+
+Returns the authenticated user's profile. Requires `Authorization: Bearer <accessToken>`.
+
+### Protected endpoints
+
+Require `Authorization: Bearer <accessToken>`:
+
+| Route | Permission |
+|-------|------------|
+| `GET /api/v1/auth/me` | Any authenticated user |
+| `POST /api/v1/bets` | Any authenticated user |
+| `PUT/DELETE/PATCH /api/v1/bets/*` | User with `role: ADMIN` |
+| `POST/PUT/DELETE /api/v1/categories/*` | User with `role: ADMIN` |
+| `GET /api/v1/users` | Admin only (`role: ADMIN`) |
+| `GET /api/v1/users/:id` | Self or admin |
+| `PUT /api/v1/users/:id` | Self or admin |
+| `DELETE /api/v1/users/:id` | Admin only (cannot delete self) |
+
+The admin dashboard uses the same auth flow: login via `POST /auth/login` with a user that has `role: ADMIN`.
 
 ### API key (optional, not mounted)
 

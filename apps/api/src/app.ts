@@ -1,5 +1,6 @@
 import express from "express";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
 import { config } from "./config/env";
@@ -11,6 +12,7 @@ import {
   sanitizeRequest,
   corsOptions,
 } from "./core/middleware/SecurityMiddleware";
+import { csrfProtection } from "./core/middleware/CsrfMiddleware";
 import { cacheHeaders } from "./core/middleware/cacheHeaders";
 import router from "./routes";
 import { logger } from "./utils/logger";
@@ -41,6 +43,9 @@ if (config.NODE_ENV !== "test") {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+app.use(cookieParser());
+app.use(csrfProtection);
+
 app.get("/health", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.status(200).json({
@@ -70,7 +75,6 @@ app.get("/ready", async (req, res) => {
   }
 });
 
-// Root route handler
 app.get("/", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.status(200).json({
@@ -83,7 +87,8 @@ app.get("/", (req, res) => {
       bets: "/api/v1/bets",
       categories: "/api/v1/categories",
       votes: "/api/v1/votes",
-      admin: "/api/v1/admin",
+      auth: "/api/v1/auth",
+      users: "/api/v1/users",
     },
     documentation: "API routes are available under /api/v1",
   });

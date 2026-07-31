@@ -3,10 +3,11 @@ import { PrismaClient } from "@prisma/client";
 // Global test setup (only when DB tests are enabled)
 beforeAll(async () => {
   // Ensure env defaults for tests
-  process.env.NODE_ENV = process.env.NODE_ENV || "test";
-  process.env.DATABASE_URL =
-    process.env.DATABASE_URL ||
-    "postgresql://postgres:postgres@localhost:5432/sarradabet_test";
+  process.env.NODE_ENV = "test";
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL =
+      "postgresql://appuser:sarradabet1234@localhost:5433/sarradabet_test";
+  }
   process.env.CORS_ORIGINS =
     process.env.CORS_ORIGINS || "http://localhost:5173";
   process.env.PORT = process.env.PORT || "0";
@@ -28,8 +29,9 @@ beforeAll(async () => {
     await prisma.$executeRaw`TRUNCATE TABLE "odd" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "bets" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "categories" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "admin_actions" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "admins" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "refresh_tokens" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "user_actions" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "users" CASCADE`;
   } finally {
     await prisma.$disconnect();
   }

@@ -1,13 +1,24 @@
+import crypto from "crypto";
 import jwt, { SignOptions } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
+const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || "15m";
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
 
-export interface AuthPayload {
-  adminId: number;
+export interface UserAuthPayload {
+  userId: number;
   username: string;
   email: string;
+  role: UserRole;
+  jti?: string;
+}
+
+export interface DecodedAccessToken extends UserAuthPayload {
+  jti: string;
+  exp: number;
+  iat: number;
 }
 
 export interface AuthToken {
@@ -15,17 +26,11 @@ export interface AuthToken {
   expiresIn: string;
 }
 
-/**
- * Hash a password using bcrypt
- */
 export const hashPassword = async (password: string): Promise<string> => {
   const saltRounds = 12;
   return bcrypt.hash(password, saltRounds);
 };
 
-/**
- * Compare a password with its hash
- */
 export const comparePassword = async (
   password: string,
   hash: string,
@@ -33,42 +38,85 @@ export const comparePassword = async (
   return bcrypt.compare(password, hash);
 };
 
-/**
- * Generate a JWT token for an admin
- */
-export const generateToken = (payload: AuthPayload): AuthToken => {
+export const generateAccessToken = (payload: UserAuthPayload): AuthToken => {
+  const jti = crypto.randomUUID();
   const options: SignOptions = {
-    expiresIn: JWT_EXPIRES_IN as SignOptions["expiresIn"],
+    expiresIn: JWT_ACCESS_EXPIRES_IN as SignOptions["expiresIn"],
     issuer: "sarradabet-api",
-    audience: "sarradabet-admin",
+    audience: "sarradabet-user",
+    jwtid: jti,
   };
   const token = jwt.sign(payload, JWT_SECRET, options);
 
   return {
     token,
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: JWT_ACCESS_EXPIRES_IN,
   };
 };
 
-/**
- * Verify and decode a JWT token
- */
-export const verifyToken = (token: string): AuthPayload => {
+export const decodeAccessToken = (token: string): DecodedAccessToken => {
+  const decoded = jwt.decode(token) as DecodedAccessToken | null;
+  if (!decoded || typeof decoded.exp !== "number") {
+    throw new Error("Invalid token");
+  }
+  return decoded;
+};
+
+export const getAccessTokenRemainingTtlSeconds = (token: string): number => {
+  const decoded = decodeAccessToken(token);
+  const remainingMs = decoded.exp * 1000 - Date.now();
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+};
+
+export const verifyAccessToken = (token: string): UserAuthPayload => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET, {
       issuer: "sarradabet-api",
-      audience: "sarradabet-admin",
-    }) as AuthPayload;
+      audience: "sarradabet-user",
+    }) as UserAuthPayload & { jti?: string };
 
-    return decoded;
+    return {
+      userId: decoded.userId,
+      username: decoded.username,
+      email: decoded.email,
+      role: decoded.role,
+      jti: decoded.jti,
+    };
   } catch {
     throw new Error("Invalid or expired token");
   }
 };
 
-/**
- * Extract token from Authorization header
- */
+export const generateRefreshToken = (): string => {
+  return crypto.randomBytes(64).toString("hex");
+};
+
+export const hashRefreshToken = (token: string): string => {
+  return crypto.createHash("sha256").update(token).digest("hex");
+};
+
+export const getRefreshTokenExpiryDate = (): Date => {
+  const match = JWT_REFRESH_EXPIRES_IN.match(/^(\d+)([smhd])$/);
+  if (!match) {
+    return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  }
+
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  const multipliers: Record<string, number> = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  };
+
+  return new Date(Date.now() + value * multipliers[unit]);
+};
+
+export const getRefreshTokenMaxAgeMs = (): number => {
+  return getRefreshTokenExpiryDate().getTime() - Date.now();
+};
+
 export const extractTokenFromHeader = (
   authHeader: string | undefined,
 ): string => {
