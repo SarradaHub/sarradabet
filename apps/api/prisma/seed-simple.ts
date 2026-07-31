@@ -29,7 +29,18 @@ async function main() {
     },
   });
 
-  console.log("Simple seed completed: admin + user accounts created");
+  await prisma.user.create({
+    data: {
+      username: "maria",
+      email: "maria@sarradabet.com",
+      phone: "5511999990003",
+      passwordHash,
+      role: UserRole.USER,
+      coinBalance: 0,
+    },
+  });
+
+  console.log("Simple seed completed: admin + user + maria accounts created");
 }
 
 main()
