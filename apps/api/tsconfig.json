@@ -12,6 +12,5 @@
   "ts-node": {
     "esm": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/modules/admin/**"]
+  "include": ["src/**/*"]
 }

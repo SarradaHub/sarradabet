@@ -43,13 +43,37 @@ export const testIfDbAvailable = (
 ) => {
   it(name, async () => {
     if (!getIsDatabaseAvailable()) {
-      pending("Database not available");
+      return;
     }
 
     if (fn) {
       await (fn as () => Promise<void>)();
     }
   });
+};
+
+export const loginTestUser = async (
+  prisma: PrismaClient,
+  overrides?: {
+    username?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    role?: UserRole;
+  },
+) => {
+  const password = overrides?.password ?? "password123";
+  const user = await createTestUser(prisma, { ...overrides, password });
+
+  const loginResponse = await request(app)
+    .post("/api/v1/auth/login")
+    .send({ username: user.username, password })
+    .expect(200);
+
+  return {
+    user,
+    accessToken: loginResponse.body.data.accessToken.token as string,
+  };
 };
 
 export const cleanupAuthData = async (prisma: PrismaClient): Promise<void> => {

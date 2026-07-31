@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import CoinsPage from "./pages/CoinsPage";
 import { AuthProvider } from "./context/AuthProvider";
 import { RealtimeProvider } from "./context/RealtimeProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -37,6 +38,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/coins"
+                element={
+                  <ProtectedRoute>
+                    <CoinsPage />
                   </ProtectedRoute>
                 }
               />

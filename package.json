@@ -53,12 +53,9 @@
     "brace-expansion": "^5.0.8",
     "minimatch": "^10.2.1",
     "uuid": "^11.1.1",
-    "test-exclude": {
-      "minimatch": "^10.2.1"
-    },
+    "test-exclude": "^7.0.1",
     "@vitest/coverage-v8": {
-      "test-exclude": "^7.0.1",
-      "minimatch": "^10.2.1"
+      "test-exclude": "^7.0.1"
     }
   }
 }
