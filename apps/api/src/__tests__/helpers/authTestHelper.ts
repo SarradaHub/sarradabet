@@ -77,9 +77,15 @@ export const loginTestUser = async (
 };
 
 export const cleanupAuthData = async (prisma: PrismaClient): Promise<void> => {
+  await prisma.pixPayment.deleteMany();
+  await prisma.coinTransaction.deleteMany();
   await prisma.refreshToken.deleteMany();
+  await prisma.userAction.deleteMany();
   await prisma.user.deleteMany();
 };
+
+export const uniqueTestPhone = (suffix = Date.now()): string =>
+  `5511999${String(suffix).slice(-6).padStart(6, "0")}`;
 
 export const createTestUser = async (
   prisma: PrismaClient,
@@ -93,8 +99,7 @@ export const createTestUser = async (
 ) => {
   const username = overrides?.username ?? `user_${Date.now()}`;
   const email = overrides?.email ?? `${username}@example.com`;
-  const phone =
-    overrides?.phone ?? `5511999${String(Date.now()).slice(-6)}`;
+  const phone = overrides?.phone ?? uniqueTestPhone();
   const password = overrides?.password ?? "password123";
   const role = overrides?.role ?? UserRole.USER;
 
