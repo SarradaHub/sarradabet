@@ -63,6 +63,35 @@ async function createTestDatabase(testDbUrl: string): Promise<void> {
   }
 }
 
+async function dropTestDatabase(testDbUrl: string): Promise<void> {
+  const dbName = getDatabaseName(testDbUrl);
+  const maintenanceUrl = getMaintenanceDatabaseUrl(testDbUrl);
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: maintenanceUrl,
+      },
+    },
+  });
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbName}' AND pid <> pg_backend_pid()`,
+    );
+    await prisma.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${dbName}"`);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+function migrationFailedError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("P3018") ||
+      error.message.includes("migration failed"))
+  );
+}
+
 function runMigrations(testDbUrl: string): void {
   const apiRoot = path.resolve(__dirname, "../../..");
 
@@ -144,11 +173,29 @@ export async function ensureTestDatabase(): Promise<boolean> {
     console.log(`[test-db] Ready at ${testDbUrl}`);
     return true;
   } catch (error) {
-    console.warn(
-      `[test-db] Migration failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
-    return false;
+    if (!migrationFailedError(error)) {
+      console.warn(
+        `[test-db] Migration failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return false;
+    }
+
+    try {
+      console.warn("[test-db] Resetting test database after failed migration...");
+      await dropTestDatabase(testDbUrl);
+      await createTestDatabase(testDbUrl);
+      runMigrations(testDbUrl);
+      console.log(`[test-db] Ready at ${testDbUrl}`);
+      return true;
+    } catch (retryError) {
+      console.warn(
+        `[test-db] Migration failed after reset: ${
+          retryError instanceof Error ? retryError.message : String(retryError)
+        }`,
+      );
+      return false;
+    }
   }
 }

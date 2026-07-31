@@ -15,9 +15,8 @@ export type RealtimeEventName =
 export type VoteCreatedPayload = {
   betId: number;
   oddId: number;
-  odds: { id: number; totalVotes: number; totalStake: number; value: number }[];
+  odds: { id: number; totalVotes: number; value: number }[];
   totalVotes: number;
-  totalStake: number;
 };
 
 export type BetCreatedPayload = BetListItem;

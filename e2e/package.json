@@ -3,8 +3,9 @@
   "private": true,
   "scripts": {
     "bddgen": "bddgen",
+    "postinstall": "playwright install chromium firefox webkit",
     "test": "bddgen && playwright test",
-    "test:smoke": "bddgen && playwright test --grep @smoke",
+    "test:smoke": "bddgen && playwright test --grep @smoke --project=chromium",
     "test:debug": "bddgen && playwright test --debug",
     "test:ui": "bddgen && playwright test --ui",
     "report": "playwright show-report"

@@ -5,13 +5,7 @@ import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { useAuth } from "../hooks/useAuth";
-import { useUserStats } from "../hooks/useUserStats";
-import { useMyPendingRedemptions } from "../hooks/useMyPendingRedemptions";
-import { useMyValidatedRedemptions } from "../hooks/useMyValidatedRedemptions";
 import { userService } from "../services/UserService";
-import { StatsCard } from "../components/gamification/StatsCard";
-import { PendingRedemptionsCard } from "../components/gamification/PendingRedemptionsCard";
-import { RegisteredRedemptionsCard } from "../components/gamification/RegisteredRedemptionsCard";
 import type { UserPublic } from "@sarradabet/types";
 
 function formatDate(value: string): string {
@@ -20,17 +14,6 @@ function formatDate(value: string): string {
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
-  const { stats, loading: statsLoading, error: statsError } = useUserStats();
-  const {
-    redemptions,
-    loading: redemptionsLoading,
-    error: redemptionsError,
-  } = useMyPendingRedemptions();
-  const {
-    redemptions: validatedRedemptions,
-    loading: validatedLoading,
-    error: validatedError,
-  } = useMyValidatedRedemptions();
   const [profile, setProfile] = useState<UserPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,31 +47,12 @@ const ProfilePage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="font-display text-3xl font-bold">Meu perfil</h1>
-          <Link to="/leaderboard">
-            <Button variant="secondary">Ver ranking</Button>
-          </Link>
           <Link to="/">
             <Button variant="secondary">Voltar ao site</Button>
           </Link>
         </div>
 
         {error && <ErrorMessage error={error} />}
-
-        {statsError && <ErrorMessage error={statsError} />}
-        {redemptionsError && <ErrorMessage error={redemptionsError} />}
-        {validatedError && <ErrorMessage error={validatedError} />}
-
-        {stats && !statsLoading && <StatsCard stats={stats} />}
-
-        <PendingRedemptionsCard
-          redemptions={redemptions}
-          loading={redemptionsLoading}
-        />
-
-        <RegisteredRedemptionsCard
-          redemptions={validatedRedemptions}
-          loading={validatedLoading}
-        />
 
         {loading ? (
           <LoadingSpinner text="Carregando perfil..." />

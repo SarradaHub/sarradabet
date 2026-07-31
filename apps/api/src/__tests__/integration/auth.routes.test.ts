@@ -27,6 +27,7 @@ import {
   createTestUser,
   refreshCookieName,
   testIfDbAvailable,
+  uniqueTestPhone,
 } from "../helpers/authTestHelper";
 
 let prisma: PrismaClient | null = null;
@@ -312,7 +313,7 @@ describe("Auth Routes Integration Tests", () => {
           .send({
             username: "meuser",
             email: "meuser@example.com",
-            phone: "5511999998888",
+            phone: uniqueTestPhone(888801),
             password: "password123",
           })
           .expect(201);

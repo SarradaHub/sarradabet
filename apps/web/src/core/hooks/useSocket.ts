@@ -14,6 +14,21 @@ function getSocketUrl(): string {
 
 let sharedSocket: Socket | null = null;
 let socketDiagnosticsAttached = false;
+let socketAuthToken: string | null = null;
+
+export function setSocketAuthToken(token: string | null): void {
+  socketAuthToken = token;
+
+  if (!sharedSocket) {
+    return;
+  }
+
+  sharedSocket.auth = token ? { token } : {};
+
+  if (sharedSocket.connected) {
+    sharedSocket.disconnect().connect();
+  }
+}
 
 function attachSocketDiagnostics(socket: Socket): void {
   if (socketDiagnosticsAttached || !import.meta.env.DEV) {
@@ -42,6 +57,7 @@ export function getSocket(): Socket {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      auth: socketAuthToken ? { token: socketAuthToken } : {},
     });
     attachSocketDiagnostics(sharedSocket);
   }

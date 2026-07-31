@@ -69,13 +69,3 @@ export const betWithOddsFactory = Factory.define<BetWithOddsAttrs>(
     };
   },
 );
-
-export const adminFactory = Factory.define<{
-  username: string;
-  email: string;
-  password: string;
-}>(() => ({
-  username: faker.internet.userName().replace(/\W/g, "_"),
-  email: faker.internet.email().toLowerCase(),
-  password: faker.internet.password({ length: 10 }),
-}));

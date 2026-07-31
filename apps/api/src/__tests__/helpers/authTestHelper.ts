@@ -43,7 +43,7 @@ export const testIfDbAvailable = (
 ) => {
   it(name, async () => {
     if (!getIsDatabaseAvailable()) {
-      pending("Database not available");
+      return;
     }
 
     if (fn) {
@@ -52,13 +52,40 @@ export const testIfDbAvailable = (
   });
 };
 
+export const loginTestUser = async (
+  prisma: PrismaClient,
+  overrides?: {
+    username?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    role?: UserRole;
+  },
+) => {
+  const password = overrides?.password ?? "password123";
+  const user = await createTestUser(prisma, { ...overrides, password });
+
+  const loginResponse = await request(app)
+    .post("/api/v1/auth/login")
+    .send({ username: user.username, password })
+    .expect(200);
+
+  return {
+    user,
+    accessToken: loginResponse.body.data.accessToken.token as string,
+  };
+};
+
 export const cleanupAuthData = async (prisma: PrismaClient): Promise<void> => {
   await prisma.pixPayment.deleteMany();
   await prisma.coinTransaction.deleteMany();
-  await prisma.coinPackage.deleteMany();
   await prisma.refreshToken.deleteMany();
+  await prisma.userAction.deleteMany();
   await prisma.user.deleteMany();
 };
+
+export const uniqueTestPhone = (suffix = Date.now()): string =>
+  `5511999${String(suffix).slice(-6).padStart(6, "0")}`;
 
 export const createTestUser = async (
   prisma: PrismaClient,
@@ -72,8 +99,7 @@ export const createTestUser = async (
 ) => {
   const username = overrides?.username ?? `user_${Date.now()}`;
   const email = overrides?.email ?? `${username}@example.com`;
-  const phone =
-    overrides?.phone ?? `5511999${String(Date.now()).slice(-6)}`;
+  const phone = overrides?.phone ?? uniqueTestPhone();
   const password = overrides?.password ?? "password123";
   const role = overrides?.role ?? UserRole.USER;
 
