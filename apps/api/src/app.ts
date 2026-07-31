@@ -15,6 +15,7 @@ import {
 import { csrfProtection } from "./core/middleware/CsrfMiddleware";
 import { cacheHeaders } from "./core/middleware/cacheHeaders";
 import router from "./routes";
+import webhookRoutes from "./routes/webhook.routes";
 import { logger } from "./utils/logger";
 
 export const app = express();
@@ -30,15 +31,23 @@ app.use(cors(corsOptions));
 app.use(
   createRateLimit({
     windowMs: 15 * 60 * 1000,
-    max: config.NODE_ENV === "development" ? 1000 : 100,
+    max:
+      config.NODE_ENV === "test"
+        ? 10_000
+        : config.NODE_ENV === "development"
+          ? 1000
+          : 100,
     message: "Too many requests from this IP, please try again later",
-    skipSuccessfulRequests: config.NODE_ENV === "development",
+    skipSuccessfulRequests:
+      config.NODE_ENV === "development" || config.NODE_ENV === "test",
   }),
 );
 
 if (config.NODE_ENV !== "test") {
   app.use(morgan(config.NODE_ENV === "development" ? "dev" : "combined"));
 }
+
+app.use("/api/v1/webhooks", webhookRoutes);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));

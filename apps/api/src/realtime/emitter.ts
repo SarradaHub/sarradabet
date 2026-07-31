@@ -1,8 +1,11 @@
 import {
   RealtimeEvents,
   type BetListItem,
+  type BetResolvedPayload,
+  type PaymentConfirmedPayload,
   type RealtimeEventName,
   type RealtimePayloadMap,
+  type RewardValidatedPayload,
   type VoteCreatedPayload,
 } from "@sarradabet/types";
 import { getSocketServer } from "./socket";
@@ -20,6 +23,19 @@ function emitEvent<E extends RealtimeEventName>(
   io.emit(event, payload);
 }
 
+function emitToUser<E extends RealtimeEventName>(
+  userId: number,
+  event: E,
+  payload: RealtimePayloadMap[E],
+): void {
+  const io = getSocketServer();
+  if (!io) {
+    logger.warn(`Socket.io not initialized; skipped emit ${event}`);
+    return;
+  }
+  io.to(`user:${userId}`).emit(event, payload);
+}
+
 export function emitVoteCreated(payload: VoteCreatedPayload): void {
   emitEvent(RealtimeEvents.VOTE_CREATED, payload);
 }
@@ -30,4 +46,25 @@ export function emitBetCreated(payload: BetListItem): void {
 
 export function emitBetUpdated(payload: BetListItem): void {
   emitEvent(RealtimeEvents.BET_UPDATED, payload);
+}
+
+export function emitPaymentConfirmed(
+  userId: number,
+  payload: PaymentConfirmedPayload,
+): void {
+  emitToUser(userId, RealtimeEvents.PAYMENT_CONFIRMED, payload);
+}
+
+export function emitBetResolved(
+  userId: number,
+  payload: BetResolvedPayload,
+): void {
+  emitToUser(userId, RealtimeEvents.BET_RESOLVED, payload);
+}
+
+export function emitRewardValidated(
+  userId: number,
+  payload: RewardValidatedPayload,
+): void {
+  emitToUser(userId, RealtimeEvents.REWARD_VALIDATED, payload);
 }
