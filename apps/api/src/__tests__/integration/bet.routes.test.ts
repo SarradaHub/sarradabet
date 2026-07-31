@@ -48,6 +48,7 @@ describe("Bet Routes Integration Tests", () => {
     });
 
     await prisma.vote.deleteMany();
+    await prisma.coinTransaction.deleteMany();
     await prisma.odd.deleteMany();
     await prisma.bet.deleteMany();
     await prisma.category.deleteMany();
@@ -250,8 +251,8 @@ describe("Bet Routes Integration Tests", () => {
         expect(response.body.data.bet).toHaveProperty("id");
         expect(response.body.data.bet.title).toBe(betData.title);
         expect(response.body.data.bet.odds).toHaveLength(2);
-        expect(response.body.data.bet.odds[0].value).toBe(2);
-        expect(response.body.data.bet.odds[1].value).toBe(2);
+        expect(response.body.data.bet.odds[0].value).toBe(1.5);
+        expect(response.body.data.bet.odds[1].value).toBe(1.5);
       },
     );
 
@@ -559,6 +560,11 @@ describe("Bet Routes Integration Tests", () => {
       () => isDatabaseAvailable,
       "should return 400 for invalid winning odd",
       async () => {
+        await request(app)
+          .patch(`/api/v1/bets/${testBetId}/close`)
+          .set(authHeader(adminAccessToken))
+          .expect(200);
+
         const response = await request(app)
           .patch(`/api/v1/bets/${testBetId}/resolve`)
           .set(authHeader(adminAccessToken))
@@ -642,6 +648,11 @@ describe("Bet Routes Integration Tests", () => {
 
         const homeOdd = bet.odds[0];
         const awayOdd = bet.odds[1];
+
+        await prisma!.user.update({
+          where: { username: "betcreator" },
+          data: { coinBalance: 1000 },
+        });
 
         const firstVote = await request(app)
           .post("/api/v1/votes")
