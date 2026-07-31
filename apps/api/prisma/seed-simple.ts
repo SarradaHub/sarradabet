@@ -29,6 +29,17 @@ async function main() {
     },
   });
 
+  await prisma.user.create({
+    data: {
+      username: "maria",
+      email: "maria@sarradabet.com",
+      phone: "5511999990003",
+      passwordHash,
+      role: UserRole.USER,
+      coinBalance: 0,
+    },
+  });
+
   await prisma.coinPackage.create({
     data: {
       name: "Pacote Básico",
@@ -39,7 +50,9 @@ async function main() {
     },
   });
 
-  console.log("Simple seed completed: admin + user + coin package created");
+  console.log(
+    "Simple seed completed: admin + user + maria accounts + coin package created",
+  );
 }
 
 main()

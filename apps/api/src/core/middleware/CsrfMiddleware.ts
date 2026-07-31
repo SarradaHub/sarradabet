@@ -71,31 +71,19 @@ export {
   validateRequest,
 };
 
-function readCsrfTokens(req: Request): {
-  csrfHeaderToken: string | undefined;
-  csrfCookieToken: string | undefined;
-} {
-  const csrfHeaderToken = req.headers["x-csrf-token"];
-  const csrfCookieToken = req.cookies?.[getCsrfCookieName()];
-
-  return {
-    csrfHeaderToken:
-      typeof csrfHeaderToken === "string" ? csrfHeaderToken : undefined,
-    csrfCookieToken:
-      typeof csrfCookieToken === "string" ? csrfCookieToken : undefined,
-  };
-}
-
 export const csrfProtection = (
   req: Request,
   res: Response,
   next: NextFunction,
 ): void => {
-  const { csrfHeaderToken, csrfCookieToken } = readCsrfTokens(req);
+  const csrfHeaderToken = req.headers["x-csrf-token"];
+  const csrfCookieToken =
+    req.cookies?.["x-csrf-token"] ??
+    req.cookies?.["__Host-sarradabet.x-csrf-token"];
 
   if (
-    csrfHeaderToken !== undefined &&
-    csrfCookieToken !== undefined &&
+    typeof csrfHeaderToken === "string" &&
+    typeof csrfCookieToken === "string" &&
     csrfHeaderToken === csrfCookieToken &&
     !validateRequest(req)
   ) {
