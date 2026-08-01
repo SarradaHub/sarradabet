@@ -14,12 +14,13 @@ jobs:
       contents: read
       security-events: write
       actions: read
-    uses: SarradaHub/platform/.github/workflows/security-scan.yaml@main
+    uses: ./.github/workflows/security-scan.yaml
     with:
       node-version: '20'
       working-directory: .
       audit-level: 'moderate'
-      codeql: false
+      codeql: true
       codeql-languages: 'javascript'
+      codeql-config-file: .github/codeql/codeql-config.yml
       check-secrets: true
       fail-on-high: false

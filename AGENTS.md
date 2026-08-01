@@ -200,7 +200,7 @@ Infrastructure → repositories (Prisma), external clients (Mercado Pago)
 - Functional React components with TypeScript.
 - Data fetching via custom hooks (`useQuery`, `useMutation`) — not React Query.
 - `RealtimeProvider` patches the in-memory query cache on Socket.io events.
-- Optimistic voting in `OddsList` with rollback on error.
+- Optimistic voting in `VoteSlip` with rollback on error.
 - Tailwind CSS for styling; `@sarradahub/design-system` for shared UI primitives.
 
 ## Code style
@@ -295,13 +295,13 @@ Planned and in-progress features are documented in `docs/features/`. Read the re
 
 | Guide | Topic | Status |
 |-------|-------|--------|
-| `docs/features/01-user-auth-and-crud.md` | Auth & user CRUD | Partial |
-| `docs/features/02-coins-and-pix-payments.md` | Coins & Pix | Partial |
-| `docs/features/03-bet-closure-and-payout.md` | Bet closure | Planned |
-| `docs/features/04-gamification-and-rewards.md` | Gamification | Planned |
-| `docs/features/05-dashboard-and-analytics.md` | Analytics | Planned |
+| `docs/features/01-user-auth-and-crud.md` | Auth & user CRUD | Complete |
+| `docs/features/02-coins-and-pix-payments.md` | Coins & Pix | Complete (online Pix) |
+| `docs/features/03-bet-closure-and-payout.md` | Bet closure | Done |
+| `docs/features/04-gamification-and-rewards.md` | Gamification | Done |
+| `docs/features/05-dashboard-and-analytics.md` | Analytics | Done |
 | `docs/features/06-mobile-app-and-admin-panel.md` | Mobile & admin | Planned |
-| `docs/features/07-mercadopago-qr-instore.md` | In-store QR | Partial |
+| `docs/features/07-mercadopago-qr-instore.md` | In-store QR | Complete |
 
 Recommended order: 01 → 02 → 03 → 04 → 05 → 06. Feature 07 depends on 02.
 

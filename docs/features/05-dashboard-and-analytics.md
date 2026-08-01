@@ -1,6 +1,6 @@
 # Feature 05 — User Dashboard and Admin Analytics
 
-**Status:** Implemented
+**Status:** Done
 
 ## Prompt summary
 
@@ -12,23 +12,27 @@ Build a logged-in user dashboard endpoint returning coin balance, bet totals, wi
 
 | Item | Status |
 |------|--------|
-| `/users/me/stats` or `/dashboard` | Does not exist |
-| Coin balance endpoint | `GET /coins/balance` — exists |
-| Transaction history | `GET /coins/transactions` — paginated, exists |
-| User bet history | Not linked (votes anonymous) |
-| Ranking position | Requires Feature 04 |
+| `GET /users/me/dashboard` | Done — [`DashboardService.ts`](../../apps/api/src/modules/dashboard/services/DashboardService.ts) |
+| `GET /users/me/stats` | Done — [`UserStatsController.ts`](../../apps/api/src/modules/stats/controllers/UserStatsController.ts) |
+| Coin balance + transactions | Aggregated in dashboard; also `GET /coins/balance`, `GET /coins/transactions` |
+| User bet history | Paginated recent votes in dashboard payload |
+| Ranking position | From `UserStats` + leaderboard query |
+| Redis cache | 60s TTL, invalidates on coin/vote/stats events |
+| Web page | [`UserDashboardPage.tsx`](../../apps/web/src/pages/UserDashboardPage.tsx) |
 
 ### Admin analytics
 
 | Item | Status |
 |------|--------|
 | Admin dashboard page | [`AdminDashboard.tsx`](../../apps/web/src/pages/AdminDashboard.tsx) |
-| Stat cards | [`AdminStatCards.tsx`](../../apps/web/src/components/admin/AdminStatCards.tsx) |
-| Charts | [`BetsStatusChart.tsx`](../../apps/web/src/components/admin/BetsStatusChart.tsx), [`BetOddVotesChart.tsx`](../../apps/web/src/components/admin/BetOddVotesChart.tsx) |
-| Pix revenue metrics | Not implemented |
-| Materialized views | Not implemented |
-| CSV export | Not implemented |
-| Date/category filters | Not implemented |
+| Overview KPIs | `GET /admin/analytics/overview` — [`AnalyticsService.ts`](../../apps/api/src/modules/analytics/services/AnalyticsService.ts) |
+| Pix revenue time series | `GET /admin/analytics/pix-revenue` |
+| Bets by category | `GET /admin/analytics/bets-by-category` |
+| Peak hours | `GET /admin/analytics/peak-hours` |
+| Materialized views | [`20260726220000_add_analytics_materialized_views`](../../apps/api/prisma/migrations/20260726220000_add_analytics_materialized_views/migration.sql) |
+| CSV export | `GET /admin/analytics/export` |
+| Date/category filters | Query params on all admin analytics endpoints |
+| Refresh job | [`refresh-analytics.job.ts`](../../apps/api/src/jobs/refresh-analytics.job.ts) — Bull hourly |
 
 Charts use **Recharts** — already a project dependency.
 
@@ -346,35 +350,35 @@ Funcionalidade: Dashboard do Usuário e Análises Administrativas
 
 ### Backend — user dashboard
 
-- [ ] `DashboardService.getUserDashboard(userId)` — aggregate from Feature 04 stats + coin modules
-- [ ] Paginate recent bets (requires user-linked votes — Feature 03)
-- [ ] Paginate recent transactions (reuse `CoinRepository.listTransactions`)
-- [ ] Redis cache with invalidation on coin/bet events
-- [ ] Route + controller + Zod query schemas
+- [x] `DashboardService.getUserDashboard(userId)` — aggregate from Feature 04 stats + coin modules
+- [x] Paginate recent bets (requires user-linked votes — Feature 03)
+- [x] Paginate recent transactions (reuse `CoinRepository.listTransactions`)
+- [x] Redis cache with invalidation on coin/bet events
+- [x] Route + controller + Zod query schemas
 
 ### Backend — admin analytics
 
-- [ ] Raw SQL or Prisma `$queryRaw` against materialized views
-- [ ] Overview endpoint: active users (logged in / placed bet in range), total volume, Pix revenue
-- [ ] Peak hours: `EXTRACT(hour FROM created_at)` aggregation
-- [ ] CSV export stream for selected report
-- [ ] Refresh materialized views job
+- [x] Raw SQL or Prisma `$queryRaw` against materialized views
+- [x] Overview endpoint: active users (logged in / placed bet in range), total volume, Pix revenue
+- [x] Peak hours: `EXTRACT(hour FROM created_at)` aggregation
+- [x] CSV export stream for selected report
+- [x] Refresh materialized views job
 
 ### Frontend — user
 
-- [ ] `/dashboard` route (authenticated)
-- [ ] Cards: balance, W/L, win rate, rank
-- [ ] Tables: recent bets, transactions
+- [x] `/dashboard` route (authenticated)
+- [x] Cards: balance, W/L, win rate, rank
+- [x] Tables: recent bets, transactions
 
 ### Frontend — admin
 
-- [ ] Extend [`AdminDashboard.tsx`](../../apps/web/src/pages/AdminDashboard.tsx) with date range picker
-- [ ] Pix revenue chart, category breakdown, peak hours chart
-- [ ] Export CSV button
+- [x] Extend [`AdminDashboard.tsx`](../../apps/web/src/pages/AdminDashboard.tsx) with date range picker
+- [x] Pix revenue chart, category breakdown, peak hours chart
+- [x] Export CSV button
 
 ### Documentation
 
-- [ ] Add admin analytics + user dashboard to [`docs/API.md`](../API.md)
+- [x] Add admin analytics + user dashboard to [`docs/API.md`](../API.md)
 
 ## Key files
 
@@ -390,12 +394,12 @@ Funcionalidade: Dashboard do Usuário e Análises Administrativas
 
 ## Acceptance criteria
 
-- [ ] Authenticated user receives dashboard JSON with correct balance and stats
-- [ ] Dashboard cache reduces DB load; invalidates after coin change
-- [ ] Admin overview respects `startDate`/`endDate` filters
-- [ ] Pix revenue matches sum of approved `PixPayment.amountCents` in range
-- [ ] CSV export downloads valid file with headers
-- [ ] Materialized view refresh job runs without blocking reads (`CONCURRENTLY`)
+- [x] Authenticated user receives dashboard JSON with correct balance and stats
+- [x] Dashboard cache reduces DB load; invalidates after coin change
+- [x] Admin overview respects `startDate`/`endDate` filters
+- [x] Pix revenue matches sum of approved `PixPayment.amountCents` in range
+- [x] CSV export downloads valid file with headers
+- [x] Materialized view refresh job runs without blocking reads (`CONCURRENTLY`)
 
 ## Dependencies
 

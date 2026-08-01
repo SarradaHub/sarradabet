@@ -55,8 +55,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build web app
-        run: npm run build
-        working-directory: apps/web
+      - name: Build design system and web app
+        run: npm run build:design-system && turbo run build --filter=web
 
       # TODO: Add deployment step(s) for your platform

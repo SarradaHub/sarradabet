@@ -8,15 +8,15 @@ Use these when starting a new feature branch or onboarding an agent — they are
 
 | # | Feature | Status | Guide | Depends on |
 |---|---------|--------|-------|------------|
-| 01 | User auth & CRUD | **Partial** | [01-user-auth-and-crud.md](./01-user-auth-and-crud.md) | — |
-| 02 | Coins & Pix payments | **Partial** | [02-coins-and-pix-payments.md](./02-coins-and-pix-payments.md) | 01 |
-| 03 | Bet closure & payout | **Planned** | [03-bet-closure-and-payout.md](./03-bet-closure-and-payout.md) | 01, 02 |
-| 04 | Gamification & rewards | **Planned** | [04-gamification-and-rewards.md](./04-gamification-and-rewards.md) | 01–03 |
-| 05 | Dashboard & analytics | **Planned** | [05-dashboard-and-analytics.md](./05-dashboard-and-analytics.md) | 03, 04 |
+| 01 | User auth & CRUD | **Complete** | [01-user-auth-and-crud.md](./01-user-auth-and-crud.md) | — |
+| 02 | Coins & Pix payments | **Complete** (online Pix) | [02-coins-and-pix-payments.md](./02-coins-and-pix-payments.md) | 01 |
+| 03 | Bet closure & payout | **Done** | [03-bet-closure-and-payout.md](./03-bet-closure-and-payout.md) | 01, 02 |
+| 04 | Gamification & rewards | **Done** | [04-gamification-and-rewards.md](./04-gamification-and-rewards.md) | 01–03 |
+| 05 | Dashboard & analytics | **Done** | [05-dashboard-and-analytics.md](./05-dashboard-and-analytics.md) | 03, 04 |
 | 06 | Mobile app & advanced admin | **Planned** | [06-mobile-app-and-admin-panel.md](./06-mobile-app-and-admin-panel.md) | 01–05 |
-| 07 | Mercado Pago QR instore | **Partial** | [07-mercadopago-qr-instore.md](./07-mercadopago-qr-instore.md) | 02 |
+| 07 | Mercado Pago QR instore | **Complete** | [07-mercadopago-qr-instore.md](./07-mercadopago-qr-instore.md) | 02 |
 
-**Legend:** *Partial* = backend or UI exists but prompt requirements are not fully met. *Planned* = not started or schema-only stubs.
+**Legend:** *Complete* / *Done* = prompt requirements met in code (minor polish may remain). *Partial* = backend or UI exists but prompt requirements are not fully met. *Planned* = not started or schema-only stubs.
 
 ## Recommended implementation order
 
@@ -60,5 +60,5 @@ Every guide includes:
 ## Related documentation
 
 - [Architecture](../ARCHITECTURE.md) — clean architecture, realtime, caching
-- [API Reference](../API.md) — REST + Socket.io (auth section complete; coins/pix pending)
+- [API Reference](../API.md) — REST + Socket.io (auth, coins, gamification, analytics documented)
 - [Developer Guide](../DEVELOPER_GUIDE.md) — setup, conventions, testing

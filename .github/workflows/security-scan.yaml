@@ -1,0 +1,184 @@
+name: Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: "20"
+      working-directory:
+        required: false
+        type: string
+        default: "."
+      audit-level:
+        required: false
+        type: string
+        default: "moderate"
+        description: "npm audit level (low, moderate, high, critical)"
+      fail-on-high:
+        required: false
+        type: boolean
+        default: false
+        description: "Fail workflow if high severity vulnerabilities found"
+      check-secrets:
+        required: false
+        type: boolean
+        default: true
+        description: "Check for hardcoded secrets in code"
+      codeql:
+        required: false
+        type: boolean
+        default: false
+        description: "Run CodeQL analysis"
+      codeql-languages:
+        required: false
+        type: string
+        default: "javascript"
+        description: "Comma-separated list of languages for CodeQL"
+      codeql-config-file:
+        required: false
+        type: string
+        default: ""
+        description: "Optional CodeQL config file path"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  dependency-scan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check for Node project
+        id: node_project
+        run: |
+          has_package='false'
+          has_lock='false'
+          [ -f package.json ] && has_package='true'
+          [ -f package-lock.json ] && has_lock='true'
+          echo "has_package=$has_package" >> $GITHUB_OUTPUT
+          echo "has_lock=$has_lock" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js (with cache)
+        if: steps.node_project.outputs.has_lock == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: Setup Node.js (no cache)
+        if: steps.node_project.outputs.has_lock != 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        if: steps.node_project.outputs.has_package == 'true'
+        run: npm ci
+
+      - name: Run npm audit
+        if: steps.node_project.outputs.has_package == 'true'
+        run: |
+          npm audit --audit-level=${{ inputs.audit-level }} --json > audit-results.json || true
+          npm audit --audit-level=${{ inputs.audit-level }}
+
+      - name: Check for high severity vulnerabilities
+        if: steps.node_project.outputs.has_package == 'true' && inputs.fail-on-high
+        run: |
+          if npm audit --audit-level=high --json | jq -e '.vulnerabilities | length > 0' > /dev/null; then
+            echo "❌ High severity vulnerabilities found"
+            exit 1
+          else
+            echo "✅ No high severity vulnerabilities found"
+          fi
+
+      - name: Upload audit results
+        if: always() && steps.node_project.outputs.has_package == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: ${{ inputs.working-directory }}/audit-results.json
+          retention-days: 30
+
+  secret-scan:
+    if: ${{ inputs.check-secrets }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check for sensitive files
+        run: |
+          echo "Checking for sensitive files..."
+          if [ -f ".env" ]; then
+            echo "⚠️ Warning: .env file found in repository"
+          fi
+          if [ -f "config/secrets.json" ]; then
+            echo "⚠️ Warning: secrets.json file found in repository"
+          fi
+
+      - name: Check for hardcoded secrets
+        run: |
+          if grep -r "password.*=" --include="*.ts" --include="*.js" --include="*.json" . | grep -v "test" | grep -v "example" | grep -v "node_modules"; then
+            echo "⚠️ Warning: Potential hardcoded passwords found"
+          fi
+
+          if grep -r "api[_-]?key.*=" --include="*.ts" --include="*.js" --include="*.json" . | grep -v "test" | grep -v "example" | grep -v "node_modules"; then
+            echo "⚠️ Warning: Potential hardcoded API keys found"
+          fi
+
+  codeql-analysis:
+    if: ${{ inputs.codeql }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Check for package-lock.json (CodeQL)
+        if: contains(inputs.codeql-languages, 'javascript')
+        id: codeql_node
+        run: |
+          lock='false'
+          [ -f "${{ inputs.working-directory }}/package-lock.json" ] && lock='true'
+          echo "has_lock=$lock" >> $GITHUB_OUTPUT
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ inputs.codeql-languages }}
+          config-file: ${{ inputs.codeql-config-file }}
+
+      - name: Setup Node.js (with cache)
+        if: contains(inputs.codeql-languages, 'javascript') && steps.codeql_node.outputs.has_lock == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: Setup Node.js (no cache)
+        if: contains(inputs.codeql-languages, 'javascript') && steps.codeql_node.outputs.has_lock != 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ inputs.codeql-languages }}"

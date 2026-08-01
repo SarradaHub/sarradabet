@@ -1,6 +1,10 @@
 import axios from "axios";
 import { MercadoPagoConfig, User } from "mercadopago";
-import { MercadoPagoInstoreClient, extractPosUuidFromQrImage } from "../../modules/payment/services/MercadoPagoInstoreClient";
+import {
+  MercadoPagoInstoreClient,
+  assertSafeMercadoPagoOrderId,
+  extractPosUuidFromQrImage,
+} from "../../modules/payment/services/MercadoPagoInstoreClient";
 
 jest.mock("axios", () => {
   const mockCreate = jest.fn(() => ({
@@ -191,6 +195,73 @@ describe("MercadoPagoInstoreClient", () => {
     expect(httpGet).toHaveBeenNthCalledWith(2, "/pos/555");
     expect(result?.id).toBe(555);
     expect(result?.uuid).toBe("abc123");
+  });
+
+  it("creates an instore order via POST /v1/orders", async () => {
+    httpPost.mockResolvedValue({
+      data: {
+        id: "ORD123",
+        status: "created",
+        type_response: {
+          qr_data:
+            "00020126580014BR.GOV.BCB.PIX0136instore52040000530398654010.005802BR5925SarradaBet6009SAO PAULO62070503***6304ABCD",
+        },
+      },
+    });
+
+    const result = await client.createOrder({
+      amountCents: 1000,
+      description: "Pacote teste",
+      externalReference: "ref-123",
+      idempotencyKey: "idem-123",
+      posExternalId: "SARRADABET001POS001",
+    });
+
+    expect(httpPost).toHaveBeenCalledWith(
+      "/v1/orders",
+      expect.objectContaining({
+        type: "qr",
+        external_reference: "ref-123",
+        total_amount: "10.00",
+      }),
+      expect.objectContaining({
+        headers: { "X-Idempotency-Key": "idem-123" },
+      }),
+    );
+    expect(result.id).toBe("ORD123");
+    expect(result.qrCode).toContain("000201");
+  });
+
+  it("gets an instore order via GET /v1/orders/{id}", async () => {
+    httpGet.mockResolvedValue({
+      data: {
+        id: "ORD123",
+        status: "processed",
+        type_response: {
+          qr_data: "00020126580014BR.GOV.BCB.PIX0136instore",
+        },
+      },
+    });
+
+    const result = await client.getOrder("ORD123");
+
+    expect(httpGet).toHaveBeenCalledWith("/v1/orders/ORD123");
+    expect(result.id).toBe("ORD123");
+    expect(result.status).toBe("processed");
+  });
+
+  it("rejects unsafe order ids before calling Mercado Pago", async () => {
+    await expect(client.getOrder("../admin")).rejects.toMatchObject({
+      name: "ValidationError",
+    });
+    expect(httpGet).not.toHaveBeenCalled();
+  });
+
+  it("assertSafeMercadoPagoOrderId rejects path traversal characters", () => {
+    expect(() => assertSafeMercadoPagoOrderId("ORD/123")).toThrow(
+      "Invalid Mercado Pago order id",
+    );
+    expect(assertSafeMercadoPagoOrderId("ORD-123_abc")).toBe("ORD-123_abc");
   });
 
   it("extracts POS uuid from static QR image URL", () => {

@@ -6,8 +6,12 @@ import { config } from "../../config/env";
 import { logger } from "../../utils/logger";
 import { PixPaymentRepository } from "./repositories/PixPaymentRepository";
 import { MercadoPagoClient } from "./services/MercadoPagoClient";
+import { MercadoPagoInstoreClient } from "./services/MercadoPagoInstoreClient";
+import { MockInstoreOrderClient } from "./services/MockInstoreOrderClient";
 import { MockMercadoPagoClient } from "./services/MockMercadoPagoClient";
+import type { InstoreOrderGateway } from "./services/InstoreOrderGateway";
 import type { PixGateway } from "./services/PixGateway";
+import { InstorePaymentService } from "./services/InstorePaymentService";
 import { PixPaymentService } from "./services/PixPaymentService";
 
 const coinRepository = new CoinRepository();
@@ -29,11 +33,28 @@ function createPixGateway(): PixGateway {
 
 const pixGateway = createPixGateway();
 
+function createInstoreGateway(): InstoreOrderGateway {
+  if (config.MERCADOPAGO_MOCK_PIX) {
+    return new MockInstoreOrderClient();
+  }
+
+  return new MercadoPagoInstoreClient();
+}
+
+const instoreGateway = createInstoreGateway();
+
 export const pixPaymentService = new PixPaymentService(
   pixPaymentRepository,
   coinService,
   coinPackageService,
   pixGateway,
+);
+
+export const instorePaymentService = new InstorePaymentService(
+  pixPaymentRepository,
+  coinService,
+  coinPackageService,
+  instoreGateway,
 );
 
 export { coinService, coinPackageService };

@@ -1,6 +1,6 @@
 # Feature 04 — Gamification (Ranking) and Reward Redemption
 
-**Status:** Planned → partial (API + web implemented; E2E smoke scenarios added)
+**Status:** Done (API + web + E2E; redemption history cards wired on profile)
 
 ## Prompt summary
 
@@ -10,13 +10,16 @@ Build gamification: maintain per-user statistics (total bets, wins, losses, win 
 
 | Item | Status |
 |------|--------|
-| `UserAction` model | Schema + seed only — audit log, not stats |
-| Ranking / leaderboard | Not implemented |
-| `UserStats` table | Does not exist |
-| Rewards / tickets | Does not exist |
-| Redis | In stack — [`ioredis`](../../apps/api/src/config/redis.ts) for Bull queues, token blacklist, leaderboard cache |
+| `UserStats` model + service | Done — [`UserStatsService.ts`](../../apps/api/src/modules/stats/services/UserStatsService.ts) |
+| Ranking / leaderboard | Done — [`LeaderboardService.ts`](../../apps/api/src/modules/stats/services/LeaderboardService.ts), Redis cache |
+| Rewards + ticket redemption | Done — [`RewardService.ts`](../../apps/api/src/modules/reward/services/RewardService.ts) |
+| Ticket PNG + verify | Done — [`TicketImageService.ts`](../../apps/api/src/modules/ticket/services/TicketImageService.ts) |
+| Web pages | [`LeaderboardPage`](../../apps/web/src/pages/LeaderboardPage.tsx), [`RewardsPage`](../../apps/web/src/pages/RewardsPage.tsx), [`AdminRewardsPage`](../../apps/web/src/pages/AdminRewardsPage.tsx) |
+| Redemption history UI | [`PendingRedemptionsCard`](../../apps/web/src/components/gamification/PendingRedemptionsCard.tsx), [`RegisteredRedemptionsCard`](../../apps/web/src/components/gamification/RegisteredRedemptionsCard.tsx) on profile |
+| Shared types | [`stats.ts`](../../packages/types/src/stats.ts), [`reward.ts`](../../packages/types/src/reward.ts), [`ticket.ts`](../../packages/types/src/ticket.ts) |
+| `UserAction` model | Audit log only — not player stats |
 
-Related stub: [`UserAction`](../../apps/api/prisma/schema.prisma) tracks admin actions (`CREATE_BET`, `RESOLVE_BET`) — do not confuse with player stats.
+Related: [`UserAction`](../../apps/api/prisma/schema.prisma) tracks admin actions (`CREATE_BET`, `RESOLVE_BET`) — do not confuse with player stats.
 
 ## Recommended technical references
 
@@ -322,27 +325,28 @@ Funcionalidade: Gamificação, Ranking e Resgate de Recompensas
 
 ### Backend
 
-- [ ] Add Prisma models + migration
-- [ ] `UserStatsService` — upsert stats, recalculate score
-- [ ] Hook stats update from payout worker (Feature 03)
-- [ ] `LeaderboardService` — query top 100, Redis cache via `ioredis`
-- [ ] `RewardService` — admin CRUD, user redeem with stock check + coin debit
-- [ ] Admin ticket validation endpoint
-- [ ] Zod schemas for all new endpoints
+- [x] Add Prisma models + migration
+- [x] `UserStatsService` — upsert stats, recalculate score
+- [x] Hook stats update from payout worker (Feature 03)
+- [x] `LeaderboardService` — query top 100, Redis cache via `ioredis`
+- [x] `RewardService` — admin CRUD, user redeem with stock check + coin debit
+- [x] Admin ticket validation endpoint
+- [x] Zod schemas for all new endpoints
 
 ### Shared types
 
-- [ ] `packages/types/src/stats.ts` — `UserStats`, `LeaderboardEntry`
-- [ ] `packages/types/src/reward.ts` — `Reward`, `RewardRedemption`
+- [x] `packages/types/src/stats.ts` — `UserStats`, `LeaderboardEntry`
+- [x] `packages/types/src/reward.ts` — `Reward`, `RewardRedemption`
 
 ### Frontend
 
-- [ ] Leaderboard page or section on home
-- [ ] Rewards catalog + redeem flow
-- [ ] Admin rewards CRUD page
-- [ ] Admin ticket validation UI
-- [ ] Visual ticket PNG generation (480×800 portrait, QR, PT-BR watermarks, Redis cache 1h)
-- [ ] Public ticket verification page `/tickets/verify/:code`
+- [x] Leaderboard page or section on home
+- [x] Rewards catalog + redeem flow
+- [x] Admin rewards CRUD page
+- [x] Admin ticket validation UI
+- [x] Visual ticket PNG generation (480×800 portrait, QR, PT-BR watermarks, Redis cache 1h)
+- [x] Public ticket verification page `/tickets/verify/:code`
+- [x] Redemption history cards on profile page
 
 ## Ticket images
 
@@ -374,12 +378,12 @@ E2E scenarios: [`e2e/features/ticket-images.feature`](../../e2e/features/ticket-
 
 ## Acceptance criteria
 
-- [ ] After bet resolution, winner/loser stats increment correctly
-- [ ] Leaderboard returns top 100 ordered by `rankingScore`
-- [ ] Leaderboard response served from cache within TTL
-- [ ] User cannot redeem reward with insufficient coins or zero stock
-- [ ] Redemption creates unique UUID ticket; coins debited atomically
-- [ ] Admin can validate ticket once; second validation rejected
+- [x] After bet resolution, winner/loser stats increment correctly
+- [x] Leaderboard returns top 100 ordered by `rankingScore`
+- [x] Leaderboard response served from cache within TTL
+- [x] User cannot redeem reward with insufficient coins or zero stock
+- [x] Redemption creates unique UUID ticket; coins debited atomically
+- [x] Admin can validate ticket once; second validation rejected
 
 ## Dependencies
 

@@ -39,6 +39,10 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const registerTo = searchParams.toString()
+    ? `/register?${searchParams.toString()}`
+    : "/register";
+
   return (
     <div className="min-h-screen bg-sportsbook-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md sb-surface border sb-border rounded-2xl p-6 space-y-6">
@@ -89,7 +93,7 @@ const LoginPage: React.FC = () => {
 
         <p className="text-center text-sm text-sportsbook-muted">
           Não tem conta?{" "}
-          <Link to="/register" className="text-yellow-400 hover:underline">
+          <Link to={registerTo} className="text-yellow-400 hover:underline">
             Criar conta
           </Link>
         </p>

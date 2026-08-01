@@ -1,6 +1,6 @@
 # Feature 07 — Mercado Pago QR Instore (Loja e Caixa)
 
-**Status:** Step 2 complete (store + POS provisioning)
+**Status:** Step 3 complete (orders API + webhook + UI; mock mode for local dev)
 
 ## Prompt summary
 
@@ -92,9 +92,9 @@ Re-running with the same `external_id` values is safe (idempotent lookup before 
 |------|--------|
 | Create store | Done (script + client) |
 | Create POS | Done (script + client) |
-| `POST /v1/orders` payment processing | Planned (step 3) |
-| Instore order webhooks | Planned |
-| Frontend QR presencial UI | Planned |
+| `POST /v1/orders` payment processing | Done — [`InstorePaymentService`](../../apps/api/src/modules/payment/services/InstorePaymentService.ts) |
+| Instore order webhooks | Done — `order` / `merchant_order` topic in [`webhook.routes.ts`](../../apps/api/src/routes/webhook.routes.ts) |
+| Frontend QR presencial UI | Done — QR presencial tab on [`CoinsPage.tsx`](../../apps/web/src/pages/CoinsPage.tsx) |
 
 ## Gherkin Specifications (BDD)
 
@@ -308,9 +308,9 @@ Funcionalidade: Integração Mercado Pago QR Instore (Loja e Caixa)
 - [x] Env schema for setup + runtime IDs
 - [x] Idempotent `mp:setup-store` script
 - [x] `getMercadoPagoInstoreRuntimeConfig()` for step 3 consumers
-- [ ] QR order creation service
-- [ ] Webhook handling for instore orders
-- [ ] UI for presencial QR payments
+- [x] QR order creation service
+- [x] Webhook handling for instore orders
+- [x] UI for presencial QR payments
 
 ## Key files
 
