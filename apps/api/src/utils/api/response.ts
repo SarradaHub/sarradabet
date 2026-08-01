@@ -107,7 +107,7 @@ export class ApiResponse {
           ? ((shaped.data ?? null) as ApiResponseData)
           : (() => {
               // Keep all fields except the envelope discriminator 'success'
-              const { success, ...rest } = shaped as Record<string, unknown>;
+              const { success: _success, ...rest } = shaped as Record<string, unknown>;
               return Object.keys(rest).length
                 ? (rest as unknown as ApiResponseData)
                 : null;

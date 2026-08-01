@@ -13,7 +13,7 @@ const testDbUrl = (() => {
 process.env.DATABASE_URL = testDbUrl;
 process.env.JWT_SECRET = "test-secret";
 
-import { PrismaClient, UserRole } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import request from "supertest";
 import { app } from "../../app";
 import {

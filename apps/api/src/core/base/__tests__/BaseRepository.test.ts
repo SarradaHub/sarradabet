@@ -43,7 +43,7 @@ class TestRepository extends BaseRepository<
 
   async update(
     where?: Record<string, unknown>,
-    data?: unknown,
+    _data?: unknown,
   ): Promise<Record<string, unknown>> {
     return (this.prisma as any).test.update(
       where ?? { where: { id: 1 }, data: {} },

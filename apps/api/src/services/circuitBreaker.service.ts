@@ -60,9 +60,7 @@ class CircuitBreakerService {
       this.breakers.set(serviceName, breaker);
     }
 
-    // Wrap axios calls with circuit breaker
-    const originalRequest = client.request.bind(client);
-    client.request = async <T = any, R = any>(config: AxiosRequestConfig) => {
+    client.request = async <R = any>(config: AxiosRequestConfig) => {
       return breaker!.fire(config) as Promise<R>;
     };
 

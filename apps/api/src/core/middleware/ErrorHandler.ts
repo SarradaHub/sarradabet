@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
-import type { Prisma } from "@prisma/client";
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,

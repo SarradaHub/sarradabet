@@ -15,7 +15,7 @@ process.env.JWT_SECRET = "test-secret";
 process.env.MERCADOPAGO_WEBHOOK_SECRET = "test-webhook-secret";
 
 import { createHmac } from "crypto";
-import { PrismaClient, PixPaymentStatus, UserRole } from "@prisma/client";
+import { PrismaClient, PixPaymentStatus } from "@prisma/client";
 import request from "supertest";
 import { app } from "../../app";
 import {

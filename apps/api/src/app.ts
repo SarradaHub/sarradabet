@@ -75,7 +75,7 @@ app.get("/ready", async (req, res) => {
       service: "sarradabet-api",
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (_error) {
     res.status(503).json({
       status: "not ready",
       service: "sarradabet-api",

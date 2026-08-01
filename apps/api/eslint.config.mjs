@@ -14,7 +14,14 @@ export default [
     rules: {
       // Temporarily relax strict rules to unblock CI; revisit to tighten later
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
       'no-useless-catch': 'off',
     }
   }
