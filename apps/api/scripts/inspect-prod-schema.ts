@@ -1,18 +1,18 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 
 async function main() {
   const prisma = new PrismaClient({
     datasources: { db: { url: process.env.DIRECT_URL } },
   });
 
-  const types = await prisma.$queryRaw`
+  const types = await prisma.$queryRaw<{ typname: string }[]>`
     SELECT typname
     FROM pg_type
     WHERE typname IN ('CoinTransactionSource', 'BetStatus', 'VoteStatus')
   `;
   console.log("types:", types);
 
-  const tables = await prisma.$queryRaw`
+  const tables = await prisma.$queryRaw<{ table_name: string }[]>`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
@@ -21,7 +21,7 @@ async function main() {
   `;
   console.log("tables:", tables);
 
-  const cols = await prisma.$queryRaw`
+  const cols = await prisma.$queryRaw<{ column_name: string }[]>`
     SELECT column_name
     FROM information_schema.columns
     WHERE table_name = 'bets'
@@ -32,7 +32,7 @@ async function main() {
     cols.map((c) => c.column_name),
   );
 
-  const allTables = await prisma.$queryRaw`
+  const allTables = await prisma.$queryRaw<{ table_name: string }[]>`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
@@ -43,7 +43,7 @@ async function main() {
     allTables.map((t) => t.table_name),
   );
 
-  const indexes = await prisma.$queryRaw`
+  const indexes = await prisma.$queryRaw<{ indexname: string }[]>`
     SELECT indexname
     FROM pg_indexes
     WHERE schemaname = 'public'

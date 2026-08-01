@@ -18,11 +18,11 @@ set +a
 cd "$API_DIR"
 
 echo "Inspecting production schema..."
-node scripts/inspect-prod-schema.js
+npx tsx scripts/inspect-prod-schema.ts
 
 echo
 echo "Resetting incorrect migration history..."
-node scripts/reset-prod-migration-history.js
+npx tsx scripts/reset-prod-migration-history.ts
 
 BASELINE_MIGRATIONS=(
   20250318194330_supabase_extensions
