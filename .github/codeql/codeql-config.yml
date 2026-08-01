@@ -2,7 +2,7 @@ name: sarradabet-codeql-config
 
 queries:
   - uses: security-and-quality
-  - uses: ./extensions/csrf-csrf
+  - uses: ./.github/codeql/extensions/csrf-csrf
 
 query-filters:
   - exclude:
