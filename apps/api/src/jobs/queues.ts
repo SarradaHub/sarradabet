@@ -2,9 +2,9 @@ import { Queue, type JobsOptions } from "bullmq";
 import { config } from "../config/env";
 
 export const BET_STATUS_QUEUE = "bet-status";
-export const PAYOUT_RESOLVE_BET_QUEUE = "payout:resolve-bet";
-export const PAYOUT_VOTE_QUEUE = "payout:vote";
-export const ANALYTICS_REFRESH_QUEUE = "analytics:refresh";
+export const PAYOUT_RESOLVE_BET_QUEUE = "payout-resolve-bet";
+export const PAYOUT_VOTE_QUEUE = "payout-vote";
+export const ANALYTICS_REFRESH_QUEUE = "analytics-refresh";
 
 export type BetStatusJobData = Record<string, never>;
 
