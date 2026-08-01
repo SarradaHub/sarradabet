@@ -1,7 +1,10 @@
 import axios, { type AxiosInstance } from "axios";
 import { MercadoPagoConfig, User } from "mercadopago";
 import { config } from "../../../config/env";
-import { ExternalServiceError } from "../../../core/errors/AppError";
+import {
+  ExternalServiceError,
+  ValidationError,
+} from "../../../core/errors/AppError";
 import type {
   CreateMercadoPagoOrderInput,
   CreateMercadoPagoPosInput,
@@ -24,6 +27,15 @@ interface MercadoPagoApiError {
 }
 
 const MERCADOPAGO_API_BASE_URL = "https://api.mercadopago.com";
+const MERCADOPAGO_ORDER_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+export function assertSafeMercadoPagoOrderId(orderId: string): string {
+  if (!MERCADOPAGO_ORDER_ID_PATTERN.test(orderId)) {
+    throw new ValidationError("Invalid Mercado Pago order id");
+  }
+
+  return orderId;
+}
 
 export function extractPosUuidFromQrImage(qrImageUrl?: string): string | undefined {
   if (!qrImageUrl) {
@@ -259,6 +271,10 @@ export class MercadoPagoInstoreClient implements InstoreOrderGateway {
   }
 
   async getOrder(orderId: string): Promise<InstoreOrderGatewayResult> {
+    if (!MERCADOPAGO_ORDER_ID_PATTERN.test(orderId)) {
+      throw new ValidationError("Invalid Mercado Pago order id");
+    }
+
     try {
       const response = await this.getHttpClient().get<MercadoPagoOrderResponse>(
         `/v1/orders/${orderId}`,

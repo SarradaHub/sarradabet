@@ -1,6 +1,10 @@
 import axios from "axios";
 import { MercadoPagoConfig, User } from "mercadopago";
-import { MercadoPagoInstoreClient, extractPosUuidFromQrImage } from "../../modules/payment/services/MercadoPagoInstoreClient";
+import {
+  MercadoPagoInstoreClient,
+  assertSafeMercadoPagoOrderId,
+  extractPosUuidFromQrImage,
+} from "../../modules/payment/services/MercadoPagoInstoreClient";
 
 jest.mock("axios", () => {
   const mockCreate = jest.fn(() => ({
@@ -226,6 +230,38 @@ describe("MercadoPagoInstoreClient", () => {
     );
     expect(result.id).toBe("ORD123");
     expect(result.qrCode).toContain("000201");
+  });
+
+  it("gets an instore order via GET /v1/orders/{id}", async () => {
+    httpGet.mockResolvedValue({
+      data: {
+        id: "ORD123",
+        status: "processed",
+        type_response: {
+          qr_data: "00020126580014BR.GOV.BCB.PIX0136instore",
+        },
+      },
+    });
+
+    const result = await client.getOrder("ORD123");
+
+    expect(httpGet).toHaveBeenCalledWith("/v1/orders/ORD123");
+    expect(result.id).toBe("ORD123");
+    expect(result.status).toBe("processed");
+  });
+
+  it("rejects unsafe order ids before calling Mercado Pago", async () => {
+    await expect(client.getOrder("../admin")).rejects.toMatchObject({
+      name: "ValidationError",
+    });
+    expect(httpGet).not.toHaveBeenCalled();
+  });
+
+  it("assertSafeMercadoPagoOrderId rejects path traversal characters", () => {
+    expect(() => assertSafeMercadoPagoOrderId("ORD/123")).toThrow(
+      "Invalid Mercado Pago order id",
+    );
+    expect(assertSafeMercadoPagoOrderId("ORD-123_abc")).toBe("ORD-123_abc");
   });
 
   it("extracts POS uuid from static QR image URL", () => {
