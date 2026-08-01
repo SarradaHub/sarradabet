@@ -102,7 +102,9 @@ const OddsList = ({
       betStatus,
       startTime,
       closesAt,
-      totalStakeOnBet,
+      totalStakeOnBet:
+        totalStakeOnBet ||
+        odds.reduce((sum, item) => sum + item.totalStake, 0),
       stakeOnOdd: odd.totalStake ?? 0,
     });
   };

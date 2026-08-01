@@ -3,8 +3,11 @@ import { CategoryController } from "../modules/category/controllers/CategoryCont
 import { CategoryService } from "../modules/category/services/CategoryService";
 import { CategoryRepository } from "../modules/category/repositories/CategoryRepository";
 import { prisma } from "../config/db";
-import { authenticateUser, requireUserRole } from "../core/middleware/AuthMiddleware";
 import { UserRole } from "@prisma/client";
+import {
+  authenticateUser,
+  requireUserRole,
+} from "../core/middleware/AuthMiddleware";
 import {
   validateBody,
   validateParams,

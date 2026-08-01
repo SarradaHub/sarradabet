@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { config } from "../../../config/env";
 import { RequestUser } from "../../../core/middleware/AuthMiddleware";
 import { TooManyRequestsError } from "../../../core/errors/AppError";
@@ -15,7 +15,7 @@ export const ticketImageRateLimit = rateLimit({
       return `ticket-image:user:${user.userId}`;
     }
 
-    return `ticket-image:ip:${req.ip ?? "unknown"}`;
+    return `ticket-image:ip:${ipKeyGenerator(req.ip ?? "unknown")}`;
   },
   handler: (req, res, next) => {
     logger.warn(`Ticket image rate limit exceeded for ${req.ip}`, {

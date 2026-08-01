@@ -28,6 +28,7 @@ function isMutatingMethod(method: string | undefined): boolean {
 
 export function clearCsrfToken(): void {
   csrfToken = null;
+  csrfTokenPromise = null;
 }
 
 export async function fetchCsrfToken(): Promise<string | null> {
@@ -114,7 +115,27 @@ function attachAuthInterceptors(client: AxiosInstance): void {
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & {
         _retry?: boolean;
+        _csrfRetry?: boolean;
       };
+
+      if (
+        error.response?.status === 403 &&
+        originalRequest &&
+        !originalRequest._csrfRetry &&
+        isMutatingMethod(originalRequest.method)
+      ) {
+        const message = (error.response.data as { message?: string } | undefined)
+          ?.message;
+        if (message?.toLowerCase().includes("csrf")) {
+          originalRequest._csrfRetry = true;
+          clearCsrfToken();
+          const csrf = await fetchCsrfToken();
+          if (csrf) {
+            originalRequest.headers["X-CSRF-Token"] = csrf;
+          }
+          return client(originalRequest);
+        }
+      }
 
       if (
         error.response?.status !== 401 ||

@@ -216,8 +216,6 @@ export const VoteQuerySchema = PaginationSchema.extend({
   oddId: IdSchema.optional(),
 });
 
-export const AdminLoginSchema = UserLoginSchema;
-
 export const CreateCoinPackageSchema = z.object({
   name: z
     .string()
@@ -327,7 +325,6 @@ export type BetQueryInput = z.infer<typeof BetQuerySchema>;
 export type CategoryQueryInput = z.infer<typeof CategoryQuerySchema>;
 export type VoteQueryInput = z.infer<typeof VoteQuerySchema>;
 export type PaginationInput = z.infer<typeof PaginationSchema>;
-export type AdminLoginInput = z.infer<typeof AdminLoginSchema>;
 export type RegisterUserInput = z.infer<typeof RegisterUserSchema>;
 export type UserLoginInput = z.infer<typeof UserLoginSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;

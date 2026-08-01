@@ -22,6 +22,7 @@ import {
   cleanupAuthData,
   createTestUser,
   testIfDbAvailable,
+  uniqueTestPhone,
 } from "../helpers/authTestHelper";
 
 let prisma: PrismaClient | null = null;
@@ -54,7 +55,7 @@ describe("Coin Package Admin Routes", () => {
       const admin = await createTestUser(prisma, {
         username: "coinadmin",
         email: "coinadmin@example.com",
-        phone: "5511999997777",
+        phone: uniqueTestPhone(777701),
         role: UserRole.ADMIN,
       });
 

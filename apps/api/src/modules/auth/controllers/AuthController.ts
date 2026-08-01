@@ -56,7 +56,7 @@ export class AuthController {
       httpOnly: true,
       secure: cookieSecure,
       sameSite: "lax",
-      path: "/api/v1/auth",
+      path: "/",
       maxAge: getRefreshTokenMaxAgeMs(),
     });
   }
@@ -69,7 +69,7 @@ export class AuthController {
       httpOnly: true,
       secure: cookieSecure,
       sameSite: "lax",
-      path: "/api/v1/auth",
+      path: "/",
     });
   }
 

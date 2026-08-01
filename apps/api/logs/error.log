@@ -83,3 +83,141 @@ Please make sure your database server is running at `localhost:5433`.
 2025-11-24 22:16:30 [[31merror[39m] Failed to deregister from Consul: not found
 2026-06-14 21:37:29 [error] Error: write EPIPE
     at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:87:19)
+2026-07-30 21:19:17 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-08-01 11:31:02 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-08-01 11:44:03 [[31merror[39m] Prisma Error: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Can't reach database server at `localhost:5433`
+
+Please make sure your database server is running at `localhost:5433`.
+2026-08-01 12:20:55 [[31merror[39m] Error: write EPIPE
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:1025:11)
+    at Socket._write (node:net:1037:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/winston-transport/modern.js:82:19)
+    at doWrite (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+2026-08-01 12:22:45 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:45 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:45 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:45 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async UserStatsService.recordLoss (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/services/UserStatsService.ts:51:21)
+    at async Promise.all (index 0)
+    at async BetService.resolveBet (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/services/BetService.ts:241:5)
+    at async BetController.resolveBet (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/controllers/BetController.ts:174:27)
+2026-08-01 12:22:45 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:46 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:46 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:46 [[31merror[39m] PrismaClientKnownRequestError: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+    at ei.handleRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at async a (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at async UserStatsService.recordLoss (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/services/UserStatsService.ts:51:21)
+    at async Promise.all (index 0)
+    at async BetService.resolveBet (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/services/BetService.ts:241:5)
+    at async BetController.resolveBet (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/bet/controllers/BetController.ts:174:27)
+2026-08-01 12:22:46 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.
+2026-08-01 12:22:46 [[31merror[39m] Prisma Error: 
+Invalid `prisma.userStats.findUnique()` invocation in
+/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/modules/stats/repositories/UserStatsRepository.ts:12:29
+
+   9 
+  10 export class UserStatsRepository {
+  11   async findByUserId(userId: number): Promise<UserStats | null> {
+→ 12     return prisma.userStats.findUnique(
+The table `public.user_stats` does not exist in the current database.

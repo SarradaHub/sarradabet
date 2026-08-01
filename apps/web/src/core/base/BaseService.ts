@@ -16,7 +16,7 @@ export abstract class BaseService<T, CreateInput, UpdateInput, CreateResult = T>
 {
   protected readonly api: AxiosInstance;
 
-  constructor(_baseURL: string, endpoint: string) {
+  constructor(_baseURL: string | undefined, endpoint: string) {
     this.api = createApiClient(endpoint);
     this.setupInterceptors();
   }

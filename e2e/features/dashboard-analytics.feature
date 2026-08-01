@@ -10,7 +10,7 @@ Funcionalidade: Dashboard do usuário e análises administrativas
     Dado que estou logado como "user"
     Quando acesso a página "/dashboard"
     Então devo ver o título "Meu Dashboard"
-    E devo ver o texto "Saldo"
+    E devo ver o texto "Taxa de acerto"
 
   @smoke @admin @dashboard
   Cenário: Administrador visualiza filtros analíticos no dashboard

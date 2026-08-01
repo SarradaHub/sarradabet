@@ -31,9 +31,15 @@ app.use(cors(corsOptions));
 app.use(
   createRateLimit({
     windowMs: 15 * 60 * 1000,
-    max: config.NODE_ENV === "development" ? 1000 : 100,
+    max:
+      config.NODE_ENV === "test"
+        ? 10_000
+        : config.NODE_ENV === "development"
+          ? 1000
+          : 100,
     message: "Too many requests from this IP, please try again later",
-    skipSuccessfulRequests: config.NODE_ENV === "development",
+    skipSuccessfulRequests:
+      config.NODE_ENV === "development" || config.NODE_ENV === "test",
   }),
 );
 

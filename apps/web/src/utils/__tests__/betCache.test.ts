@@ -32,11 +32,11 @@ describe("betCache", () => {
       betId: 10,
       oddId: 101,
       totalVotes: 3,
+      totalStake: 25,
       odds: [
         { id: 101, totalVotes: 2, totalStake: 20, value: 1.5 },
         { id: 102, totalVotes: 1, totalStake: 5, value: 3 },
       ],
-      totalStake: 25,
     });
 
     const cached = queryCache.getRaw<{

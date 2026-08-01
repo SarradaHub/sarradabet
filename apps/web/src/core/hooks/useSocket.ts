@@ -8,17 +8,20 @@ function getSocketUrl(): string {
 
 let sharedSocket: Socket | null = null;
 let socketDiagnosticsAttached = false;
-let socketToken: string | null = null;
+let socketAuthToken: string | null = null;
 
 export function setSocketAuthToken(token: string | null): void {
-  socketToken = token;
+  socketAuthToken = token;
 
   if (!sharedSocket) {
     return;
   }
 
   sharedSocket.auth = token ? { token } : {};
-  if (token && !sharedSocket.connected) {
+
+  if (sharedSocket.connected) {
+    sharedSocket.disconnect().connect();
+  } else if (token) {
     sharedSocket.connect();
   }
 }
@@ -50,11 +53,11 @@ export function getSocket(): Socket {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      auth: socketToken ? { token: socketToken } : undefined,
+      auth: socketAuthToken ? { token: socketAuthToken } : {},
     });
     attachSocketDiagnostics(sharedSocket);
-  } else if (socketToken) {
-    sharedSocket.auth = { token: socketToken };
+  } else if (socketAuthToken) {
+    sharedSocket.auth = { token: socketAuthToken };
     if (!sharedSocket.connected) {
       sharedSocket.connect();
     }

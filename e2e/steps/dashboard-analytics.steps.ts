@@ -14,7 +14,7 @@ When("acesso a página {string}", async ({ page }, path: string) => {
 
 When(
   "consulto a overview analítica de {string} até {string}",
-  async (_context, startDate: string, endDate: string) => {
+  async ({}, startDate: string, endDate: string) => {
     const token = await loginViaApi(getCurrentRole());
     const response = await fetch(
       `${API_URL}/api/v1/admin/analytics/overview?startDate=${startDate}&endDate=${endDate}`,
@@ -29,13 +29,13 @@ When(
 
 Then(
   "a resposta analítica contém {string}",
-  async (_context, field: string) => {
+  async ({}, field: string) => {
     const data = lastAnalyticsBody.data as Record<string, unknown> | undefined;
     expect(data).toBeTruthy();
     expect(data?.[field]).toBeDefined();
   },
 );
 
-Then("a resposta HTTP analítica é {int}", async (_context, status: number) => {
+Then("a resposta HTTP analítica é {int}", async ({}, status: number) => {
   expect(lastAnalyticsStatus).toBe(status);
 });

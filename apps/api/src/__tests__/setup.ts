@@ -29,8 +29,9 @@ beforeAll(async () => {
     await prisma.$executeRaw`TRUNCATE TABLE "odd" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "bets" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "categories" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "admin_actions" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "admins" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "refresh_tokens" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "user_actions" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "users" CASCADE`;
   } finally {
     await prisma.$disconnect();
   }

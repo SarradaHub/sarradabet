@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import type { BetEntity, OddsEntity } from "../../../types/bet.types";
 import { BaseRepository } from "../../../core/base/BaseRepository";
 import { FindManyParams } from "../../../core/interfaces/IRepository";
@@ -133,24 +133,13 @@ export class BetRepository extends BaseRepository<
     where: { id: number },
     data: UpdateBetInput,
   ): Promise<BetWithOdds> {
+    const betUpdateData = this.buildBetUpdateData(data);
+
     if (data.odds?.length) {
       return this.executeTransaction(async (tx) => {
         await tx.bet.update({
           where,
-          data: {
-            ...(data.title && { title: data.title }),
-            ...(data.description !== undefined && {
-              description: data.description,
-            }),
-            ...(data.categoryId && { categoryId: data.categoryId }),
-            ...(data.status && { status: data.status }),
-            ...(data.startTime !== undefined && {
-              startTime: data.startTime ? new Date(data.startTime) : null,
-            }),
-            ...(data.closesAt !== undefined && {
-              closesAt: data.closesAt ? new Date(data.closesAt) : null,
-            }),
-          },
+          data: betUpdateData,
         });
 
         await Promise.all(
@@ -197,20 +186,7 @@ export class BetRepository extends BaseRepository<
 
     const updatedBet = await this.prisma.bet.update({
       where,
-      data: {
-        ...(data.title && { title: data.title }),
-        ...(data.description !== undefined && {
-          description: data.description,
-        }),
-        ...(data.categoryId && { categoryId: data.categoryId }),
-        ...(data.status && { status: data.status }),
-        ...(data.startTime !== undefined && {
-          startTime: data.startTime ? new Date(data.startTime) : null,
-        }),
-        ...(data.closesAt !== undefined && {
-          closesAt: data.closesAt ? new Date(data.closesAt) : null,
-        }),
-      },
+      data: betUpdateData,
       include: {
         odds: {
           include: {
@@ -284,6 +260,36 @@ export class BetRepository extends BaseRepository<
     return this.findMany({
       where: { categoryId },
     });
+  }
+
+  private buildBetUpdateData(data: UpdateBetInput): Prisma.BetUncheckedUpdateInput {
+    const updateData: Prisma.BetUncheckedUpdateInput = {};
+
+    if (data.title) {
+      updateData.title = data.title;
+    }
+
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
+
+    if (data.categoryId) {
+      updateData.categoryId = data.categoryId;
+    }
+
+    if (data.status) {
+      updateData.status = data.status;
+    }
+
+    if (data.startTime !== undefined) {
+      updateData.startTime = data.startTime ? new Date(data.startTime) : null;
+    }
+
+    if (data.closesAt !== undefined) {
+      updateData.closesAt = data.closesAt ? new Date(data.closesAt) : null;
+    }
+
+    return updateData;
   }
 
   private transformBetWithVotes(
