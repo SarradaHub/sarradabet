@@ -3,6 +3,37 @@ import { hashPassword } from "../src/utils/auth";
 
 const prisma = new PrismaClient();
 
+const SEED_BET_TITLES = [
+  "Brasil vs Argentina - Quem ganha?",
+  "Campeão da Champions League 2026",
+  "Libertadores 2026 - Campeão",
+] as const;
+
+async function cleanupNonSeedBets(): Promise<void> {
+  const betsToDelete = await prisma.bet.findMany({
+    where: { title: { notIn: [...SEED_BET_TITLES] } },
+    select: { id: true },
+  });
+
+  if (betsToDelete.length === 0) {
+    return;
+  }
+
+  const betIds = betsToDelete.map((bet) => bet.id);
+  const odds = await prisma.odd.findMany({
+    where: { betId: { in: betIds } },
+    select: { id: true },
+  });
+  const oddIds = odds.map((odd) => odd.id);
+
+  if (oddIds.length > 0) {
+    await prisma.vote.deleteMany({ where: { oddId: { in: oddIds } } });
+  }
+
+  await prisma.odd.deleteMany({ where: { betId: { in: betIds } } });
+  await prisma.bet.deleteMany({ where: { id: { in: betIds } } });
+}
+
 async function ensureUser(data: {
   username: string;
   email: string;
@@ -47,6 +78,14 @@ async function ensureBet(
   });
 
   if (existing) {
+    await prisma.bet.update({
+      where: { id: existing.id },
+      data: {
+        status: BetStatus.open,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
     return;
   }
 
@@ -110,6 +149,8 @@ async function main() {
   }
 
   const futebol = await ensureCategory("Futebol");
+
+  await cleanupNonSeedBets();
 
   await ensureBet(futebol.id, {
     title: "Brasil vs Argentina - Quem ganha?",

@@ -10,7 +10,7 @@ import {
 import { BetStatus } from "../../types/bet";
 
 const STATUS_COLORS: Record<BetStatus, string> = {
-  scheduled: "#3b82f6",
+  scheduled: "#38bdf8",
   open: "#22c55e",
   closed: "#facc15",
   resolved: "#f97316",

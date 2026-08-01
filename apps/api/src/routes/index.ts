@@ -7,9 +7,10 @@ import coinRoutes from "./coin.routes";
 import paymentRoutes from "./payment.routes";
 import adminCoinPackageRoutes from "./admin.coin-package.routes";
 import adminHouseRoutes from "./admin.house.routes";
-import jobsRoutes from "./jobs.routes";
+import analyticsRoutes from "../modules/analytics/routes/analytics.routes";
 import authRoutes from "../modules/auth/routes/auth.routes";
 import userRoutes from "../modules/user/routes/user.routes";
+import jobsRoutes from "./jobs.routes";
 import leaderboardRoutes from "./leaderboard.routes";
 import rewardRoutes, { adminRewardRoutes } from "./reward.routes";
 import {
@@ -28,6 +29,7 @@ router.use("/admin/coin-packages", adminCoinPackageRoutes);
 router.use("/admin/rewards/tickets", adminTicketRoutes);
 router.use("/admin/rewards", adminRewardRoutes);
 router.use("/admin/house", adminHouseRoutes);
+router.use("/admin/analytics", analyticsRoutes);
 router.use("/leaderboard", leaderboardRoutes);
 router.use("/tickets", ticketPublicRoutes);
 router.use("/rewards/tickets", rewardTicketRoutes);
@@ -56,7 +58,6 @@ router.get("/", (req, res) => {
       adminHouse: "/api/v1/admin/house",
       leaderboard: "/api/v1/leaderboard",
       rewards: "/api/v1/rewards",
-      jobs: "/api/v1/jobs",
       health: "/health",
     },
   });

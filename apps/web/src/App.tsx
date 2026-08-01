@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import UserDashboardPage from "./pages/UserDashboardPage";
 import CoinsPage from "./pages/CoinsPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import RewardsPage from "./pages/RewardsPage";
@@ -26,10 +27,10 @@ const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminBetsPage = lazy(() => import("./pages/AdminBetsPage"));
 const AdminCategoriesPage = lazy(() => import("./pages/AdminCategoriesPage"));
-const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminCoinPackagesPage = lazy(
   () => import("./pages/AdminCoinPackagesPage"),
 );
+const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminRewardsPage = lazy(() => import("./pages/AdminRewardsPage"));
 
 function App() {
@@ -53,6 +54,14 @@ function App() {
                 }
               />
               <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <UserDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/coins"
                 element={
                   <ProtectedRoute>
@@ -62,10 +71,7 @@ function App() {
               />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/rewards" element={<RewardsPage />} />
-              <Route
-                path="/tickets/verify/:code"
-                element={<TicketVerifyPage />}
-              />
+              <Route path="/tickets/verify/:code" element={<TicketVerifyPage />} />
               <Route
                 path="/admin/login"
                 element={

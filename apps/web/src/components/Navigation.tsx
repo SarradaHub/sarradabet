@@ -59,6 +59,11 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
               {user?.username ?? "Perfil"}
             </Button>
           </Link>
+          <Link to="/dashboard" onClick={closeMobileMenu}>
+            <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+              Dashboard
+            </Button>
+          </Link>
           {isAdmin && (
             <Link to="/admin/dashboard" onClick={closeMobileMenu}>
               <Button

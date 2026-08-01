@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Plus } from "@sarradahub/design-system";
 import { formatDistanceToNow } from "date-fns";
@@ -9,8 +9,13 @@ import CreateCategoryModal from "../components/CreateCategoryModal";
 import AdminStatCards, {
   type DashboardStats,
 } from "../components/admin/AdminStatCards";
+import AnalyticsOverviewCards from "../components/admin/AnalyticsOverviewCards";
+import AnalyticsDateFilter from "../components/admin/AnalyticsDateFilter";
 import BetsStatusChart from "../components/admin/BetsStatusChart";
 import BetOddVotesChart from "../components/admin/BetOddVotesChart";
+import PixRevenueChart from "../components/admin/PixRevenueChart";
+import PeakHoursChart from "../components/admin/PeakHoursChart";
+import CategoryBreakdownChart from "../components/admin/CategoryBreakdownChart";
 import BetStatusBadge from "../components/admin/BetStatusBadge";
 import {
   useBets,
@@ -18,16 +23,65 @@ import {
   BETS_LIST_PARAMS,
   CATEGORIES_LIST_PARAMS,
 } from "../hooks";
+import { useAnalytics } from "../hooks/useAnalytics";
 import { Bet, BetStatus } from "../types/bet";
 import { Category } from "../types/category";
 import { unwrapList } from "../utils/apiData";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { adminHouseService } from "../services/CoinPaymentService";
+import { analyticsService } from "../services/analyticsService";
+import type { HouseTreasurySummary } from "@sarradabet/types";
+import { useAuth } from "../hooks/useAuth";
+
+function formatDateInput(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function getDefaultAnalyticsStartDate(): string {
+  const now = new Date();
+  return formatDateInput(new Date(now.getFullYear(), 0, 1));
+}
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { accessToken } = useAuth();
   const [showCreateBetModal, setShowCreateBetModal] = useState(false);
   const [showCreateCategoryModal, setShowCreateCategoryModal] = useState(false);
+  const [houseSummary, setHouseSummary] = useState<HouseTreasurySummary | null>(
+    null,
+  );
+  const [houseError, setHouseError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState(getDefaultAnalyticsStartDate);
+  const [endDate, setEndDate] = useState(formatDateInput(new Date()));
+  const [categoryId, setCategoryId] = useState<number | undefined>();
+  const [exporting, setExporting] = useState(false);
+
+  const analyticsFilters = useMemo(
+    () => ({ startDate, endDate, categoryId }),
+    [startDate, endDate, categoryId],
+  );
+
+  const {
+    overview,
+    betsByCategory,
+    pixRevenue,
+    peakHours,
+    loading: analyticsLoading,
+    error: analyticsError,
+    refetch: refetchAnalytics,
+  } = useAnalytics(analyticsFilters);
+
+  useEffect(() => {
+    void adminHouseService
+      .getSummary()
+      .then(setHouseSummary)
+      .catch((err: unknown) => {
+        setHouseError(
+          err instanceof Error ? err.message : "Erro ao carregar receita da casa",
+        );
+      });
+  }, []);
 
   const {
     data: betsResponse,
@@ -49,16 +103,16 @@ const AdminDashboard: React.FC = () => {
     [categoriesResponse],
   );
 
-  const stats = useMemo((): DashboardStats => {
+  const legacyStats = useMemo((): DashboardStats => {
     return {
       totalBets: bets.length,
       totalCategories: categories.length,
       totalVotes: bets.reduce((sum, bet) => sum + (bet.totalVotes || 0), 0),
       activeBets: bets.filter((bet) => bet.status === "open").length,
-      houseTakeoutBalance: 0,
-      takeoutPercent: 0,
+      houseTakeoutBalance: houseSummary?.balance ?? 0,
+      takeoutPercent: houseSummary?.takeoutPercent ?? 25,
     };
-  }, [bets, categories]);
+  }, [bets, categories, houseSummary]);
 
   const statusChartData = useMemo(() => {
     const counts: Record<BetStatus, number> = {
@@ -99,8 +153,39 @@ const AdminDashboard: React.FC = () => {
       .slice(0, 5);
   }, [bets]);
 
-  const loading = betsLoading || categoriesLoading;
-  const error = betsError || categoriesError;
+  const loading = betsLoading || categoriesLoading || analyticsLoading;
+  const error = betsError || categoriesError || analyticsError;
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const response = await fetch(
+        analyticsService.getExportUrl(analyticsFilters),
+        {
+          headers: accessToken
+            ? { Authorization: `Bearer ${accessToken}` }
+            : undefined,
+          credentials: "include",
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Falha ao exportar CSV");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `analytics_${startDate}_${endDate}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setHouseError(
+        err instanceof Error ? err.message : "Erro ao exportar CSV",
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner size="lg" text="Carregando dados..." />;
@@ -114,6 +199,7 @@ const AdminDashboard: React.FC = () => {
         onRetry={() => {
           void refetchBets();
           void refetchCategories();
+          void refetchAnalytics();
         }}
       />
     );
@@ -138,9 +224,59 @@ const AdminDashboard: React.FC = () => {
         }}
       />
 
-      <AdminStatCards stats={stats} />
+      <AnalyticsDateFilter
+        startDate={startDate}
+        endDate={endDate}
+        categoryId={categoryId}
+        categories={categories}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onCategoryChange={setCategoryId}
+        onExport={() => void handleExport()}
+        exporting={exporting}
+      />
+
+      {overview && <AnalyticsOverviewCards overview={overview} />}
+      <AdminStatCards stats={legacyStats} />
+      {houseError && (
+        <p className="text-xs text-warning-400" role="status">
+          {houseError}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="sb-surface-raised border sb-border rounded-lg p-5">
+          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+            Receita Pix
+          </h2>
+          <p className="text-xs text-sportsbook-muted mb-4">
+            Série temporal de pagamentos aprovados
+          </p>
+          <PixRevenueChart data={pixRevenue} />
+        </div>
+
+        <div className="sb-surface-raised border sb-border rounded-lg p-5">
+          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+            Apostas por categoria
+          </h2>
+          <p className="text-xs text-sportsbook-muted mb-4">
+            Volume de moedas por categoria no período
+          </p>
+          <CategoryBreakdownChart data={betsByCategory} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="sb-surface-raised border sb-border rounded-lg p-5">
+          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+            Horários de pico
+          </h2>
+          <p className="text-xs text-sportsbook-muted mb-4">
+            Apostas criadas por hora do dia
+          </p>
+          <PeakHoursChart data={peakHours} />
+        </div>
+
         <div className="sb-surface-raised border sb-border rounded-lg p-5">
           <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
             Apostas por status
@@ -150,16 +286,16 @@ const AdminDashboard: React.FC = () => {
           </p>
           <BetsStatusChart data={statusChartData} />
         </div>
+      </div>
 
-        <div className="sb-surface-raised border sb-border rounded-lg p-5">
-          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
-            Votos por aposta e odd
-          </h2>
-          <p className="text-xs text-sportsbook-muted mb-4">
-            Cada aposta no eixo X · barras agrupadas por odd
-          </p>
-          <BetOddVotesChart data={betOddChartData} />
-        </div>
+      <div className="sb-surface-raised border sb-border rounded-lg p-5">
+        <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+          Votos por aposta e odd
+        </h2>
+        <p className="text-xs text-sportsbook-muted mb-4">
+          Cada aposta no eixo X · barras agrupadas por odd
+        </p>
+        <BetOddVotesChart data={betOddChartData} />
       </div>
 
       <div className="sb-surface-raised border sb-border rounded-lg p-5">
