@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import Navigation from "../components/Navigation";
+import { StatsCard } from "../components/gamification/StatsCard";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { useAuth } from "../hooks/useAuth";
+import { useUserStats } from "../hooks/useUserStats";
 import { userService } from "../services/UserService";
 import type { UserPublic } from "@sarradabet/types";
 
@@ -14,6 +16,11 @@ function formatDate(value: string): string {
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+  } = useUserStats();
   const [profile, setProfile] = useState<UserPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,38 +60,47 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {error && <ErrorMessage error={error} />}
+        {statsError && <ErrorMessage error={statsError} />}
 
         {loading ? (
           <LoadingSpinner text="Carregando perfil..." />
         ) : profile ? (
-          <div className="sb-surface border sb-border rounded-2xl p-6 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs text-sportsbook-muted">Usuário</p>
-                <p className="font-medium">{profile.username}</p>
-              </div>
-              <div>
-                <p className="text-xs text-sportsbook-muted">E-mail</p>
-                <p className="font-medium">{profile.email}</p>
-              </div>
-              <div>
-                <p className="text-xs text-sportsbook-muted">Telefone</p>
-                <p className="font-medium">{profile.phone}</p>
-              </div>
-              <div>
-                <p className="text-xs text-sportsbook-muted">Função</p>
-                <p className="font-medium">{profile.role}</p>
-              </div>
-              <div>
-                <p className="text-xs text-sportsbook-muted">Saldo de moedas</p>
-                <p className="font-medium">{profile.coinBalance}</p>
-              </div>
-              <div>
-                <p className="text-xs text-sportsbook-muted">Membro desde</p>
-                <p className="font-medium">{formatDate(profile.createdAt)}</p>
+          <>
+            <div className="sb-surface border sb-border rounded-2xl p-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-sportsbook-muted">Usuário</p>
+                  <p className="font-medium">{profile.username}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-sportsbook-muted">E-mail</p>
+                  <p className="font-medium">{profile.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-sportsbook-muted">Telefone</p>
+                  <p className="font-medium">{profile.phone}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-sportsbook-muted">Função</p>
+                  <p className="font-medium">{profile.role}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-sportsbook-muted">Saldo de moedas</p>
+                  <p className="font-medium">{profile.coinBalance}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-sportsbook-muted">Membro desde</p>
+                  <p className="font-medium">{formatDate(profile.createdAt)}</p>
+                </div>
               </div>
             </div>
-          </div>
+
+            {statsLoading ? (
+              <LoadingSpinner text="Carregando estatísticas..." />
+            ) : stats ? (
+              <StatsCard stats={stats} />
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>

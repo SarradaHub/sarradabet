@@ -15,8 +15,24 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
+  const publicLinks = (
+    <>
+      <Link to="/leaderboard" onClick={closeMobileMenu}>
+        <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+          Ranking
+        </Button>
+      </Link>
+      <Link to="/rewards" onClick={closeMobileMenu}>
+        <Button variant="secondary" size="sm" className="text-xs w-full md:w-auto">
+          Recompensas
+        </Button>
+      </Link>
+    </>
+  );
+
   const authButtons = (
     <>
+      {publicLinks}
       {!isAuthenticated && (
         <>
           <Link to="/login" onClick={closeMobileMenu}>

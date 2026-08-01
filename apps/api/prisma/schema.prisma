@@ -91,11 +91,61 @@ model User {
   actions          UserAction[]
   coinTransactions CoinTransaction[]
   pixPayments      PixPayment[]
-  votes            Vote[]
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
+  votes             Vote[]
+  stats             UserStats?
+  rewardRedemptions RewardRedemption[]
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model UserStats {
+  userId       Int      @id @map("user_id")
+  totalBets    Int      @default(0) @map("total_bets")
+  wonBets      Int      @default(0) @map("won_bets")
+  lostBets     Int      @default(0) @map("lost_bets")
+  winRate      Float    @default(0) @map("win_rate")
+  rankingScore Float    @default(0) @map("ranking_score")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([rankingScore(sort: Desc)])
+  @@map("user_stats")
+}
+
+model Reward {
+  id          Int                @id @default(autoincrement())
+  title       String             @db.VarChar(255)
+  description String?
+  coinCost    Int                @map("coin_cost")
+  stock       Int                @default(0)
+  imageUrl    String?            @map("image_url")
+  isActive    Boolean            @default(true) @map("is_active")
+  redemptions RewardRedemption[]
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("rewards")
+}
+
+model RewardRedemption {
+  id          Int       @id @default(autoincrement())
+  rewardId    Int       @map("reward_id")
+  userId      Int       @map("user_id")
+  ticketCode  String    @unique @map("ticket_code") @db.VarChar(36)
+  redeemedAt  DateTime  @default(now()) @map("redeemed_at")
+  validatedAt DateTime? @map("validated_at")
+  validatedBy Int?      @map("validated_by")
+
+  reward Reward @relation(fields: [rewardId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([rewardId])
+  @@map("reward_redemptions")
 }
 
 model UserAction {
@@ -217,6 +267,7 @@ enum CoinTransactionSource {
   REFUND
   WIN
   TAKEOUT
+  REWARD_REDEMPTION
 }
 
 enum VoteStatus {

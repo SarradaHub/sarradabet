@@ -10,8 +10,6 @@ import {
   CoinRepository,
   CreditDebitMetadata,
 } from "../repositories/CoinRepository";
-import { invalidateDashboardCache } from "../../dashboard/services/DashboardService";
-
 export class CoinService {
   constructor(private readonly coinRepository: CoinRepository = new CoinRepository()) {}
 
@@ -50,15 +48,12 @@ export class CoinService {
         amount,
         metadata,
       );
-      await invalidateDashboardCache(userId);
       return result;
     }
 
-    const result = await prisma.$transaction(async (tx) =>
+    return prisma.$transaction(async (tx) =>
       this.coinRepository.creditCoins(tx, userId, amount, metadata),
     );
-    await invalidateDashboardCache(userId);
-    return result;
   }
 
   async debitCoins(
@@ -79,15 +74,12 @@ export class CoinService {
           amount,
           metadata,
         );
-        await invalidateDashboardCache(userId);
         return result;
       }
 
-      const result = await prisma.$transaction(async (tx) =>
+      return await prisma.$transaction(async (tx) =>
         this.coinRepository.debitCoins(tx, userId, amount, metadata),
       );
-      await invalidateDashboardCache(userId);
-      return result;
     } catch (error) {
       if (error instanceof Error && error.message === "INSUFFICIENT_BALANCE") {
         throw new BadRequestError("Saldo insuficiente");

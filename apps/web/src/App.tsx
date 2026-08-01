@@ -10,9 +10,13 @@ import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import CoinsPage from "./pages/CoinsPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import RewardsPage from "./pages/RewardsPage";
+import TicketVerifyPage from "./pages/TicketVerifyPage";
 import { AuthProvider } from "./context/AuthProvider";
 import { RealtimeProvider } from "./context/RealtimeProvider";
 import PayoutNotification from "./components/PayoutNotification";
+import RewardValidatedNotification from "./components/RewardValidatedNotification";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PageSkeleton from "./components/ui/PageSkeleton";
 import "./App.css";
@@ -26,6 +30,7 @@ const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminCoinPackagesPage = lazy(
   () => import("./pages/AdminCoinPackagesPage"),
 );
+const AdminRewardsPage = lazy(() => import("./pages/AdminRewardsPage"));
 
 function App() {
   return (
@@ -33,6 +38,7 @@ function App() {
       <AuthProvider>
         <RealtimeProvider>
           <PayoutNotification />
+          <RewardValidatedNotification />
           <main>
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -53,6 +59,12 @@ function App() {
                     <CoinsPage />
                   </ProtectedRoute>
                 }
+              />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/rewards" element={<RewardsPage />} />
+              <Route
+                path="/tickets/verify/:code"
+                element={<TicketVerifyPage />}
               />
               <Route
                 path="/admin/login"
@@ -110,6 +122,14 @@ function App() {
                   element={
                     <Suspense fallback={<PageSkeleton />}>
                       <AdminUsersPage />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="rewards"
+                  element={
+                    <Suspense fallback={<PageSkeleton />}>
+                      <AdminRewardsPage />
                     </Suspense>
                   }
                 />

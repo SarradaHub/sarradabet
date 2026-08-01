@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { defineBddConfig, cucumberReporter } from "playwright-bdd";
 
 const repoRoot = "..";
+const skipManagedServers = process.env.E2E_SKIP_WEBSERVER === "true";
 
 const testDir = defineBddConfig({
   features: "features/**/*.feature",
@@ -20,6 +21,7 @@ const chromeUse = {
 
 export default defineConfig({
   testDir,
+  globalSetup: "./global-setup.ts",
   timeout: 60_000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -43,7 +45,7 @@ export default defineConfig({
         { name: "firefox", use: { ...devices["Desktop Firefox"] } },
         { name: "webkit", use: { ...devices["Desktop Safari"] } },
       ],
-  webServer: process.env.CI
+  webServer: skipManagedServers
     ? undefined
     : [
         {
