@@ -5,24 +5,164 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   coverage:
-    permissions:
-      contents: write
-      pull-requests: write
-    uses: SarradaHub/platform/.github/workflows/coverage-badge.yaml@main
-    with:
-      node-version: '20'
-      working-directory: .
-      install-command: npm ci
-      test-command: npm run test:api:coverage && npm run test:web:coverage
-      prisma-generate: true
-      prisma-working-directory: apps/api
-      prepare-db-command: |
-        git clone --depth 1 https://github.com/SarradaHub/platform.git ../platform || true
-        npm run build:design-system && cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
-      postgres-db: sarradabet_test
-      db-url: postgresql://postgres:postgres@localhost:5432/sarradabet_test
-      coverage-paths: |
-        apps/api/coverage
-        apps/web/coverage
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: sarradabet_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: apps/api
+        run: npx prisma generate
+
+      - name: Prepare database
+        run: |
+          git clone --depth 1 https://github.com/SarradaHub/platform.git ../platform || true
+          npm run build:design-system && cd apps/api && npm run prisma:migrate:deploy && npm run db:seed:simple
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
+
+      - name: Run tests with coverage
+        run: npm run test:api:coverage && npm run test:web:coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarradabet_test
+          NODE_ENV: test
+
+      - name: Generate coverage badge
+        run: |
+          mkdir -p badges
+
+          COVERAGE_FILES=$(find . -path "*/coverage/lcov.info" -o -path "*/coverage/coverage-final.json" | head -1)
+
+          if [ -z "$COVERAGE_FILES" ]; then
+            echo "No coverage files found"
+            exit 0
+          fi
+
+          if echo "$COVERAGE_FILES" | grep -q "lcov.info"; then
+            TOTAL=$(grep -o '^LF:[0-9]*' "$COVERAGE_FILES" | head -1 | cut -d: -f2)
+            HIT=$(grep -o '^LH:[0-9]*' "$COVERAGE_FILES" | head -1 | cut -d: -f2)
+            if [ -n "$TOTAL" ] && [ -n "$HIT" ] && [ "$TOTAL" -gt 0 ]; then
+              PERCENTAGE=$((HIT * 100 / TOTAL))
+            else
+              PERCENTAGE=0
+            fi
+          elif echo "$COVERAGE_FILES" | grep -q "coverage-final.json"; then
+            PERCENTAGE=$(node -e "
+              const fs = require('fs');
+              try {
+                const coverage = JSON.parse(fs.readFileSync('$COVERAGE_FILES', 'utf8'));
+                let total = 0;
+                let covered = 0;
+                Object.values(coverage).forEach(file => {
+                  if (file.s) {
+                    Object.values(file.s).forEach(line => {
+                      total++;
+                      if (line > 0) covered++;
+                    });
+                  }
+                });
+                console.log(total > 0 ? Math.round((covered / total) * 100) : 0);
+              } catch (error) {
+                console.log(0);
+              }
+            ")
+          else
+            PERCENTAGE=0
+          fi
+
+          COLOR="red"
+          if [ "$PERCENTAGE" -ge 90 ]; then
+            COLOR="brightgreen"
+          elif [ "$PERCENTAGE" -ge 80 ]; then
+            COLOR="green"
+          elif [ "$PERCENTAGE" -ge 70 ]; then
+            COLOR="yellowgreen"
+          elif [ "$PERCENTAGE" -ge 60 ]; then
+            COLOR="yellow"
+          elif [ "$PERCENTAGE" -ge 50 ]; then
+            COLOR="orange"
+          fi
+
+          cat > badges/coverage.svg << EOF
+          <svg xmlns="http://www.w3.org/2000/svg" width="104" height="20" role="img" aria-label="coverage: ${PERCENTAGE}%">
+            <title>coverage: ${PERCENTAGE}%</title>
+            <linearGradient id="s" x2="0" y2="100%">
+              <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+              <stop offset="1" stop-opacity=".1"/>
+            </linearGradient>
+            <clipPath id="r"><rect width="104" height="20" rx="3" fill="#fff"/></clipPath>
+            <g clip-path="url(#r)">
+              <rect width="67" height="20" fill="#555"/>
+              <rect x="67" width="37" height="20" fill="${COLOR}"/>
+              <rect width="104" height="20" fill="url(#s)"/>
+            </g>
+            <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
+              <text aria-hidden="true" x="345" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="570">coverage</text>
+              <text x="345" y="140" transform="scale(.1)" fill="#fff" textLength="570">coverage</text>
+              <text aria-hidden="true" x="845" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="270">${PERCENTAGE}%</text>
+              <text x="845" y="140" transform="scale(.1)" fill="#fff" textLength="270">${PERCENTAGE}%</text>
+            </g>
+          </svg>
+          EOF
+
+          echo "Coverage: ${PERCENTAGE}%"
+
+      - name: Create coverage badge pull request
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Update coverage badge [skip ci]
+          title: Update coverage badge
+          body: Automated coverage badge update.
+          branch: automation/coverage-badge
+          delete-branch: true
+          add-paths: |
+            badges/
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            apps/api/coverage
+            apps/web/coverage
+          retention-days: 30
+
+      - name: Upload coverage badges
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-badges
+          path: badges/
+          retention-days: 30
