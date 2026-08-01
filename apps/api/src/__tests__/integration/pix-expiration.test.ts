@@ -54,7 +54,6 @@ describe("Pix expiration", () => {
       const user = await createTestUser(prisma, {
         username: "pixuser",
         email: "pixuser@example.com",
-        phone: "5511999998888",
       });
 
       const coinPackage = await prisma.coinPackage.create({

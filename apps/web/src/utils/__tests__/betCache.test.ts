@@ -32,6 +32,7 @@ describe("betCache", () => {
       betId: 10,
       oddId: 101,
       totalVotes: 3,
+      totalStake: 300,
       odds: [
         { id: 101, totalVotes: 2, value: 1.5 },
         { id: 102, totalVotes: 1, value: 3 },

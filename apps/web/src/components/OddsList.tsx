@@ -9,6 +9,9 @@ interface OddsListProps {
   betTitle: string;
   categoryTitle?: string;
   betStatus: BetStatus;
+  startTime?: string | Date | null;
+  closesAt?: string | Date | null;
+  totalStake?: number;
 }
 
 function OddCell({
@@ -71,6 +74,9 @@ const OddsList = ({
   betTitle,
   categoryTitle,
   betStatus,
+  startTime,
+  closesAt,
+  totalStake,
 }: OddsListProps) => {
   const { addSelection, isSelected } = useVoteSlip();
   const [pressedId, setPressedId] = useState<number | null>(null);
@@ -90,6 +96,11 @@ const OddsList = ({
       betTitle,
       categoryTitle,
       betStatus,
+      startTime,
+      closesAt,
+      totalStakeOnBet:
+        totalStake ?? odds.reduce((sum, item) => sum + item.totalStake, 0),
+      stakeOnOdd: odd.totalStake,
     });
   };
 

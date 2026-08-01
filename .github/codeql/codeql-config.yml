@@ -1,0 +1,9 @@
+name: sarradabet-codeql-config
+
+queries:
+  - uses: security-and-quality
+  - uses: ./extensions/csrf-csrf
+
+query-filters:
+  - exclude:
+      id: js/missing-token-validation

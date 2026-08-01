@@ -28,7 +28,7 @@ export async function enqueuePayoutJobs(
     return winningVotes;
   }
 
-  await getPayoutResolveBetQueue().add({ betId, winningOddId });
+  await getPayoutResolveBetQueue().add("resolve-bet", { betId, winningOddId });
   const winningVotes = await prisma.vote.count({
     where: { oddId: winningOddId, status: VoteStatus.pending },
   });
@@ -57,7 +57,7 @@ export async function processPayoutResolveBetJob(data: {
 
   const queue = getPayoutVoteQueue();
   await Promise.all(
-    winningVotes.map((vote) => queue.add({ voteId: vote.id })),
+    winningVotes.map((vote) => queue.add("payout-vote", { voteId: vote.id })),
   );
 }
 

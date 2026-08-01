@@ -1,11 +1,14 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+
+type CreateBetOptions = {
+  title: string;
+  description: string;
+  category: string;
+  odds: string[];
+};
 
 export class AdminBetsPage {
-  readonly statusFilter: Locator;
-
-  constructor(private readonly page: Page) {
-    this.statusFilter = page.getByLabel("Status");
-  }
+  constructor(private readonly page: Page) {}
 
   async goto(): Promise<void> {
     const betsResponse = this.page.waitForResponse(
@@ -22,50 +25,39 @@ export class AdminBetsPage {
     ).toBeVisible({ timeout: 15_000 });
   }
 
-  async expectBetVisible(title: string): Promise<void> {
-    await expect(this.page.getByText(title)).toBeVisible({ timeout: 15_000 });
+  private betRow(title: string) {
+    return this.page.getByRole("row").filter({ hasText: title });
   }
 
-  async expectBetNotVisible(title: string): Promise<void> {
-    await expect(this.page.getByText(title)).not.toBeVisible({ timeout: 10_000 });
+  async filterByStatus(statusLabel: string): Promise<void> {
+    await this.page.locator("#status-filter").selectOption({ label: statusLabel });
   }
 
-  async filterByStatus(label: string): Promise<void> {
-    await this.statusFilter.selectOption({ label });
-  }
-
-  async openCreateModal(): Promise<void> {
+  async createBet(options: CreateBetOptions): Promise<void> {
     await this.page.getByRole("button", { name: "Nova Aposta" }).click();
     await expect(
-      this.page.getByRole("dialog").getByRole("heading", { name: "Criar mercado" }),
+      this.page.getByRole("heading", { name: "Criar mercado" }),
     ).toBeVisible();
-  }
 
-  async createBet(data: {
-    title: string;
-    description: string;
-    category: string;
-    odds: string[];
-  }): Promise<void> {
-    await this.openCreateModal();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByLabel("Título").fill(data.title);
-    await dialog.getByLabel("Descrição").fill(data.description);
-    await dialog.getByLabel("Categoria").selectOption({ label: data.category });
+    await this.page.getByLabel("Título").fill(options.title);
+    await this.page.getByLabel("Descrição").fill(options.description);
+    await this.page.locator("#category").selectOption({ label: options.category });
 
-    const oddInputs = dialog.getByPlaceholder(/Opção \d+/);
-    for (let index = 0; index < data.odds.length; index++) {
-      await oddInputs.nth(index).fill(data.odds[index] ?? "");
+    for (let i = 0; i < options.odds.length; i++) {
+      if (i >= 2) {
+        await this.page.getByRole("button", { name: "Adicionar" }).click();
+      }
+      await this.page.getByPlaceholder(`Opção ${i + 1}`).fill(options.odds[i]);
     }
 
-    await dialog.getByRole("button", { name: "Criar mercado" }).click();
-    await expect(this.page.getByText(data.title)).toBeVisible({
+    await this.page.getByRole("button", { name: "Criar mercado" }).click();
+    await expect(this.page.getByText(options.title)).toBeVisible({
       timeout: 15_000,
     });
   }
 
   async closeBet(title: string): Promise<void> {
-    const row = this.page.getByRole("row").filter({ hasText: title });
+    const row = this.betRow(title);
     await row.getByRole("button", { name: `Fechar ${title}` }).click();
     await this.page
       .getByRole("dialog", { name: "Fechar aposta" })
@@ -75,16 +67,18 @@ export class AdminBetsPage {
   }
 
   async resolveBet(title: string, winningOdd: string): Promise<void> {
-    const row = this.page.getByRole("row").filter({ hasText: title });
+    const row = this.betRow(title);
     await row.getByRole("button", { name: `Resolver ${title}` }).click();
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: winningOdd }).click();
-    await dialog.getByRole("button", { name: "Resolver" }).click();
+    await this.page
+      .getByRole("button")
+      .filter({ has: this.page.getByText(winningOdd, { exact: true }) })
+      .click();
+    await this.page.getByRole("button", { name: "Resolver" }).click();
     await expect(row.getByText("Resolvida")).toBeVisible({ timeout: 10_000 });
   }
 
   async deleteBet(title: string): Promise<void> {
-    const row = this.page.getByRole("row").filter({ hasText: title });
+    const row = this.betRow(title);
     await row.getByRole("button", { name: `Excluir ${title}` }).click();
     await this.page
       .getByRole("dialog", { name: "Excluir aposta" })
@@ -93,10 +87,11 @@ export class AdminBetsPage {
     await expect(row).not.toBeVisible({ timeout: 10_000 });
   }
 
-  async expectBetCountAtLeast(count: number): Promise<void> {
-    const rows = this.page.locator("tbody tr").filter({
-      hasNotText: "Nenhuma aposta encontrada",
-    });
-    await expect(rows).toHaveCount(count, { timeout: 15_000 });
+  async expectBetVisible(title: string): Promise<void> {
+    await expect(this.betRow(title)).toBeVisible({ timeout: 15_000 });
+  }
+
+  async expectBetNotVisible(title: string): Promise<void> {
+    await expect(this.betRow(title)).not.toBeVisible({ timeout: 10_000 });
   }
 }

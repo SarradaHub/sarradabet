@@ -119,9 +119,9 @@ describe("Reward Routes", () => {
         .set(authHeader(adminToken))
         .expect(200);
 
-      expect(validateResponse.body.data).toMatchObject({
-        valid: true,
+      expect(validateResponse.body).toMatchObject({
         message: "Ticket validado com sucesso",
+        data: { valid: true },
       });
 
       await request(app)

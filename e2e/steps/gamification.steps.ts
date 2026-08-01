@@ -6,7 +6,3 @@ Then("devo ver o título {string}", async ({ page }, title: string) => {
     page.getByRole("heading", { name: title, exact: true }),
   ).toBeVisible({ timeout: 10_000 });
 });
-
-Then("devo ver o texto {string}", async ({ page }, text: string) => {
-  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
-});

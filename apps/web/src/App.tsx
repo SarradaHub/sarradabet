@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import UserDashboardPage from "./pages/UserDashboardPage";
 import CoinsPage from "./pages/CoinsPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import RewardsPage from "./pages/RewardsPage";
@@ -49,6 +50,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <UserDashboardPage />
                   </ProtectedRoute>
                 }
               />
