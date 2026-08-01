@@ -7,6 +7,7 @@ import {
 } from "@prisma/client/runtime/library";
 import { logger } from "../../utils/logger";
 import { AppError, NotFoundError } from "../errors/AppError";
+import { invalidCsrfTokenError } from "./CsrfMiddleware";
 
 export const errorHandler = (
   error: Error,
@@ -41,7 +42,10 @@ export const errorHandler = (
     query: req.query,
   });
 
-  if (error instanceof AppError) {
+  if (error === invalidCsrfTokenError) {
+    statusCode = 403;
+    message = "Invalid CSRF token";
+  } else if (error instanceof AppError) {
     statusCode = error.statusCode;
     message = error.message;
     errors = error.context

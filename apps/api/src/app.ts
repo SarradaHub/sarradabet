@@ -12,7 +12,7 @@ import {
   sanitizeRequest,
   corsOptions,
 } from "./core/middleware/SecurityMiddleware";
-import { csrfProtection } from "./core/middleware/CsrfMiddleware";
+import { doubleCsrfProtection } from "./core/middleware/CsrfMiddleware";
 import { cacheHeaders } from "./core/middleware/cacheHeaders";
 import router from "./routes";
 import webhookRoutes from "./routes/webhook.routes";
@@ -44,7 +44,7 @@ app.use(
 );
 
 app.use(cookieParser());
-app.use(csrfProtection);
+app.use(doubleCsrfProtection);
 
 app.use("/api/v1/webhooks", webhookRoutes);
 

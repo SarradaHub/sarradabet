@@ -221,3 +221,13 @@ Invalid `prisma.userStats.findUnique()` invocation in
   11   async findByUserId(userId: number): Promise<UserStats | null> {
 → 12     return prisma.userStats.findUnique(
 The table `public.user_stats` does not exist in the current database.
+2026-08-01 13:50:22 [[31merror[39m] ForbiddenError: invalid csrf token
+    at doubleCsrf (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/csrf-csrf/dist/index.cjs:63:64)
+    at Object.<anonymous> (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/CsrfMiddleware.ts:49:15)
+    at Runtime._execModule (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/jest-runtime/build/index.js:1268:24)
+    at Runtime._loadModule (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/jest-runtime/build/index.js:944:12)
+    at Runtime.requireModule (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/jest-runtime/build/index.js:832:12)
+    at Runtime.requireModuleOrMock (/home/lmafra/projects/SarradaHub/sarradabet/node_modules/jest-runtime/build/index.js:964:21)
+    at /home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/__tests__/CsrfMiddleware.test.ts:70:27
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Object.<anonymous> (/home/lmafra/projects/SarradaHub/sarradabet/apps/api/src/core/middleware/__tests__/CsrfMiddleware.test.ts:70:27)

@@ -63,7 +63,7 @@ const {
   skipCsrfProtection: shouldSkipCsrfProtection,
 });
 
-export { generateCsrfToken, invalidCsrfTokenError };
+export { generateCsrfToken, invalidCsrfTokenError, doubleCsrfProtection };
 
 export const csrfProtection = (
   req: Request,

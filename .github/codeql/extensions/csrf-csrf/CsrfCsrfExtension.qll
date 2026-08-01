@@ -21,4 +21,13 @@ DataFlow::SourceNode csrfCsrfMiddlewareCreation() {
     ) and
     result = prop
   )
+  or
+  exists(DataFlow::FunctionNode fn |
+    fn.getFunction().getName() = "csrfProtection" and
+    exists(DataFlow::CallNode delegateCall |
+      delegateCall.getCalleeName() = "doubleCsrfProtection" and
+      delegateCall.getEnclosingFunction() = fn.getFunction()
+    ) and
+    result = fn
+  )
 }
