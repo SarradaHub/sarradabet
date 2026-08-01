@@ -1,17 +1,17 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { formatOddValue } from "../../utils/odds";
 import { X } from "lucide-react";
-import { voteService } from "../../services/VoteService";
 import { useVoteSlip } from "../../context/VoteSlipContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useCoinBalance } from "../../hooks/useCoinBalance";
 import { Button } from "../ui/Button";
 import { sportsbookFieldClass } from "../ui/SportsbookModal";
-import { patchBetsFromVote } from "../../utils/betCache";
 import BetReturnExplainer from "./BetReturnExplainer";
 import { getApiErrorMessage } from "../../utils/apiError";
 import { canAcceptWagers } from "../../utils/betSchedule";
+import { submitVoteWithOptimism } from "../../utils/optimisticVote";
+import { formatPartialVoteMessage } from "../../utils/voteSlipSubmit";
 
 interface VoteSlipProps {
   variant?: "rail" | "sheet";
@@ -21,11 +21,17 @@ interface VoteSlipProps {
 const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
   const { selections, removeSelection, clearSelections, count } = useVoteSlip();
   const { isAuthenticated } = useAuth();
-  const { balance, loading: balanceLoading } = useCoinBalance();
+  const { balance, loading: balanceLoading, refetch, setBalance } =
+    useCoinBalance();
+  const location = useLocation();
   const [stakes, setStakes] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const loginPath = `/login?redirect=${encodeURIComponent(
+    `${location.pathname}${location.search}`,
+  )}`;
 
   const getStake = (oddId: number) => {
     const value = stakes[oddId];
@@ -74,28 +80,68 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
         return;
       }
 
-      for (const selection of votableSelections) {
+      const selectionsToSubmit = votableSelections.filter(
+        (selection) => getStake(selection.oddId) > 0,
+      );
+
+      if (selectionsToSubmit.length === 0) {
+        setError("Informe um valor de aposta válido para cada seleção.");
+        return;
+      }
+
+      if (
+        selectionsToSubmit.length !== votableSelections.length ||
+        votableSelections.some((selection) => getStake(selection.oddId) <= 0)
+      ) {
+        setError("Informe um valor de aposta válido para cada seleção.");
+        return;
+      }
+
+      const totalToSubmit = selectionsToSubmit.length;
+      let succeededCount = 0;
+
+      for (const selection of selectionsToSubmit) {
         const amount = getStake(selection.oddId);
-        if (amount <= 0) {
-          setError("Informe um valor de aposta válido para cada seleção.");
+
+        try {
+          await submitVoteWithOptimism({
+            oddId: selection.oddId,
+            amount,
+            betId: selection.betId,
+            onBalanceAdjust: (delta) => {
+              setBalance((current) => (current ?? 0) + delta);
+            },
+          });
+
+          succeededCount += 1;
+          removeSelection(selection.oddId);
+          setStakes((current) => {
+            const next = { ...current };
+            delete next[selection.oddId];
+            return next;
+          });
+        } catch (err) {
+          await refetch();
+          window.dispatchEvent(new CustomEvent("bet:staked"));
+
+          const partialMessage = formatPartialVoteMessage(
+            succeededCount,
+            totalToSubmit,
+          );
+          const failureMessage = getApiErrorMessage(
+            err,
+            "Não foi possível registrar seus votos. Tente novamente.",
+          );
+
+          setError(
+            partialMessage
+              ? `${partialMessage} ${failureMessage}`
+              : failureMessage,
+          );
           return;
         }
-
-        const response = await voteService.create({
-          oddId: selection.oddId,
-          amount,
-        });
-        if (response.success && response.data) {
-          const { betId, odds, totalVotes, totalStake } = response.data;
-          patchBetsFromVote({
-            betId,
-            oddId: selection.oddId,
-            odds,
-            totalVotes,
-            totalStake,
-          });
-        }
       }
+
       clearSelections();
       setStakes({});
       setSuccess(true);
@@ -256,7 +302,7 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
       <div className="shrink-0 p-3 border-t sb-border space-y-2">
         {!isAuthenticated && count > 0 && (
           <p className="text-xs text-warning-400">
-            <Link to="/login" className="underline hover:text-warning-300">
+            <Link to={loginPath} className="underline hover:text-warning-300">
               Faça login
             </Link>{" "}
             para apostar com moedas.

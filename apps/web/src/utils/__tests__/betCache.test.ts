@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { queryCache } from "../../core/hooks/useQueryCache";
-import { patchBetsFromVote } from "../betCache";
+import {
+  optimisticPatchFromVote,
+  patchBetsFromVote,
+  restoreBetsCache,
+  snapshotBetsCache,
+} from "../betCache";
 
 describe("betCache", () => {
   beforeEach(() => {
@@ -57,5 +62,53 @@ describe("betCache", () => {
     });
     expect(cached?.data[0].odds[1].value).toBe(3);
     expect(cached?.data[1].totalVotes).toBe(0);
+  });
+
+  it("applies optimistic vote patch and restores snapshot on rollback", () => {
+    queryCache.set("bets-{}", {
+      data: [
+        {
+          id: 10,
+          title: "Match",
+          totalVotes: 2,
+          totalStake: 15,
+          odds: [
+            { id: 101, title: "Home", value: 2, totalVotes: 1, totalStake: 10 },
+            { id: 102, title: "Away", value: 2, totalVotes: 1, totalStake: 5 },
+          ],
+        },
+      ],
+    });
+
+    const snapshot = snapshotBetsCache();
+
+    optimisticPatchFromVote({ betId: 10, oddId: 101, amount: 25 });
+
+    const patched = queryCache.getRaw<{
+      data: Array<{
+        totalVotes: number;
+        totalStake: number;
+        odds: Array<{ id: number; totalVotes: number; totalStake: number }>;
+      }>;
+    }>("bets-{}");
+
+    expect(patched?.data[0].totalVotes).toBe(3);
+    expect(patched?.data[0].totalStake).toBe(40);
+    expect(patched?.data[0].odds[0].totalVotes).toBe(2);
+    expect(patched?.data[0].odds[0].totalStake).toBe(35);
+
+    restoreBetsCache(snapshot);
+
+    const restored = queryCache.getRaw<{
+      data: Array<{
+        totalVotes: number;
+        totalStake: number;
+        odds: Array<{ id: number; totalVotes: number; totalStake: number }>;
+      }>;
+    }>("bets-{}");
+
+    expect(restored?.data[0].totalVotes).toBe(2);
+    expect(restored?.data[0].totalStake).toBe(15);
+    expect(restored?.data[0].odds[0].totalStake).toBe(10);
   });
 });

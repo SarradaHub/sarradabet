@@ -1,6 +1,6 @@
 # Feature 03 — Bet Closure and Payout
 
-**Status:** Done (parimutuel payout model; Feature 04 stats hook deferred)
+**Status:** Done (parimutuel payout model; stats hook wired in payout worker and `BetService.resolveBet`)
 
 ## Prompt summary
 
@@ -12,22 +12,19 @@ Add match/bet status fields (`scheduled`, `live`, `finished`) and/or closing dat
 
 | Capability | Path / detail |
 |------------|---------------|
-| Bet status enum | `open`, `closed`, `resolved` — no `scheduled`/`live`/`finished` |
-| Manual close | `BetService.closeBet()` — [`BetService.ts`](../../apps/api/src/modules/bet/services/BetService.ts) |
-| Manual resolve | `BetService.resolveBet(id, winningOddId)` — marks odds `won`/`lost`, sets `resolvedAt` |
-| Anonymous votes | `Vote` model — no `userId`, no stake amount |
-| Odd values | `Float` on `Odd.value` |
-| Realtime | `bet:updated` on resolve — [`realtime.ts`](../../packages/types/src/realtime.ts) |
-| Admin UI | [`ResolveBetModal.tsx`](../../apps/web/src/components/admin/ResolveBetModal.tsx) |
+| Bet status enum | `scheduled`, `open`, `closed`, `resolved` — [`schema.prisma`](../../apps/api/prisma/schema.prisma) |
+| Schedule fields | `startTime`, `closesAt`, `resolvedAt` on `Bet` |
+| Auto status transitions | Bull job — [`bet-status.worker.ts`](../../apps/api/src/jobs/bet-status.worker.ts) |
+| Authenticated coin-staked votes | `Vote.userId`, `Vote.amount`; debit `BET_COST` — [`vote.service.ts`](../../apps/api/src/services/vote.service.ts) |
+| Manual close / resolve | [`BetService.ts`](../../apps/api/src/modules/bet/services/BetService.ts) |
+| Parimutuel payout queue | [`payout.worker.ts`](../../apps/api/src/jobs/payout.worker.ts) — credits `WIN`, emits `bet:resolved` |
+| User stats on resolve | `UserStatsService.recordWin` / `recordLoss` from payout worker and resolve |
+| Realtime | `bet:updated`, `bet:resolved` — [`realtime.ts`](../../packages/types/src/realtime.ts) |
+| Admin + sportsbook UI | [`ResolveBetModal.tsx`](../../apps/web/src/components/admin/ResolveBetModal.tsx), [`VoteSlip.tsx`](../../apps/web/src/components/VoteSlip.tsx) |
 
-### What is missing
+### Remaining gaps
 
-- No `startTime` / `closesAt` on `Bet`
-- No automatic status transitions (cron/Bull)
-- Votes are not tied to users or coin stakes
-- `resolveBet` does **not** credit coins or create `CoinTransaction`
-- No `WIN` source in `CoinTransactionSource`
-- No payout queue for batch processing
+- `Odd.value` still `Float` (not `Decimal`) — edge-case float precision
 
 ## Recommended technical references
 
@@ -236,11 +233,12 @@ Funcionalidade: Encerramento de Apostas e Pagamento de Prêmios
   # --- CASOS DE BORDA ---
 
   @edge
-  Cenário: Pagamento lida com odds decimais corretamente sem erros de ponto flutuante
-    Dado que um voto vencedor com aposta "10" e odd "1.33" existe
+  Cenário: Pagamento parimutuel arredonda para baixo com pote assimétrico
+    Dado que um voto vencedor com aposta "10" existe em um pote total de "401" moedas
+    E "101" moedas estão na odd vencedora
     Quando o worker de pagamento processa o job
-    Então o valor creditado é exatamente "13.3" (usando precisão Decimal)
-    E o registro da transação armazena "13.3"
+    Então o valor creditado é "29" (Math.floor do payout parimutuel com taxa de 25%)
+    E o registro da transação armazena "29"
 
   @edge
   Cenário: Administrador não pode resolver uma aposta já resolvida
@@ -263,7 +261,7 @@ Funcionalidade: Encerramento de Apostas e Pagamento de Prêmios
 - [x] Require auth on `POST /votes`
 - [x] Debit coins via `CoinService.debitCoins` with `BET_COST` before creating vote
 - [x] Validate bet is `open` (or `scheduled` with future `startTime`)
-- [ ] Refund on bet cancellation (optional `REFUND` source) — deferred
+- [x] Refund on bet cancellation — admin delete on `open`/`scheduled` bets refunds pending votes via `REFUND`
 
 ### Phase 3 — Scheduled jobs
 
@@ -278,7 +276,7 @@ Funcionalidade: Encerramento de Apostas e Pagamento de Prêmios
 - [x] Payout worker: parimutuel `calculatePayout(stake, pool, winningPool)` with 25% takeout (`BET_TAKEOUT_RATE`)
 - [x] Use `$transaction` per user payout; handle partial failures with retry
 - [x] Emit `bet:resolved` per user or batch notification
-- [ ] Hook into user stats update (Feature 04) — deferred
+- [x] Hook into user stats update (Feature 04) — `UserStatsService` in payout worker and `resolveBet`
 
 ### Phase 5 — Frontend
 

@@ -1,5 +1,6 @@
 import { createHmac } from "crypto";
 import {
+  isOrderWebhook,
   isPaymentWebhook,
   resolveWebhookDataId,
   validateMercadoPagoWebhookSignature,
@@ -81,5 +82,12 @@ describe("MercadoPago webhook validator", () => {
     expect(isPaymentWebhook({ type: "payment" })).toBe(true);
     expect(isPaymentWebhook({ action: "payment.updated" })).toBe(true);
     expect(isPaymentWebhook({ type: "merchant_order" })).toBe(false);
+  });
+
+  it("identifies order webhooks", () => {
+    expect(isOrderWebhook({ type: "order" })).toBe(true);
+    expect(isOrderWebhook({ type: "merchant_order" })).toBe(true);
+    expect(isOrderWebhook({ action: "order.processed" })).toBe(true);
+    expect(isOrderWebhook({ type: "payment" })).toBe(false);
   });
 });

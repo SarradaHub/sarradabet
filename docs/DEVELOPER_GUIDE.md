@@ -854,7 +854,7 @@ See [Performance Guide](./PERFORMANCE.md) for caching TTLs, Supabase pooling, So
 Implemented in this codebase:
 
 - **Backend:** `node-cache`, gzip compression, slim bet list DTOs, DB indexes on `categoryId` and `(status, created_at)`
-- **Frontend:** Socket.io push (no polling), optimistic votes, lazy admin routes, skeleton loaders, query cache with stale-while-revalidate
+- **Frontend:** Socket.io push (no polling), optimistic votes in VoteSlip, lazy admin routes, skeleton loaders, query cache with stale-while-revalidate
 
 ## Common Issues and Solutions
 

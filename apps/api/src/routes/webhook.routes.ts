@@ -1,12 +1,17 @@
 import { NextFunction, Request, Response, Router } from "express";
 import express from "express";
 import {
+  isOrderWebhook,
   isPaymentWebhook,
   resolveWebhookDataId,
   validateMercadoPagoWebhookSignature,
   type MercadoPagoWebhookPayload,
 } from "../core/middleware/mercadopagoWebhook";
-import { pixPaymentService } from "../modules/payment/payment.container";
+import {
+  instorePaymentService,
+  pixPaymentService,
+} from "../modules/payment/payment.container";
+import { resolveInstoreWebhookExternalId } from "../modules/payment/services/InstorePaymentService";
 import { logger } from "../utils/logger";
 
 const router = Router();
@@ -28,14 +33,20 @@ router.post(
         body,
       );
 
-      if (!isPaymentWebhook(body)) {
+      if (!isPaymentWebhook(body) && !isOrderWebhook(body)) {
         res.status(200).json({ received: true, ignored: true });
         return;
       }
 
-      const paymentId = resolveWebhookDataId(req.query, body);
-      if (paymentId) {
-        await pixPaymentService.confirmPayment(paymentId);
+      const resourceId = resolveWebhookDataId(req.query, body);
+      if (resourceId) {
+        if (isOrderWebhook(body)) {
+          await instorePaymentService.confirmOrder(
+            resolveInstoreWebhookExternalId(resourceId),
+          );
+        } else {
+          await pixPaymentService.confirmPayment(resourceId);
+        }
       }
 
       res.status(200).json({ received: true });

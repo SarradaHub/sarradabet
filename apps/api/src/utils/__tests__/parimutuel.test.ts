@@ -39,4 +39,8 @@ describe("parimutuel", () => {
   it("targets implied probability total with takeout", () => {
     expect(targetImpliedProbabilityTotal()).toBeCloseTo(1.333, 3);
   });
+
+  it("floors payout for asymmetric parimutuel pools", () => {
+    expect(calculatePayout(10, 401, 101)).toBe(29);
+  });
 });

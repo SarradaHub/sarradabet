@@ -5,6 +5,8 @@ export type PixPaymentStatus =
   | "CANCELLED"
   | "FAILED";
 
+export type PixPaymentChannel = "online" | "instore";
+
 export interface CreatePixPurchaseRequest {
   coinPackageId: number;
 }
@@ -21,6 +23,7 @@ export interface CreatePixPurchaseResponse {
   amountCents: number;
   packageName: string;
   status: PixPaymentStatus;
+  channel?: PixPaymentChannel;
   isMock?: boolean;
 }
 
@@ -36,5 +39,6 @@ export interface PixPaymentStatusResponse {
   qrCode: string | null;
   qrCodeBase64: string | null;
   copyPaste: string | null;
+  channel?: PixPaymentChannel;
   isMock?: boolean;
 }

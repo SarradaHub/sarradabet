@@ -63,6 +63,34 @@ class PaymentService {
     );
     return response.data.data;
   }
+
+  async createInstorePurchase(
+    coinPackageId: number,
+  ): Promise<CreatePixPurchaseResponse> {
+    const response = await this.api.post<ApiResponse<CreatePixPurchaseResponse>>(
+      "/instore",
+      { coinPackageId },
+    );
+    return response.data.data;
+  }
+
+  async getInstorePaymentStatus(
+    paymentId: number,
+  ): Promise<PixPaymentStatusResponse> {
+    const response = await this.api.get<ApiResponse<PixPaymentStatusResponse>>(
+      `/instore/${paymentId}`,
+    );
+    return response.data.data;
+  }
+
+  async simulateMockInstoreApproval(
+    paymentId: number,
+  ): Promise<PixPaymentStatusResponse> {
+    const response = await this.api.post<ApiResponse<PixPaymentStatusResponse>>(
+      `/instore/${paymentId}/simulate-approval`,
+    );
+    return response.data.data;
+  }
 }
 
 class AuthService {

@@ -12,6 +12,7 @@ import { useSocketEvent } from "../core/hooks/useSocket";
 import { useCoinBalance } from "../hooks/useCoinBalance";
 import { useCoinTransactions } from "../hooks/useCoinTransactions";
 import { usePixPurchase } from "../hooks/usePixPurchase";
+import { useInstorePurchase } from "../hooks/useInstorePurchase";
 import { coinService, paymentService } from "../services/CoinPaymentService";
 import { getApiErrorMessage } from "../utils/apiError";
 
@@ -51,6 +52,9 @@ const STATUS_LABELS: Record<PixPaymentStatus, string> = {
 };
 
 const CoinsPage: React.FC = () => {
+  const [paymentChannel, setPaymentChannel] = useState<"online" | "instore">(
+    "online",
+  );
   const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
   const [packagesError, setPackagesError] = useState<string | null>(null);
@@ -75,8 +79,36 @@ const CoinsPage: React.FC = () => {
     void refetchTransactions();
   };
 
-  const { purchase, status, loading, error, startPurchase, resetPurchase, setStatus } =
-    usePixPurchase(onPaymentApproved);
+  const {
+    purchase: onlinePurchase,
+    status: onlineStatus,
+    loading: onlineLoading,
+    error: onlineError,
+    startPurchase: startOnlinePurchase,
+    resetPurchase: resetOnlinePurchase,
+    setStatus: setOnlineStatus,
+  } = usePixPurchase(onPaymentApproved);
+
+  const {
+    purchase: instorePurchase,
+    status: instoreStatus,
+    loading: instoreLoading,
+    error: instoreError,
+    startPurchase: startInstorePurchase,
+    resetPurchase: resetInstorePurchase,
+    setStatus: setInstoreStatus,
+  } = useInstorePurchase(onPaymentApproved);
+
+  const purchase = paymentChannel === "online" ? onlinePurchase : instorePurchase;
+  const status = paymentChannel === "online" ? onlineStatus : instoreStatus;
+  const loading = paymentChannel === "online" ? onlineLoading : instoreLoading;
+  const error = paymentChannel === "online" ? onlineError : instoreError;
+  const startPurchase =
+    paymentChannel === "online" ? startOnlinePurchase : startInstorePurchase;
+  const resetPurchase =
+    paymentChannel === "online" ? resetOnlinePurchase : resetInstorePurchase;
+  const setStatus =
+    paymentChannel === "online" ? setOnlineStatus : setInstoreStatus;
 
   useSocketEvent<{ newBalance: number }>(
     RealtimeEvents.PAYMENT_CONFIRMED,
@@ -137,7 +169,10 @@ const CoinsPage: React.FC = () => {
     try {
       setSimulating(true);
       setSimulateError(null);
-      const approved = await paymentService.simulateMockApproval(status.id);
+      const approved =
+        paymentChannel === "online"
+          ? await paymentService.simulateMockApproval(status.id)
+          : await paymentService.simulateMockInstoreApproval(status.id);
       setStatus(approved);
       setSuccessMessage("Pagamento confirmado! Suas moedas foram creditadas.");
       void refetch();
@@ -183,6 +218,39 @@ const CoinsPage: React.FC = () => {
           <ErrorMessage error={error || packagesError || simulateError || "Erro"} />
         )}
 
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={paymentChannel === "online" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => {
+              resetOnlinePurchase();
+              resetInstorePurchase();
+              setPaymentChannel("online");
+              setSuccessMessage(null);
+            }}
+          >
+            Pix online
+          </Button>
+          <Button
+            variant={paymentChannel === "instore" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => {
+              resetOnlinePurchase();
+              resetInstorePurchase();
+              setPaymentChannel("instore");
+              setSuccessMessage(null);
+            }}
+          >
+            QR presencial
+          </Button>
+        </div>
+
+        {paymentChannel === "instore" && (
+          <p className="text-sm text-sportsbook-muted">
+            Pagamento presencial via QR dinâmico do Mercado Pago (caixa/loja).
+          </p>
+        )}
+
         {packagesLoading ? (
           <LoadingSpinner text="Carregando pacotes..." />
         ) : packages.length === 0 ? (
@@ -208,7 +276,9 @@ const CoinsPage: React.FC = () => {
                   disabled={loading}
                   onClick={() => void startPurchase(coinPackage.id)}
                 >
-                  Comprar com Pix
+                  {paymentChannel === "online"
+                    ? "Comprar com Pix"
+                    : "Comprar com QR presencial"}
                 </Button>
               </div>
             ))}
@@ -220,7 +290,9 @@ const CoinsPage: React.FC = () => {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="font-display text-xl font-bold">
-                  Pagamento Pix
+                  {paymentChannel === "online"
+                    ? "Pagamento Pix"
+                    : "Pagamento QR presencial"}
                 </h2>
                 <p
                   className={`text-sm ${

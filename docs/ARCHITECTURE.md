@@ -112,7 +112,7 @@ Event contracts: [`packages/types/src/realtime.ts`](../packages/types/src/realti
 | Response size | `bet.mapper.ts` | Slim list DTOs vs full detail |
 | Wire format | `compression` middleware | gzip above ~1KB |
 | Frontend | `useQuery` + `queryCache` | Stale-while-revalidate; `RealtimeProvider` patches cache and notifies `useQuery` subscribers |
-| Frontend UI | `OddsList` optimistic vote | Rollback on error; socket reconciles counts |
+| Frontend UI | `VoteSlip` optimistic vote | Rollback on error; socket reconciles counts |
 
 ## Shared Types
 
@@ -312,12 +312,13 @@ apps/web/src/
 ├── hooks/                       # Domain-specific hooks
 │   ├── useBets.ts              # staleTime 2m
 │   ├── useCategories.ts        # staleTime 5m
-│   └── useVotes.ts
+│   └── useCategories.ts        # staleTime 5m
 ├── components/
 │   ├── ui/                     # Button, Modal, BetRowSkeleton, etc.
 │   ├── CreateBetModal.tsx
 │   ├── BetCard.tsx             # Socket vote updates + category from list
-│   └── OddsList.tsx            # Optimistic vote + rollback
+│   ├── OddsList.tsx            # Selection UI + odd flash animation
+│   └── sportsbook/VoteSlip.tsx # Optimistic vote + rollback
 ├── pages/
 │   ├── HomePage.tsx
 │   ├── AdminLogin.tsx          # lazy-loaded
@@ -424,7 +425,7 @@ export const useCategories = () => {
 };
 ```
 
-**RealtimeProvider** listens for Socket.io events and patches `queryCache` keys prefixed with `bets-`. Patches notify `useQuery` subscribers so list data re-renders without refetch. **VoteSlip** applies the same patch helper from REST vote responses for immediate self-vote updates. **OddsList** flashes changed odds; **BetCard** also reconciles via `vote:created` for fast local updates.
+**RealtimeProvider** listens for Socket.io events and patches `queryCache` keys prefixed with `bets-`. Patches notify `useQuery` subscribers so list data re-renders without refetch. **VoteSlip** applies optimistic cache and balance updates before the vote API returns, rolls back on error, and reconciles with the server response on success. **OddsList** flashes changed odds for selection feedback; **BetCard** also reconciles via `vote:created` for fast local updates.
 
 #### 3. Component Composition
 

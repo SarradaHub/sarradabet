@@ -244,7 +244,7 @@ Follow these steps to run SarradaBet locally.
 Once the dev servers are running:
 
 1. **Browse bets** — open http://localhost:3002 to view active markets and odds.
-2. **Vote** — click an odd to cast a vote; the UI updates optimistically, then reconciles via Socket.io.
+2. **Vote** — add odds to the slip, confirm stakes; **VoteSlip** updates optimistically, then reconciles via REST and Socket.io.
 3. **Admin** — authenticated admin routes (JWT via `JWT_SECRET`) manage bet creation, closure, and resolution.
 
 For REST endpoints and Socket.io event payloads, see [docs/API.md](docs/API.md).

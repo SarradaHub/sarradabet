@@ -96,3 +96,11 @@ function tsAndHashPresent(signatureHeader: string): boolean {
 export function isPaymentWebhook(body: MercadoPagoWebhookPayload): boolean {
   return body.type === "payment" || body.action?.startsWith("payment.") === true;
 }
+
+export function isOrderWebhook(body: MercadoPagoWebhookPayload): boolean {
+  return (
+    body.type === "order" ||
+    body.type === "merchant_order" ||
+    body.action?.startsWith("order.") === true
+  );
+}

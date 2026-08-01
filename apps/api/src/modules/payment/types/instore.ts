@@ -90,3 +90,43 @@ export interface MercadoPagoPosSearchResponse {
   };
   results?: MercadoPagoPosResponse[];
 }
+
+export interface CreateMercadoPagoOrderInput {
+  type: "qr";
+  external_reference: string;
+  description: string;
+  total_amount: string;
+  transactions: {
+    payments: Array<{
+      amount: string;
+      payment_method: {
+        id: string;
+        type: string;
+      };
+    }>;
+  };
+  config: {
+    qr: {
+      external_pos_id: string;
+      mode: "dynamic";
+    };
+  };
+}
+
+export interface MercadoPagoOrderPayment {
+  id?: string;
+  status?: string;
+  amount?: string;
+}
+
+export interface MercadoPagoOrderResponse {
+  id: string;
+  status: string;
+  external_reference?: string;
+  type_response?: {
+    qr_data?: string;
+  };
+  transactions?: {
+    payments?: MercadoPagoOrderPayment[];
+  };
+}

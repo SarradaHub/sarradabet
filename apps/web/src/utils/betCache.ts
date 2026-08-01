@@ -28,6 +28,58 @@ export function patchBetsCache(
   });
 }
 
+export type BetsCacheSnapshot = Map<string, unknown>;
+
+export function snapshotBetsCache(): BetsCacheSnapshot {
+  const snapshot: BetsCacheSnapshot = new Map();
+
+  for (const key of queryCache.keysMatching("bets-")) {
+    const data = queryCache.getRaw(key);
+    if (data !== null) {
+      snapshot.set(key, structuredClone(data));
+    }
+  }
+
+  return snapshot;
+}
+
+export function restoreBetsCache(snapshot: BetsCacheSnapshot): void {
+  for (const [key, data] of snapshot) {
+    queryCache.set(key, data);
+  }
+}
+
+export function optimisticPatchFromVote(params: {
+  betId: number;
+  oddId: number;
+  amount: number;
+}): void {
+  patchBetsCache((bets) =>
+    bets.map((bet) => {
+      if (bet.id !== params.betId) {
+        return bet;
+      }
+
+      return {
+        ...bet,
+        totalVotes: bet.totalVotes + 1,
+        totalStake: (bet.totalStake ?? 0) + params.amount,
+        odds: bet.odds.map((odd) => {
+          if (odd.id !== params.oddId) {
+            return odd;
+          }
+
+          return {
+            ...odd,
+            totalVotes: odd.totalVotes + 1,
+            totalStake: (odd.totalStake ?? 0) + params.amount,
+          };
+        }),
+      };
+    }),
+  );
+}
+
 export function patchBetsFromVote(payload: VoteCreatedPayload): void {
   patchBetsCache((bets) =>
     bets.map((bet) => {

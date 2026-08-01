@@ -20,9 +20,11 @@ import { validateManualOddsValues } from "../../../utils/parimutuel";
 import { enqueuePayoutJobs } from "../../../jobs/payout.worker";
 import { resolveStatusAfterScheduleChange } from "../../../utils/betSchedule";
 import { houseTreasuryService } from "../../coin/services/HouseTreasuryService";
+import { CoinService } from "../../coin/services/CoinService";
+import { CoinRepository } from "../../coin/repositories/CoinRepository";
 import { UserStatsService } from "../../stats/services/UserStatsService";
 import { prisma } from "../../../config/db";
-import { VoteStatus } from "@prisma/client";
+import { CoinTransactionSource, VoteStatus } from "@prisma/client";
 
 export class BetService extends BaseService<
   BetWithOdds,
@@ -131,17 +133,56 @@ export class BetService extends BaseService<
   async delete(id: number): Promise<void> {
     this.validateId(id);
 
-    // Check if bet exists
-    await this.handleNotFound(id, "Bet");
-
-    // Business rule: Cannot delete bets that have votes
     const bet = await this.findById(id);
+
     if (bet.totalVotes > 0) {
-      throw new ConflictError("Cannot delete bet that has votes");
+      if (bet.status === "closed" || bet.status === "resolved") {
+        throw new ConflictError("Cannot delete bet that has votes");
+      }
+
+      await this.refundPendingVotes(id);
     }
 
     await this.betRepository.delete({ id });
     cacheService.invalidateBet(id);
+  }
+
+  private async refundPendingVotes(betId: number): Promise<void> {
+    const coinRepository = new CoinRepository();
+    const coinService = new CoinService(coinRepository);
+
+    const pendingVotes = await prisma.vote.findMany({
+      where: {
+        odd: { betId },
+        status: VoteStatus.pending,
+      },
+      select: { id: true, userId: true, amount: true },
+    });
+
+    if (pendingVotes.length === 0) {
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const vote of pendingVotes) {
+        await coinService.creditCoins(
+          vote.userId,
+          vote.amount,
+          {
+            source: CoinTransactionSource.REFUND,
+            referenceId: vote.id,
+            externalId: `refund:vote:${vote.id}`,
+            description: `Reembolso aposta ${betId} cancelada`,
+          },
+          tx,
+        );
+
+        await tx.vote.update({
+          where: { id: vote.id },
+          data: { status: VoteStatus.lost },
+        });
+      }
+    });
   }
 
   async findByStatus(status: string): Promise<BetWithOdds[]> {

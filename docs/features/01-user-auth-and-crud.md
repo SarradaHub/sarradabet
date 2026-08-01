@@ -43,7 +43,7 @@ From [`apps/api/src/config/env.ts`](../../apps/api/src/config/env.ts):
 - Shared API client: [`apps/web/src/services/apiClient.ts`](../../apps/web/src/services/apiClient.ts)
 - Registration: [`apps/web/src/pages/RegisterPage.tsx`](../../apps/web/src/pages/RegisterPage.tsx)
 - Login: [`apps/web/src/pages/LoginPage.tsx`](../../apps/web/src/pages/LoginPage.tsx)
-- Profile (read-only): [`apps/web/src/pages/ProfilePage.tsx`](../../apps/web/src/pages/ProfilePage.tsx)
+- Profile (editable on `/profile`): [`apps/web/src/pages/ProfilePage.tsx`](../../apps/web/src/pages/ProfilePage.tsx)
 - Admin login: [`apps/web/src/pages/AdminLogin.tsx`](../../apps/web/src/pages/AdminLogin.tsx)
 - Admin users: [`apps/web/src/pages/AdminUsersPage.tsx`](../../apps/web/src/pages/AdminUsersPage.tsx)
 - Protected routes: [`apps/web/src/components/ProtectedRoute.tsx`](../../apps/web/src/components/ProtectedRoute.tsx)
@@ -114,7 +114,7 @@ sequenceDiagram
 - [x] Wire auth state to sportsbook header (login/logout, profile link)
 - [x] Redirect unauthenticated users from protected pages
 - [x] Share auth hook between admin and end-user flows where appropriate
-- [x] Read-only profile page
+- [x] Editable profile page (`EditUserModal` on `/profile`)
 - [x] Admin users list/delete UI
 
 ## Acceptance criteria

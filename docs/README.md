@@ -17,12 +17,13 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 ### Feature Implementation Guides
 
 - **[Feature Guides Index](./features/README.md)** - Status matrix, dependency graph, and links to all specs
-- **[01 — User Auth & CRUD](./features/01-user-auth-and-crud.md)** - Partial
-- **[02 — Coins & Pix Payments](./features/02-coins-and-pix-payments.md)** - Partial
-- **[03 — Bet Closure & Payout](./features/03-bet-closure-and-payout.md)** - Planned
-- **[04 — Gamification & Rewards](./features/04-gamification-and-rewards.md)** - Planned
-- **[05 — Dashboard & Analytics](./features/05-dashboard-and-analytics.md)** - Planned
+- **[01 — User Auth & CRUD](./features/01-user-auth-and-crud.md)** - Complete
+- **[02 — Coins & Pix Payments](./features/02-coins-and-pix-payments.md)** - Complete (online Pix)
+- **[03 — Bet Closure & Payout](./features/03-bet-closure-and-payout.md)** - Done
+- **[04 — Gamification & Rewards](./features/04-gamification-and-rewards.md)** - Done
+- **[05 — Dashboard & Analytics](./features/05-dashboard-and-analytics.md)** - Done
 - **[06 — Mobile App & Advanced Admin](./features/06-mobile-app-and-admin-panel.md)** - Planned
+- **[07 — Mercado Pago QR Instore](./features/07-mercadopago-qr-instore.md)** - Complete
 
 ### Deployment & Operations
 
@@ -66,7 +67,8 @@ docs/
     ├── 03-bet-closure-and-payout.md
     ├── 04-gamification-and-rewards.md
     ├── 05-dashboard-and-analytics.md
-    └── 06-mobile-app-and-admin-panel.md
+    ├── 06-mobile-app-and-admin-panel.md
+    └── 07-mercadopago-qr-instore.md
 ```
 
 ## 🎯 Key Features Covered
@@ -84,7 +86,7 @@ docs/
 
 - **React 19** with custom hooks (`useQuery`, `useMutation`, `useSocket`)
 - **`RealtimeProvider`** — patches query cache on Socket.io events
-- **Optimistic voting** in `OddsList` with rollback on error
+- **Optimistic voting** in `VoteSlip` with rollback on error
 - **Lazy-loaded admin routes** and skeleton loaders
 - **Shared types** via `@sarradabet/types`
 
@@ -160,13 +162,14 @@ docs/
 ### Features
 
 - [x] **Real-time Updates** — Socket.io (see [ARCHITECTURE.md](./ARCHITECTURE.md) and [API.md](./API.md))
-- [x] **User Authentication** — partial; see [Feature 01](./features/01-user-auth-and-crud.md)
-- [x] **Payment Integration (Pix)** — partial; Mercado Pago; see [Feature 02](./features/02-coins-and-pix-payments.md)
-- [x] **Admin Dashboard (basic)** — bets, categories, coin packages; see [Feature 06](./features/06-mobile-app-and-admin-panel.md)
-- [ ] **Bet Closure & Payout** — see [Feature 03](./features/03-bet-closure-and-payout.md)
-- [ ] **Gamification & Rewards** — see [Feature 04](./features/04-gamification-and-rewards.md)
-- [ ] **Advanced Analytics** — see [Feature 05](./features/05-dashboard-and-analytics.md)
-- [ ] **Mobile App** — see [Feature 06](./features/06-mobile-app-and-admin-panel.md)
+- [x] **User Authentication** — see [Feature 01](./features/01-user-auth-and-crud.md)
+- [x] **Payment Integration (Pix)** — online Pix via Mercado Pago; see [Feature 02](./features/02-coins-and-pix-payments.md)
+- [x] **Bet Closure & Payout** — see [Feature 03](./features/03-bet-closure-and-payout.md)
+- [x] **Gamification & Rewards** — see [Feature 04](./features/04-gamification-and-rewards.md)
+- [x] **Dashboard & Analytics** — see [Feature 05](./features/05-dashboard-and-analytics.md)
+- [x] **Admin Panel (web SPA)** — bets, categories, coin packages, users, rewards, analytics
+- [x] **Mercado Pago QR Instore** — see [Feature 07](./features/07-mercadopago-qr-instore.md)
+- [ ] **Mobile App & Advanced Admin** — see [Feature 06](./features/06-mobile-app-and-admin-panel.md)
 
 ---
 

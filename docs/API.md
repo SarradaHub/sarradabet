@@ -1035,6 +1035,52 @@ Returns the current status for the authenticated user's payment. Pending payment
 
 **Status values:** `PENDING`, `APPROVED`, `EXPIRED`, `CANCELLED`, `FAILED`.
 
+### Create Instore QR Purchase
+
+**POST** `/payments/instore`
+
+Creates a Mercado Pago in-store order for a coin package. Requires user JWT. Response shape matches online Pix with `channel: "instore"` and QR payload for display at a physical POS.
+
+**Request:**
+
+```json
+{
+  "coinPackageId": 1
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "paymentId": 2,
+    "externalId": "instore_mock_abc123",
+    "qrCode": "00020126...",
+    "qrCodeBase64": "iVBORw0KGgo...",
+    "copyPaste": "00020126...",
+    "expiresAt": "2024-01-01T00:30:00.000Z",
+    "coinsAmount": 100,
+    "amountCents": 500,
+    "packageName": "Pacote Básico",
+    "status": "PENDING",
+    "channel": "instore",
+    "isMock": true
+  }
+}
+```
+
+Poll status or listen for Socket.io `payment:confirmed` after the customer pays at the POS.
+
+### Get Instore Payment Status
+
+**GET** `/payments/instore/:id`
+
+Returns the current status for the authenticated user's instore payment. Pending payments past `expiresAt` are marked `EXPIRED` on read. Response includes `channel: "instore"`.
+
+When `MERCADOPAGO_MOCK_PIX=true`, mock approval is available at **POST** `/payments/instore/:id/simulate-approval` (same auth as online Pix mock simulate).
+
 ## Webhook Endpoints
 
 ### Mercado Pago Payment Notification
@@ -1061,6 +1107,8 @@ Called by Mercado Pago when a payment status changes. Uses raw JSON body (not th
 ```
 
 On valid payment notifications, the API verifies status with Mercado Pago, credits coins idempotently (`externalId`: `mp_payment_{id}`), updates `PixPayment` to `APPROVED`, and emits `payment:confirmed` to the user's Socket.io room.
+
+**Instore orders:** webhooks with topic `order` or `merchant_order` are routed to instore order confirmation (`externalId` prefixed with `instore_`). Approved orders credit coins the same way as online Pix.
 
 Invalid signatures return **401**. Non-payment webhook types return `{ "received": true, "ignored": true }`.
 

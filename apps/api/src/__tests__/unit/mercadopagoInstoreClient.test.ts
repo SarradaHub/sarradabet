@@ -193,6 +193,41 @@ describe("MercadoPagoInstoreClient", () => {
     expect(result?.uuid).toBe("abc123");
   });
 
+  it("creates an instore order via POST /v1/orders", async () => {
+    httpPost.mockResolvedValue({
+      data: {
+        id: "ORD123",
+        status: "created",
+        type_response: {
+          qr_data:
+            "00020126580014BR.GOV.BCB.PIX0136instore52040000530398654010.005802BR5925SarradaBet6009SAO PAULO62070503***6304ABCD",
+        },
+      },
+    });
+
+    const result = await client.createOrder({
+      amountCents: 1000,
+      description: "Pacote teste",
+      externalReference: "ref-123",
+      idempotencyKey: "idem-123",
+      posExternalId: "SARRADABET001POS001",
+    });
+
+    expect(httpPost).toHaveBeenCalledWith(
+      "/v1/orders",
+      expect.objectContaining({
+        type: "qr",
+        external_reference: "ref-123",
+        total_amount: "10.00",
+      }),
+      expect.objectContaining({
+        headers: { "X-Idempotency-Key": "idem-123" },
+      }),
+    );
+    expect(result.id).toBe("ORD123");
+    expect(result.qrCode).toContain("000201");
+  });
+
   it("extracts POS uuid from static QR image URL", () => {
     expect(
       extractPosUuidFromQrImage(

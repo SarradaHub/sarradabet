@@ -3,13 +3,20 @@ import { MercadoPagoConfig, User } from "mercadopago";
 import { config } from "../../../config/env";
 import { ExternalServiceError } from "../../../core/errors/AppError";
 import type {
+  CreateMercadoPagoOrderInput,
   CreateMercadoPagoPosInput,
   CreateMercadoPagoStoreInput,
+  MercadoPagoOrderResponse,
   MercadoPagoPosResponse,
   MercadoPagoPosSearchResponse,
   MercadoPagoStoreResponse,
   MercadoPagoStoreSearchResponse,
 } from "../types/instore";
+import type {
+  CreateInstoreOrderInput,
+  InstoreOrderGateway,
+  InstoreOrderGatewayResult,
+} from "./InstoreOrderGateway";
 
 interface MercadoPagoApiError {
   message?: string;
@@ -27,7 +34,7 @@ export function extractPosUuidFromQrImage(qrImageUrl?: string): string | undefin
   return match?.[1];
 }
 
-export class MercadoPagoInstoreClient {
+export class MercadoPagoInstoreClient implements InstoreOrderGateway {
   private httpClient: AxiosInstance | null = null;
   private userApi: User | null = null;
 
@@ -205,6 +212,72 @@ export class MercadoPagoInstoreClient {
     } catch (error) {
       throw this.toExternalServiceError(error, "create pos");
     }
+  }
+
+  async createOrder(
+    input: CreateInstoreOrderInput,
+  ): Promise<InstoreOrderGatewayResult> {
+    const payload: CreateMercadoPagoOrderInput = {
+      type: "qr",
+      external_reference: input.externalReference,
+      description: input.description,
+      total_amount: (input.amountCents / 100).toFixed(2),
+      transactions: {
+        payments: [
+          {
+            amount: (input.amountCents / 100).toFixed(2),
+            payment_method: {
+              id: "pix",
+              type: "bank_transfer",
+            },
+          },
+        ],
+      },
+      config: {
+        qr: {
+          external_pos_id: input.posExternalId,
+          mode: "dynamic",
+        },
+      },
+    };
+
+    try {
+      const response = await this.getHttpClient().post<MercadoPagoOrderResponse>(
+        "/v1/orders",
+        payload,
+        {
+          headers: {
+            "X-Idempotency-Key": input.idempotencyKey,
+          },
+        },
+      );
+
+      return this.normalizeOrder(response.data);
+    } catch (error) {
+      throw this.toExternalServiceError(error, "create instore order");
+    }
+  }
+
+  async getOrder(orderId: string): Promise<InstoreOrderGatewayResult> {
+    try {
+      const response = await this.getHttpClient().get<MercadoPagoOrderResponse>(
+        `/v1/orders/${orderId}`,
+      );
+
+      return this.normalizeOrder(response.data);
+    } catch (error) {
+      throw this.toExternalServiceError(error, "get instore order");
+    }
+  }
+
+  private normalizeOrder(order: MercadoPagoOrderResponse): InstoreOrderGatewayResult {
+    const qrCode = order.type_response?.qr_data ?? null;
+    return {
+      id: order.id,
+      status: order.status,
+      qrCode,
+      qrCodeBase64: null,
+    };
   }
 
   private normalizeStore(

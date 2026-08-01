@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { Input } from "@sarradahub/design-system";
 import BrandLogo from "../components/BrandLogo";
 import { Button } from "../components/ui/Button";
@@ -10,6 +10,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
@@ -27,13 +28,18 @@ const RegisterPage: React.FC = () => {
 
     try {
       await register(formData);
-      navigate("/coins");
+      const redirect = searchParams.get("redirect") || "/coins";
+      navigate(redirect, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao cadastrar");
     } finally {
       setLoading(false);
     }
   };
+
+  const loginTo = searchParams.toString()
+    ? `/login?${searchParams.toString()}`
+    : "/login";
 
   return (
     <div className="min-h-screen bg-sportsbook-bg flex items-center justify-center px-4">
@@ -111,7 +117,7 @@ const RegisterPage: React.FC = () => {
 
         <p className="text-center text-sm text-sportsbook-muted">
           Já tem conta?{" "}
-          <Link to="/login" className="text-yellow-400 hover:underline">
+          <Link to={loginTo} className="text-yellow-400 hover:underline">
             Entrar
           </Link>
         </p>

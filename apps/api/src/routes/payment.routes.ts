@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { PaymentController } from "../modules/payment/controllers/PaymentController";
-import { pixPaymentService } from "../modules/payment/payment.container";
+import {
+  instorePaymentService,
+  pixPaymentService,
+} from "../modules/payment/payment.container";
 import { authenticateUser } from "../core/middleware/AuthMiddleware";
 import { config } from "../config/env";
 import {
@@ -12,7 +15,10 @@ import {
   ParamIdSchema,
 } from "../core/validation/ValidationSchemas";
 
-const paymentController = new PaymentController(pixPaymentService);
+const paymentController = new PaymentController(
+  pixPaymentService,
+  instorePaymentService,
+);
 
 const router = Router();
 
@@ -29,12 +35,31 @@ router.get(
   paymentController.getPixPaymentStatus,
 );
 
+router.post(
+  "/instore",
+  authenticateUser,
+  validateBody(CreatePixPurchaseSchema),
+  paymentController.createInstorePurchase,
+);
+router.get(
+  "/instore/:id",
+  authenticateUser,
+  validateParams(ParamIdSchema),
+  paymentController.getInstorePaymentStatus,
+);
+
 if (config.MERCADOPAGO_MOCK_PIX) {
   router.post(
     "/pix/:id/simulate-approval",
     authenticateUser,
     validateParams(ParamIdSchema),
     paymentController.simulateMockApproval,
+  );
+  router.post(
+    "/instore/:id/simulate-approval",
+    authenticateUser,
+    validateParams(ParamIdSchema),
+    paymentController.simulateMockInstoreApproval,
   );
 }
 

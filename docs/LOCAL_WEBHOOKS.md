@@ -136,7 +136,7 @@ Keep secrets in `.env.local` (gitignored).
 **Suas integrações → sarradabet → Webhooks**
 
 - Test URL: `https://<ngrok>/api/v1/webhooks/mercadopago`
-- Topics: `payment` (required for Pix coin purchases)
+- Topics: `payment` (online Pix coin purchases), `order` or `merchant_order` (QR presencial / instore orders)
 
 ## Related docs
 

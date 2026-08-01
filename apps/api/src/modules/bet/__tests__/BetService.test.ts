@@ -158,8 +158,13 @@ describe("BetService", () => {
       expect(mockRepository.delete).toHaveBeenCalledWith({ id: 1 });
     });
 
-    it("should throw ConflictError when bet has votes", async () => {
-      const mockBet: any = { id: 1, title: "Test Bet", totalVotes: 5 };
+    it("should throw ConflictError when closed bet has votes", async () => {
+      const mockBet: any = {
+        id: 1,
+        title: "Test Bet",
+        status: BetStatus.closed,
+        totalVotes: 5,
+      };
       mockRepository.findUnique.mockResolvedValue(mockBet as any);
 
       await expect(betService.delete(1)).rejects.toThrow(ConflictError);
