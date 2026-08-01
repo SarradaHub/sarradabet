@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { BetStatus } from "@sarradabet/types";
+import { canAcceptWagers } from "../utils/betSchedule";
 
 export interface SlipSelection {
   oddId: number;
@@ -16,6 +17,10 @@ export interface SlipSelection {
   betTitle: string;
   categoryTitle?: string;
   betStatus: BetStatus;
+  startTime?: string | Date | null;
+  closesAt?: string | Date | null;
+  totalStakeOnBet: number;
+  stakeOnOdd: number;
 }
 
 interface VoteSlipContextValue {
@@ -33,18 +38,20 @@ export function VoteSlipProvider({ children }: { children: ReactNode }) {
   const [selections, setSelections] = useState<SlipSelection[]>([]);
 
   const addSelection = useCallback((selection: SlipSelection) => {
-    if (selection.betStatus !== "open") return;
+    if (
+      !canAcceptWagers({
+        status: selection.betStatus,
+        startTime: selection.startTime,
+        closesAt: selection.closesAt,
+      })
+    ) {
+      return;
+    }
 
     setSelections((current) => {
       const exists = current.some((item) => item.oddId === selection.oddId);
       if (exists) {
         return current.filter((item) => item.oddId !== selection.oddId);
-      }
-      const sameBet = current.find((item) => item.betId === selection.betId);
-      if (sameBet) {
-        return current.map((item) =>
-          item.betId === selection.betId ? selection : item,
-        );
       }
       return [...current, selection];
     });

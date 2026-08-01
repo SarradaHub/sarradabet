@@ -79,6 +79,9 @@ export const loginTestUser = async (
 export const cleanupAuthData = async (prisma: PrismaClient): Promise<void> => {
   await prisma.pixPayment.deleteMany();
   await prisma.coinTransaction.deleteMany();
+  await prisma.vote.deleteMany();
+  await prisma.odd.deleteMany();
+  await prisma.bet.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.userAction.deleteMany();
   await prisma.user.deleteMany();

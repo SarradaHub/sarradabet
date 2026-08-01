@@ -33,7 +33,7 @@ export function formatOddValue(value: number | undefined | null): string {
   return rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-const TARGET_IMPLIED_TOTAL = 1;
+export const TARGET_IMPLIED_TOTAL = 1;
 const MIN_ODD_VALUE = 1.01;
 const MAX_ODD_VALUE = 1000;
 

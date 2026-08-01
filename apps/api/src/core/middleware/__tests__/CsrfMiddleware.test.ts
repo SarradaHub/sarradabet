@@ -61,4 +61,39 @@ describe("CsrfMiddleware", () => {
       jest.resetModules();
     }
   });
+
+  it("accepts CSRF-protected requests outside /api/v1/auth when refresh cookie uses path /", async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+
+    jest.resetModules();
+    const { config } = await import("../../../config/env");
+    const enabledModule = await import("../CsrfMiddleware");
+    const app = express();
+    app.use(cookieParser());
+    app.use(enabledModule.csrfProtection);
+    app.get("/api/v1/auth/csrf-token", enabledModule.csrfTokenHandler);
+    app.post("/api/v1/votes", (_req, res) => {
+      res.status(201).json({ success: true });
+    });
+
+    try {
+      const agent = request.agent(app);
+      agent.set("Cookie", `${config.REFRESH_TOKEN_COOKIE_NAME}=logged-in-session`);
+
+      const csrfResponse = await agent
+        .get("/api/v1/auth/csrf-token")
+        .expect(200);
+      const csrfToken = csrfResponse.body.data.csrfToken as string;
+
+      await agent
+        .post("/api/v1/votes")
+        .set("X-CSRF-Token", csrfToken)
+        .send({ oddId: 1, amount: 10 })
+        .expect(201);
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      jest.resetModules();
+    }
+  });
 });

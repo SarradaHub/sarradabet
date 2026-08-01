@@ -2,15 +2,17 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import type { BetEntity, OddsEntity } from "../../../types/bet.types";
 import { BaseRepository } from "../../../core/base/BaseRepository";
 import { FindManyParams } from "../../../core/interfaces/IRepository";
-import { calculateOddsFromVotes } from "../../../utils/odds";
+import { calculateOddsFromStakes } from "../../../utils/parimutuel";
+import { resolveInitialBetStatus } from "../../../utils/betSchedule";
 import {
   CreateBetInput,
   UpdateBetInput,
 } from "../../../core/validation/ValidationSchemas";
 
 export type BetWithOdds = BetEntity & {
-  odds: (OddsEntity & { totalVotes: number })[];
+  odds: (OddsEntity & { totalVotes: number; totalStake: number })[];
   totalVotes: number;
+  totalStake: number;
   category?: { id: number; title: string };
 };
 
@@ -38,6 +40,9 @@ export class BetRepository extends BaseRepository<
             _count: {
               select: { votes: true },
             },
+            votes: {
+              select: { amount: true },
+            },
           },
         },
         category: {
@@ -50,14 +55,7 @@ export class BetRepository extends BaseRepository<
       },
     });
 
-    return bets.map((b: any) =>
-      this.transformBetWithVotes(
-        b as unknown as BetEntity & {
-          odds: Array<OddsEntity & { _count: { votes: number } }>;
-          category?: { id: number; title: string };
-        },
-      ),
-    );
+    return bets.map((b) => this.transformBetWithVotes(b as never));
   }
 
   async findUnique(where: { id: number }): Promise<BetWithOdds | null> {
@@ -68,6 +66,9 @@ export class BetRepository extends BaseRepository<
           include: {
             _count: {
               select: { votes: true },
+            },
+            votes: {
+              select: { amount: true },
             },
           },
         },
@@ -80,20 +81,13 @@ export class BetRepository extends BaseRepository<
       },
     });
 
-    return bet
-      ? this.transformBetWithVotes(
-          bet as unknown as BetEntity & {
-            odds: Array<OddsEntity & { _count: { votes: number } }>;
-            category?: { id: number; title: string };
-          },
-        )
-      : null;
+    return bet ? this.transformBetWithVotes(bet as never) : null;
   }
 
   async create(data: CreateBetInput): Promise<BetWithOdds> {
-    const initialValues = calculateOddsFromVotes(
-      data.odds.map(() => 0),
-    );
+    const initialValues = calculateOddsFromStakes(data.odds.map(() => 0));
+
+    const status = resolveInitialBetStatus(data.startTime);
 
     return this.executeTransaction(async (tx) => {
       const bet = await tx.bet.create({
@@ -101,6 +95,9 @@ export class BetRepository extends BaseRepository<
           title: data.title,
           description: data.description,
           categoryId: data.categoryId,
+          status,
+          startTime: data.startTime ? new Date(data.startTime) : undefined,
+          closesAt: data.closesAt ? new Date(data.closesAt) : undefined,
           odds: {
             create: data.odds.map((odd, index) => ({
               title: odd.title,
@@ -114,6 +111,9 @@ export class BetRepository extends BaseRepository<
               _count: {
                 select: { votes: true },
               },
+              votes: {
+                select: { amount: true },
+              },
             },
           },
           category: {
@@ -125,12 +125,7 @@ export class BetRepository extends BaseRepository<
         },
       });
 
-      return this.transformBetWithVotes(
-        bet as unknown as BetEntity & {
-          odds: Array<OddsEntity & { _count: { votes: number } }>;
-          category?: { id: number; title: string };
-        },
-      );
+      return this.transformBetWithVotes(bet as never);
     });
   }
 
@@ -167,6 +162,9 @@ export class BetRepository extends BaseRepository<
                 _count: {
                   select: { votes: true },
                 },
+                votes: {
+                  select: { amount: true },
+                },
               },
             },
             category: {
@@ -182,12 +180,7 @@ export class BetRepository extends BaseRepository<
           throw new Error(`Bet with id ${where.id} not found`);
         }
 
-        return this.transformBetWithVotes(
-          updatedBet as unknown as BetEntity & {
-            odds: Array<OddsEntity & { _count: { votes: number } }>;
-            category?: { id: number; title: string };
-          },
-        );
+        return this.transformBetWithVotes(updatedBet as never);
       });
     }
 
@@ -200,6 +193,9 @@ export class BetRepository extends BaseRepository<
             _count: {
               select: { votes: true },
             },
+            votes: {
+              select: { amount: true },
+            },
           },
         },
         category: {
@@ -211,12 +207,7 @@ export class BetRepository extends BaseRepository<
       },
     });
 
-    return this.transformBetWithVotes(
-      updatedBet as unknown as BetEntity & {
-        odds: Array<OddsEntity & { _count: { votes: number } }>;
-        category?: { id: number; title: string };
-      },
-    );
+    return this.transformBetWithVotes(updatedBet as never);
   }
 
   async delete(where: { id: number }): Promise<BetWithOdds> {
@@ -230,6 +221,9 @@ export class BetRepository extends BaseRepository<
               _count: {
                 select: { votes: true },
               },
+              votes: {
+                select: { amount: true },
+              },
             },
           },
           category: {
@@ -241,21 +235,14 @@ export class BetRepository extends BaseRepository<
         },
       });
 
-      // If not found, trigger the same error behavior as Prisma delete
       if (!betBeforeDelete) {
         await tx.bet.delete({ where });
       }
 
-      // Ensure related odds are removed to satisfy FK constraints
       await tx.odd.deleteMany({ where: { betId: where.id } });
       await tx.bet.delete({ where });
 
-      return this.transformBetWithVotes(
-        betBeforeDelete as unknown as BetEntity & {
-          odds: Array<OddsEntity & { _count: { votes: number } }>;
-          category?: { id: number; title: string };
-        },
-      );
+      return this.transformBetWithVotes(betBeforeDelete as never);
     });
   }
 
@@ -294,30 +281,58 @@ export class BetRepository extends BaseRepository<
       updateData.status = data.status;
     }
 
+    if (data.startTime !== undefined) {
+      updateData.startTime = data.startTime ? new Date(data.startTime) : null;
+    }
+
+    if (data.closesAt !== undefined) {
+      updateData.closesAt = data.closesAt ? new Date(data.closesAt) : null;
+    }
+
     return updateData;
   }
 
   private transformBetWithVotes(
     bet: BetEntity & {
-      odds: Array<OddsEntity & { _count: { votes: number } }>;
+      odds: Array<
+        OddsEntity & {
+          _count: { votes: number };
+          votes?: { amount: number }[];
+        }
+      >;
       category?: { id: number; title: string };
     },
   ): BetWithOdds {
-    const totalVotes = bet.odds.reduce(
-      (sum: number, odd: OddsEntity & { _count: { votes: number } }) =>
-        sum + odd._count.votes,
-      0,
+    const odds = bet.odds.map(
+      ({
+        _count,
+        votes,
+        ...odd
+      }: OddsEntity & {
+        _count: { votes: number };
+        votes?: { amount: number }[];
+      }) => ({
+        ...odd,
+        totalVotes: _count.votes,
+        totalStake: (votes ?? []).reduce((sum, vote) => sum + vote.amount, 0),
+      }),
     );
+
+    const stakeAmounts = odds.map((odd) => odd.totalStake);
+    const calculatedValues = calculateOddsFromStakes(stakeAmounts);
+    const oddsWithDisplay = odds.map((odd, index) => ({
+      ...odd,
+      value: calculatedValues[index] ?? odd.value,
+    }));
+
+    const totalVotes = oddsWithDisplay.reduce((sum, odd) => sum + odd.totalVotes, 0);
+    const totalStake = oddsWithDisplay.reduce((sum, odd) => sum + odd.totalStake, 0);
 
     return {
       ...bet,
-      odds: bet.odds.map(
-        ({ _count, ...odd }: OddsEntity & { _count: { votes: number } }) => ({
-          ...odd,
-          totalVotes: _count.votes,
-        }),
-      ),
+      odds: oddsWithDisplay,
       totalVotes,
+      totalStake,
     };
   }
 }

@@ -11,9 +11,17 @@ export class AdminBetsPage {
   constructor(private readonly page: Page) {}
 
   async goto(): Promise<void> {
+    const betsResponse = this.page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/bets") &&
+        response.request().method() === "GET" &&
+        response.ok(),
+      { timeout: 15_000 },
+    );
     await this.page.goto("/admin/bets");
+    await betsResponse;
     await expect(
-      this.page.getByRole("heading", { name: "Apostas" }),
+      this.page.getByRole("button", { name: "Nova Aposta" }),
     ).toBeVisible({ timeout: 15_000 });
   }
 
@@ -43,17 +51,17 @@ export class AdminBetsPage {
     }
 
     await this.page.getByRole("button", { name: "Criar mercado" }).click();
-    await expect(
-      this.page.getByRole("heading", { name: "Criar mercado" }),
-    ).not.toBeVisible({ timeout: 15_000 });
+    await expect(this.page.getByText(options.title)).toBeVisible({
+      timeout: 15_000,
+    });
   }
 
   async closeBet(title: string): Promise<void> {
     const row = this.betRow(title);
     await row.getByRole("button", { name: `Fechar ${title}` }).click();
     await this.page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Fechar" })
+      .getByRole("dialog", { name: "Fechar aposta" })
+      .getByRole("button", { name: "Fechar", exact: true })
       .click();
     await expect(row.getByText("Fechada")).toBeVisible({ timeout: 10_000 });
   }
@@ -73,8 +81,8 @@ export class AdminBetsPage {
     const row = this.betRow(title);
     await row.getByRole("button", { name: `Excluir ${title}` }).click();
     await this.page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Excluir" })
+      .getByRole("dialog", { name: "Excluir aposta" })
+      .getByRole("button", { name: "Excluir", exact: true })
       .click();
     await expect(row).not.toBeVisible({ timeout: 10_000 });
   }

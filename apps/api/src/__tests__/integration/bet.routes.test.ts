@@ -17,10 +17,10 @@ process.env.NODE_ENV = "test";
 import { PrismaClient, UserRole } from "@prisma/client";
 import request from "supertest";
 import { app } from "../../app";
+import { hashPassword } from "../../utils/auth";
 import {
   authHeader,
   checkDatabaseConnection,
-  loginTestUser,
   testIfDbAvailable,
 } from "../helpers/authTestHelper";
 
@@ -48,26 +48,12 @@ describe("Bet Routes Integration Tests", () => {
     });
 
     await prisma.vote.deleteMany();
+    await prisma.coinTransaction.deleteMany();
     await prisma.odd.deleteMany();
     await prisma.bet.deleteMany();
     await prisma.category.deleteMany();
     await prisma.refreshToken.deleteMany();
     await prisma.user.deleteMany();
-
-    const userSession = await loginTestUser(prisma, {
-      username: "betuser",
-      email: "betuser@example.com",
-      phone: "5511999990101",
-    });
-    userAccessToken = userSession.accessToken;
-
-    const adminSession = await loginTestUser(prisma, {
-      username: "betadmin",
-      email: "betadmin@example.com",
-      phone: "5511999990102",
-      role: UserRole.ADMIN,
-    });
-    adminAccessToken = adminSession.accessToken;
 
     const category = await prisma.category.create({
       data: { title: "Test Category" },
@@ -89,6 +75,44 @@ describe("Bet Routes Integration Tests", () => {
       include: { odds: true },
     });
     testBetId = bet.id;
+
+    const user = await prisma.user.create({
+      data: {
+        username: "betcreator",
+        email: "betcreator@example.com",
+        phone: "5511988880001",
+        passwordHash: await hashPassword("password123"),
+        coinBalance: 1000,
+      },
+    });
+
+    const loginResponse = await request(app)
+      .post("/api/v1/auth/login")
+      .send({
+        username: user.username,
+        password: "password123",
+      });
+
+    userAccessToken = loginResponse.body.data.accessToken.token;
+
+    const admin = await prisma.user.create({
+      data: {
+        username: "betadmin",
+        email: "betadmin@example.com",
+        phone: "5511988880002",
+        passwordHash: await hashPassword("password123"),
+        role: UserRole.ADMIN,
+      },
+    });
+
+    const adminLoginResponse = await request(app)
+      .post("/api/v1/auth/login")
+      .send({
+        username: admin.username,
+        password: "password123",
+      });
+
+    adminAccessToken = adminLoginResponse.body.data.accessToken.token;
   });
 
   afterAll(async () => {
@@ -188,6 +212,26 @@ describe("Bet Routes Integration Tests", () => {
   describe("POST /api/v1/bets", () => {
     testIfDbAvailable(
       () => isDatabaseAvailable,
+      "should return 401 when creating bet without auth",
+      async () => {
+        const betData = {
+          title: "Unauthorized Bet",
+          description: "Should fail",
+          categoryId: testCategoryId,
+          odds: [{ title: "Option 1" }, { title: "Option 2" }],
+        };
+
+        const response = await request(app)
+          .post("/api/v1/bets")
+          .send(betData)
+          .expect(401);
+
+        expect(response.body.success).toBe(false);
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
       "should create a new bet with auto-calculated odds",
       async () => {
         const betData = {
@@ -207,8 +251,8 @@ describe("Bet Routes Integration Tests", () => {
         expect(response.body.data.bet).toHaveProperty("id");
         expect(response.body.data.bet.title).toBe(betData.title);
         expect(response.body.data.bet.odds).toHaveLength(2);
-        expect(response.body.data.bet.odds[0].value).toBe(2);
-        expect(response.body.data.bet.odds[1].value).toBe(2);
+        expect(response.body.data.bet.odds[0].value).toBe(1.5);
+        expect(response.body.data.bet.odds[1].value).toBe(1.5);
       },
     );
 
@@ -423,7 +467,7 @@ describe("Bet Routes Integration Tests", () => {
           data: {
             title: "Bet to Resolve",
             categoryId: testCategoryId,
-            status: "open",
+            status: "closed",
             odds: {
               create: [
                 { title: "Winning Option", value: 2.0 },
@@ -457,8 +501,70 @@ describe("Bet Routes Integration Tests", () => {
 
     testIfDbAvailable(
       () => isDatabaseAvailable,
+      "should credit house takeout when resolving a bet with stakes",
+      async () => {
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Takeout Resolve Bet",
+            categoryId: testCategoryId,
+            status: "closed",
+            odds: {
+              create: [
+                { title: "Home", value: 2.0 },
+                { title: "Away", value: 2.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        const bettor = await prisma!.user.findUnique({
+          where: { username: "betcreator" },
+        });
+
+        await prisma!.vote.create({
+          data: {
+            oddId: bet.odds[0].id,
+            userId: bettor!.id,
+            amount: 200,
+          },
+        });
+        await prisma!.vote.create({
+          data: {
+            oddId: bet.odds[1].id,
+            userId: bettor!.id,
+            amount: 200,
+          },
+        });
+
+        await request(app)
+          .patch(`/api/v1/bets/${bet.id}/resolve`)
+          .set(authHeader(adminAccessToken))
+          .send({ winningOddId: bet.odds[0].id })
+          .expect(200);
+
+        const house = await prisma!.user.findUnique({
+          where: { username: "house" },
+        });
+        expect(house?.coinBalance).toBe(100);
+
+        const takeoutTx = await prisma!.coinTransaction.findUnique({
+          where: { externalId: `takeout:bet:${bet.id}` },
+        });
+        expect(takeoutTx?.source).toBe("TAKEOUT");
+        expect(takeoutTx?.amount).toBe(100);
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
       "should return 400 for invalid winning odd",
       async () => {
+        await request(app)
+          .patch(`/api/v1/bets/${testBetId}/close`)
+          .set(authHeader(adminAccessToken))
+          .expect(200);
+
         const response = await request(app)
           .patch(`/api/v1/bets/${testBetId}/resolve`)
           .set(authHeader(adminAccessToken))
@@ -494,7 +600,29 @@ describe("Bet Routes Integration Tests", () => {
           .expect(409);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.message).toContain("already resolved");
+        expect(response.body.message).toContain("Aposta já foi resolvida");
+      },
+    );
+  });
+
+  describe("GET /api/v1/admin/house/summary", () => {
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should return house treasury summary for admin",
+      async () => {
+        const response = await request(app)
+          .get("/api/v1/admin/house/summary")
+          .set(authHeader(adminAccessToken))
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toEqual(
+          expect.objectContaining({
+            balance: expect.any(Number),
+            takeoutRate: 0.25,
+            takeoutPercent: 25,
+          }),
+        );
       },
     );
   });
@@ -502,7 +630,7 @@ describe("Bet Routes Integration Tests", () => {
   describe("POST /api/v1/votes", () => {
     testIfDbAvailable(
       () => isDatabaseAvailable,
-      "should recalculate odds after voting",
+      "should recalculate odds after staking vote",
       async () => {
         const bet = await prisma!.bet.create({
           data: {
@@ -521,36 +649,69 @@ describe("Bet Routes Integration Tests", () => {
         const homeOdd = bet.odds[0];
         const awayOdd = bet.odds[1];
 
+        await prisma!.user.update({
+          where: { username: "betcreator" },
+          data: { coinBalance: 1000 },
+        });
+
         const firstVote = await request(app)
           .post("/api/v1/votes")
-          .send({ oddId: homeOdd.id })
+          .set(authHeader(userAccessToken))
+          .send({ oddId: homeOdd.id, amount: 100 })
           .expect(201);
 
         expect(firstVote.body.success).toBe(true);
         expect(firstVote.body.data.odds).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({ id: homeOdd.id, totalVotes: 1 }),
-            expect.objectContaining({ id: awayOdd.id, totalVotes: 0 }),
+            expect.objectContaining({
+              id: homeOdd.id,
+              totalVotes: 1,
+              totalStake: 100,
+            }),
+            expect.objectContaining({
+              id: awayOdd.id,
+              totalVotes: 0,
+              totalStake: 0,
+            }),
           ]),
         );
 
-        const homeAfterFirst = firstVote.body.data.odds.find(
-          (odd: { id: number }) => odd.id === homeOdd.id,
-        );
-        const awayAfterFirst = firstVote.body.data.odds.find(
-          (odd: { id: number }) => odd.id === awayOdd.id,
-        );
-        expect(homeAfterFirst.value).toBeLessThan(awayAfterFirst.value);
+        const userAfterFirst = await prisma!.user.findUnique({
+          where: { username: "betcreator" },
+        });
+        expect(userAfterFirst?.coinBalance).toBe(900);
+      },
+    );
 
-        const secondVote = await request(app)
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should return 409 when voting on a scheduled bet",
+      async () => {
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Scheduled Vote Bet",
+            categoryId: testCategoryId,
+            status: "scheduled",
+            startTime: new Date(Date.now() + 60 * 60 * 1000),
+            odds: {
+              create: [
+                { title: "Yes", value: 2.0 },
+                { title: "No", value: 2.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        const response = await request(app)
           .post("/api/v1/votes")
-          .send({ oddId: homeOdd.id })
-          .expect(201);
+          .set(authHeader(userAccessToken))
+          .send({ oddId: bet.odds[0].id, amount: 100 })
+          .expect(409);
 
-        const homeAfterSecond = secondVote.body.data.odds.find(
-          (odd: { id: number }) => odd.id === homeOdd.id,
+        expect(response.body.message).toContain(
+          "Aposta ainda não está aberta para votos",
         );
-        expect(homeAfterSecond.value).toBeLessThan(homeAfterFirst.value);
       },
     );
 
@@ -575,10 +736,201 @@ describe("Bet Routes Integration Tests", () => {
 
         const response = await request(app)
           .post("/api/v1/votes")
-          .send({ oddId: bet.odds[0].id })
+          .set(authHeader(userAccessToken))
+          .send({ oddId: bet.odds[0].id, amount: 100 })
           .expect(409);
 
-        expect(response.body.message).toContain("Only open bets accept votes");
+        expect(response.body.message).toContain("Aposta está fechada");
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should require authentication",
+      async () => {
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Auth Vote Bet",
+            categoryId: testCategoryId,
+            odds: {
+              create: [
+                { title: "Yes", value: 2.0 },
+                { title: "No", value: 2.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        await request(app)
+          .post("/api/v1/votes")
+          .send({ oddId: bet.odds[0].id, amount: 100 })
+          .expect(401);
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should return 400 when user has insufficient balance",
+      async () => {
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Insufficient Balance Bet",
+            categoryId: testCategoryId,
+            odds: {
+              create: [
+                { title: "Yes", value: 2.0 },
+                { title: "No", value: 2.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        const response = await request(app)
+          .post("/api/v1/votes")
+          .set(authHeader(userAccessToken))
+          .send({ oddId: bet.odds[0].id, amount: 5000 })
+          .expect(400);
+
+        expect(response.body.message).toContain("Saldo insuficiente");
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should allow multiple tickets on the same odd and multiple outcomes on one bet",
+      async () => {
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Multi Outcome Bet",
+            categoryId: testCategoryId,
+            odds: {
+              create: [
+                { title: "Team A", value: 2.0 },
+                { title: "Team B", value: 2.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        const [teamA, teamB] = bet.odds;
+
+        await request(app)
+          .post("/api/v1/votes")
+          .set(authHeader(userAccessToken))
+          .send({ oddId: teamA.id, amount: 50 })
+          .expect(201);
+
+        await request(app)
+          .post("/api/v1/votes")
+          .set(authHeader(userAccessToken))
+          .send({ oddId: teamA.id, amount: 100 })
+          .expect(201);
+
+        const secondOutcome = await request(app)
+          .post("/api/v1/votes")
+          .set(authHeader(userAccessToken))
+          .send({ oddId: teamB.id, amount: 75 })
+          .expect(201);
+
+        expect(secondOutcome.body.success).toBe(true);
+
+        const bettor = await prisma!.user.findUnique({
+          where: { username: "betcreator" },
+        });
+        const votesOnA = await prisma!.vote.count({
+          where: { userId: bettor!.id, oddId: teamA.id },
+        });
+        const votesOnB = await prisma!.vote.count({
+          where: { userId: bettor!.id, oddId: teamB.id },
+        });
+
+        expect(votesOnA).toBe(2);
+        expect(votesOnB).toBe(1);
+      },
+    );
+  });
+
+  describe("POST /api/v1/jobs/bet-status/run", () => {
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should transition scheduled to open and open to closed",
+      async () => {
+        const past = new Date(Date.now() - 60_000);
+        const future = new Date(Date.now() + 60 * 60_000);
+
+        const scheduledBet = await prisma!.bet.create({
+          data: {
+            title: "Scheduled Job Bet",
+            categoryId: testCategoryId,
+            status: "scheduled",
+            startTime: past,
+            closesAt: future,
+            odds: {
+              create: [
+                { title: "A", value: 2.0 },
+                { title: "B", value: 2.0 },
+              ],
+            },
+          },
+        });
+
+        const closingBet = await prisma!.bet.create({
+          data: {
+            title: "Closing Job Bet",
+            categoryId: testCategoryId,
+            status: "open",
+            startTime: new Date(Date.now() - 120_000),
+            closesAt: past,
+            odds: {
+              create: [
+                { title: "A", value: 2.0 },
+                { title: "B", value: 2.0 },
+              ],
+            },
+          },
+        });
+
+        const futureBet = await prisma!.bet.create({
+          data: {
+            title: "Future Job Bet",
+            categoryId: testCategoryId,
+            status: "scheduled",
+            startTime: future,
+            closesAt: new Date(Date.now() + 120 * 60_000),
+            odds: {
+              create: [
+                { title: "A", value: 2.0 },
+                { title: "B", value: 2.0 },
+              ],
+            },
+          },
+        });
+
+        const response = await request(app)
+          .post("/api/v1/jobs/bet-status/run")
+          .set(authHeader(adminAccessToken))
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.opened).toBeGreaterThanOrEqual(1);
+        expect(response.body.data.closed).toBeGreaterThanOrEqual(1);
+
+        const opened = await prisma!.bet.findUnique({
+          where: { id: scheduledBet.id },
+        });
+        const closed = await prisma!.bet.findUnique({
+          where: { id: closingBet.id },
+        });
+        const stillScheduled = await prisma!.bet.findUnique({
+          where: { id: futureBet.id },
+        });
+
+        expect(opened?.status).toBe("open");
+        expect(closed?.status).toBe("closed");
+        expect(stillScheduled?.status).toBe("scheduled");
       },
     );
   });

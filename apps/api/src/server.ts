@@ -6,6 +6,7 @@ import { prisma } from "./config/db";
 import { initializeConsul } from "./config/consul";
 import { initSocketServer, closeSocketServer } from "./realtime/socket";
 import { pixPaymentService } from "./modules/payment/payment.container";
+import { startJobWorkers, shutdownJobWorkers } from "./jobs";
 
 const EXPIRATION_JOB_INTERVAL_MS = 60_000;
 
@@ -29,6 +30,7 @@ const startServer = async () => {
 
     const httpServer = createServer(app);
     initSocketServer(httpServer);
+    startJobWorkers();
 
     const expirationInterval = setInterval(() => {
       pixPaymentService
@@ -46,6 +48,7 @@ const startServer = async () => {
       logger.info("Shutting down server...");
       clearInterval(expirationInterval);
       closeSocketServer();
+      await shutdownJobWorkers();
       httpServer.close(async () => {
         await prisma.$disconnect();
         logger.info("Server and database connections closed");
