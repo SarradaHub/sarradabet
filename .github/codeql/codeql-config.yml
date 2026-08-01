@@ -7,3 +7,5 @@ queries:
 query-filters:
   - exclude:
       id: js/missing-token-validation
+  - exclude:
+      id: javascript/missing-token-validation
