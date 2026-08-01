@@ -18,6 +18,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   globalSetup: '<rootDir>/src/__tests__/globalSetup.ts',
   forceExit: true,
+  maxWorkers: 1,
   testTimeout: 10000,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

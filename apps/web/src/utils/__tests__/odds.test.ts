@@ -11,6 +11,7 @@ describe("mergeOddFromVoteUpdate", () => {
     title: "Home",
     value: 2.5,
     totalVotes: 3,
+    totalStake: 30,
   };
 
   it("updates value when payload includes it", () => {

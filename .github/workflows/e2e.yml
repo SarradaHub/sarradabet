@@ -99,6 +99,7 @@ jobs:
         working-directory: e2e
         env:
           CI: true
+          E2E_SKIP_WEBSERVER: "true"
           E2E_BASE_URL: http://127.0.0.1:3002
         run: npm run test:smoke
 

@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "npm run build:design-system && turbo run build",
-    "build:design-system": "bash scripts/clone-platform.sh && cd ../platform/design-system && npm ci --legacy-peer-deps && npm run build",
+    "build:design-system": "bash scripts/build-design-system.sh",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
@@ -16,7 +16,8 @@
     "db:seed": "npm run -w apps/api db:seed",
     "db:seed:simple": "npm run -w apps/api db:seed:simple",
     "db:reset": "npm run -w apps/api db:reset",
-    "test": "turbo run test",
+    "test": "turbo run test --filter=!e2e",
+    "test:all": "turbo run test",
     "test:api": "npm run -w apps/api test",
     "test:api:watch": "npm run -w apps/api test:watch",
     "test:api:coverage": "npm run -w apps/api test:coverage",
@@ -48,13 +49,14 @@
     "on-headers": ">=1.1.0",
     "@eslint/plugin-kit": ">=0.3.4",
     "esbuild": ">=0.28.1",
-    "minimatch": "^3.1.5",
-    "test-exclude": {
-      "minimatch": "^3.1.5"
-    },
+    "body-parser": "^1.20.6",
+    "postcss": "^8.5.18",
+    "brace-expansion": "^5.0.8",
+    "minimatch": "^10.2.1",
+    "uuid": "11.1.1",
+    "test-exclude": "^7.0.1",
     "@vitest/coverage-v8": {
-      "test-exclude": "^6.0.0",
-      "minimatch": "^3.1.5"
+      "test-exclude": "^7.0.1"
     }
   }
 }

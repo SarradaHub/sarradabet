@@ -13,7 +13,7 @@ Funcionalidade: Gamificação, ranking e recompensas
 
   @stats
   Cenário: Usuário autenticado visualiza estatísticas no perfil
-    Dado que estou logado como "player"
+    Dado que estou logado como "user"
     Quando navego para "/profile"
     Então devo ver o texto "Suas estatísticas"
 
@@ -25,7 +25,7 @@ Funcionalidade: Gamificação, ranking e recompensas
 
   @rewards @smoke
   Cenário: Usuário autenticado visualiza catálogo de recompensas
-    Dado que estou logado como "player"
+    Dado que estou logado como "user"
     Quando navego para "/rewards"
     Então devo ver o título "Recompensas"
 

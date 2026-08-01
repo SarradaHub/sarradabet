@@ -7,3 +7,4 @@ export * from "./payment";
 export * from "./reward";
 export * from "./stats";
 export * from "./ticket";
+export * from "./dashboard";

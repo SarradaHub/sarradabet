@@ -1,15 +1,17 @@
+export type { CreateVoteDto } from "@sarradabet/types";
+
 export type Vote = {
   id: number;
   oddId: number;
-};
-
-export type CreateVoteDto = {
-  oddId: number;
+  userId: number;
+  amount: number;
 };
 
 export type CreateVoteResponse = {
   vote: Vote;
   betId: number;
-  odds: { id: number; totalVotes: number; value: number }[];
+  oddId: number;
+  odds: { id: number; totalVotes: number; totalStake: number; value: number }[];
   totalVotes: number;
+  totalStake: number;
 };

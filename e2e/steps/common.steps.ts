@@ -11,6 +11,10 @@ import { AdminRewardsPage } from "../pages/admin-rewards.page";
 
 Given("que não estou autenticado", async ({ page }) => {
   await page.context().clearCookies();
+  await page.addInitScript(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
   await page.goto("/");
 });
 

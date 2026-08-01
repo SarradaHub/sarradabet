@@ -77,7 +77,7 @@ export class CoinService {
         return result;
       }
 
-      return prisma.$transaction(async (tx) =>
+      return await prisma.$transaction(async (tx) =>
         this.coinRepository.debitCoins(tx, userId, amount, metadata),
       );
     } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Plus } from "@sarradahub/design-system";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -55,11 +55,14 @@ const AdminDashboard: React.FC = () => {
       totalCategories: categories.length,
       totalVotes: bets.reduce((sum, bet) => sum + (bet.totalVotes || 0), 0),
       activeBets: bets.filter((bet) => bet.status === "open").length,
+      houseTakeoutBalance: 0,
+      takeoutPercent: 0,
     };
   }, [bets, categories]);
 
   const statusChartData = useMemo(() => {
     const counts: Record<BetStatus, number> = {
+      scheduled: 0,
       open: 0,
       closed: 0,
       resolved: 0,
