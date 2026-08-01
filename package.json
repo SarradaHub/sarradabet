@@ -30,7 +30,7 @@
     "test:e2e:smoke": "npm run -w e2e test:smoke"
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
+    "prettier": "^3.7.4",
     "turbo": "^2.9.18",
     "typescript": "5.9.3",
     "vitest": "^3.2.6",
