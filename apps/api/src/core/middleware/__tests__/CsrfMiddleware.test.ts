@@ -62,6 +62,29 @@ describe("CsrfMiddleware", () => {
     }
   });
 
+  it("returns 403 through the global error handler when app uses doubleCsrfProtection", async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+
+    jest.resetModules();
+    const enabledModule = await import("../CsrfMiddleware");
+    const { errorHandler: appErrorHandler } = await import("../ErrorHandler");
+    const app = express();
+    app.use(cookieParser());
+    app.use(enabledModule.doubleCsrfProtection);
+    app.post("/protected", (_req, res) => {
+      res.status(200).json({ ok: true });
+    });
+    app.use(appErrorHandler);
+
+    try {
+      await request(app).post("/protected").expect(403);
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      jest.resetModules();
+    }
+  });
+
   it("accepts CSRF-protected requests outside /api/v1/auth when refresh cookie uses path /", async () => {
     const originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = "development";

@@ -1,6 +1,5 @@
 import {
   CoinTransaction,
-  CoinTransactionSource,
   Prisma,
 } from "@prisma/client";
 import { prisma } from "../../../config/db";

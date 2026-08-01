@@ -46,8 +46,7 @@ apps/api/src/
 │   ├── errors/                    # Custom error classes
 │   │   └── AppError.ts            # Application error hierarchy
 │   ├── validation/                # Validation schemas
-│   │   ├── ValidationSchemas.ts   # Zod validation schemas
-│   │   └── SanitizationSchemas.ts # Input sanitization
+│   │   └── ValidationSchemas.ts   # Zod validation schemas
 │   ├── cache/                     # In-memory cache (node-cache)
 │   │   └── CacheService.ts
 │   └── middleware/                # Core middleware
@@ -315,7 +314,7 @@ apps/web/src/
 │   ├── useCategories.ts        # staleTime 5m
 │   └── useVotes.ts
 ├── components/
-│   ├── ui/                     # Button, Modal, BetCardSkeleton, etc.
+│   ├── ui/                     # Button, Modal, BetRowSkeleton, etc.
 │   ├── CreateBetModal.tsx
 │   ├── BetCard.tsx             # Socket vote updates + category from list
 │   └── OddsList.tsx            # Optimistic vote + rollback

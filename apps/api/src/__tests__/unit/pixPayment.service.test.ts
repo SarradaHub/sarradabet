@@ -1,4 +1,3 @@
-import { createHmac } from "crypto";
 import {
   CoinTransactionSource,
   PixPaymentStatus,

@@ -154,6 +154,10 @@
   .sb-modal-form input,
   .sb-modal-form textarea,
   .sb-modal-form select {
-    @apply bg-sportsbook-raised border-sportsbook-border text-white;
+    @apply bg-black border-sportsbook-border text-white;
+  }
+
+  .sb-datetime-input {
+    color-scheme: dark;
   }
 }

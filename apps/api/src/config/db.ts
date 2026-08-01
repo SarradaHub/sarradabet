@@ -16,14 +16,24 @@ prisma.$on("error" as never, (e: { message: string }) => {
   logger.error(`Prisma Error: ${e.message}`);
 });
 
+let isPrismaDisconnected = false;
+
 const shutdownPrisma = async () => {
+  if (isPrismaDisconnected) {
+    return;
+  }
+
+  isPrismaDisconnected = true;
   logger.info("Disconnecting from database...");
   await prisma.$disconnect();
   logger.info("Database disconnected");
 };
 
-process.on("beforeExit", shutdownPrisma);
-process.on("SIGINT", shutdownPrisma);
-process.on("SIGTERM", shutdownPrisma);
+process.on("SIGINT", () => {
+  void shutdownPrisma();
+});
+process.on("SIGTERM", () => {
+  void shutdownPrisma();
+});
 
 export { prisma };

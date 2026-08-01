@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosResponse } from "axios";
-import { IApiService, ApiResponse } from "../interfaces/IService";
+import { IApiService, ApiResponse, ApiError } from "../interfaces/IService";
 import { requestDeduplicator } from "../utils/requestDeduplicator";
 import { createApiClient } from "../../services/apiClient";
 
@@ -22,22 +22,93 @@ export abstract class BaseService<T, CreateInput, UpdateInput, CreateResult = T>
   }
 
   private setupInterceptors(): void {
-    this.api.interceptors.response.use((response: AxiosResponse) => {
-      const contentType = headerValue(response.headers, "content-type");
-      if (
-        contentType.includes("text/html") &&
-        typeof response.data === "string" &&
-        response.data.includes("<!doctype html>")
-      ) {
-        const error = new Error(
-          "Received HTML instead of JSON. API server may not be running or URL is incorrect.",
-        );
-        (error as any).isHtmlResponse = true;
-        (error as any).config = response.config;
-        return Promise.reject(error);
-      }
-      return response;
-    });
+    this.api.interceptors.response.use(
+      (response: AxiosResponse) => {
+        const contentType = headerValue(response.headers, "content-type");
+        if (
+          contentType.includes("text/html") &&
+          typeof response.data === "string" &&
+          response.data.includes("<!doctype html>")
+        ) {
+          const error = new Error(
+            "Received HTML instead of JSON. API server may not be running or URL is incorrect.",
+          );
+          (error as any).isHtmlResponse = true;
+          (error as any).config = response.config;
+          return Promise.reject(error);
+        }
+        return response;
+      },
+      (error) => {
+        const requestUrl = error.config?.url
+          ? `${error.config.baseURL || ""}${error.config.url}`
+          : undefined;
+        const requestMethod = error.config?.method?.toUpperCase();
+
+        const isTimeout =
+          error.code === "ECONNABORTED" ||
+          error.message?.includes("timeout") ||
+          error.message?.includes("exceeded");
+
+        const isHtmlResponse =
+          headerValue(
+            error.response?.headers ?? {},
+            "content-type",
+          ).includes("text/html") ||
+          (typeof error.response?.data === "string" &&
+            error.response?.data?.includes("<!doctype html>"));
+
+        const isNetworkError =
+          !error.response &&
+          (error.code === "ECONNREFUSED" ||
+            error.code === "ERR_NETWORK" ||
+            isTimeout);
+
+        let errorMessage = "An error occurred";
+        if (isTimeout) {
+          errorMessage =
+            "Request timed out. The API server may not be running or is taking too long to respond. Please check that the API server is running on port 8000.";
+        } else if (isNetworkError) {
+          errorMessage =
+            "Cannot connect to the API server. Please ensure the API server is running on port 8000.";
+        } else if (isHtmlResponse) {
+          errorMessage =
+            "Received HTML instead of JSON. The API server may not be running or the URL is incorrect. Check that the API is running on port 8000.";
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        if (import.meta.env.DEV) {
+          console.error("API Error:", {
+            url: requestUrl,
+            method: requestMethod,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            message: errorMessage,
+            errorCode: error.code,
+            isTimeout,
+            isNetworkError,
+            isHtmlResponse,
+            contentType: error.response?.headers?.["content-type"],
+            baseURL: error.config?.baseURL,
+            actualURL: requestUrl,
+            fullError: error,
+          });
+        }
+
+        const apiError: ApiError = {
+          success: false,
+          message: errorMessage,
+          errors: error.response?.data?.errors,
+          url: requestUrl || error.response?.data?.url,
+          method: requestMethod || error.response?.data?.method,
+          requestId: error.response?.data?.requestId,
+        };
+        return Promise.reject(apiError);
+      },
+    );
   }
 
   async getAll(): Promise<ApiResponse<T[]>> {

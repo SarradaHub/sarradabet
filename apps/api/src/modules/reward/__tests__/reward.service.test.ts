@@ -5,7 +5,6 @@ import { CoinRepository } from "../../coin/repositories/CoinRepository";
 import { UserStatsService } from "../../stats/services/UserStatsService";
 import { RewardRepository } from "../repositories/RewardRepository";
 import { RewardService } from "../services/RewardService";
-import { emitRewardValidated } from "../../../realtime/emitter";
 
 jest.mock("../../../config/db", () => ({
   prisma: {

@@ -14,7 +14,7 @@
     "test:integration": "jest --testPathPatterns=integration",
     "test:integration:setup": "tsx src/__tests__/helpers/setupTestDatabase.cli.ts",
     "db:test:setup": "tsx src/__tests__/helpers/setupTestDatabase.cli.ts",
-    "test:unit": "jest --testPathPatterns=__tests__ --testPathIgnorePatterns=integration",
+    "test:unit": "jest --testPathPattern=__tests__ --testPathIgnorePatterns=integration",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

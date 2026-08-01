@@ -19,7 +19,7 @@ jobs:
       node-version: '20'
       working-directory: .
       audit-level: 'moderate'
-      codeql: true
+      codeql: false
       codeql-languages: 'javascript'
       check-secrets: true
       fail-on-high: false

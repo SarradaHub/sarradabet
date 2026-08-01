@@ -1,24 +1,27 @@
 import javascript
 
 /**
- * Gets `doubleCsrfProtection` from a `doubleCsrf(...)` call on the `csrf-csrf` module.
+ * Gets a node referring to csrf-csrf `doubleCsrfProtection`, including re-exports.
  */
 DataFlow::SourceNode csrfCsrfMiddlewareCreation() {
-  exists(DataFlow::CallNode call |
-    call.getCalleeName() = "doubleCsrf" and
-    call.getCallee().(DataFlow::PropRead).getBase().(DataFlow::SourceNode) =
-      DataFlow::moduleImport("csrf-csrf") and
-    result = call.getAPropertyRead("doubleCsrfProtection")
-  )
-  or
-  exists(DataFlow::PropRead prop |
+  exists(DataFlow::PropRead prop, DataFlow::CallNode call |
     prop.getPropertyName() = "doubleCsrfProtection" and
-    exists(DataFlow::CallNode call |
-      call = prop.getBase().getALocalSource() and
-      call.getCalleeName() = "doubleCsrf" and
-      call.getCallee().(DataFlow::PropRead).getBase().(DataFlow::SourceNode) =
-        DataFlow::moduleImport("csrf-csrf")
-    ) and
+    call.getCalleeNode() = DataFlow::moduleMember("csrf-csrf", "doubleCsrf") and
+    prop.getBase().getALocalSource() = call and
     result = prop
   )
+  or
+  exists(DataFlow::FunctionNode fn |
+    fn.getFunction().getName() = "csrfProtection" and
+    exists(DataFlow::CallNode delegateCall |
+      delegateCall.getCalleeName() = "doubleCsrfProtection" and
+      delegateCall.getEnclosingFunction() = fn.getFunction()
+    ) and
+    result = fn
+  )
+  or
+  result = DataFlow::moduleMember("./core/middleware/CsrfMiddleware", "doubleCsrfProtection")
+  or
+  result =
+    DataFlow::moduleMember("apps/api/src/core/middleware/CsrfMiddleware", "doubleCsrfProtection")
 }

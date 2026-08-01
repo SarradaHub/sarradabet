@@ -1,5 +1,4 @@
 import { circuitBreakerService } from "./circuitBreaker.service";
-import { logger } from "../utils/logger";
 
 class IdentityServiceClient {
   private baseUrl =

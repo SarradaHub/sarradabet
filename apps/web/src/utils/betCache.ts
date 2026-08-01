@@ -38,6 +38,7 @@ export function patchBetsFromVote(payload: VoteCreatedPayload): void {
       return {
         ...bet,
         totalVotes: payload.totalVotes,
+        totalStake: payload.totalStake ?? bet.totalStake,
         odds: bet.odds.map((odd) => {
           const updated = payload.odds.find((o) => o.id === odd.id);
           return updated ? mergeOddFromVoteUpdate(odd, updated) : odd;

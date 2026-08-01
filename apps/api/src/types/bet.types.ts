@@ -24,8 +24,9 @@ export interface BetEntity {
 export type OddsEntity = OddEntity;
 
 export type BetResponse = BetEntity & {
-  odds: (OddsEntity & { totalVotes: number })[];
+  odds: (OddsEntity & { totalVotes: number; totalStake: number })[];
   totalVotes?: number;
+  totalStake?: number;
 };
 
 export type BetQueryParams = {

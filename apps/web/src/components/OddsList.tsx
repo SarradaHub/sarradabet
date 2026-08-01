@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { BetStatus, OddWithVotes } from "@sarradabet/types";
 import { formatOddValue } from "../utils/odds";
 import { useVoteSlip } from "../context/VoteSlipContext";
+import { canAcceptWagers, isBetScheduledForFuture } from "../utils/betSchedule";
+import { formatScheduleDate } from "../utils/formatSchedule";
 
 interface OddsListProps {
   odds: OddWithVotes[];
@@ -11,7 +13,7 @@ interface OddsListProps {
   betStatus: BetStatus;
   startTime?: string | Date | null;
   closesAt?: string | Date | null;
-  totalStake?: number;
+  totalStakeOnBet?: number;
 }
 
 function OddCell({
@@ -76,11 +78,13 @@ const OddsList = ({
   betStatus,
   startTime,
   closesAt,
-  totalStake,
+  totalStakeOnBet = 0,
 }: OddsListProps) => {
   const { addSelection, isSelected } = useVoteSlip();
   const [pressedId, setPressedId] = useState<number | null>(null);
-  const votable = betStatus === "open";
+  const schedule = { status: betStatus, startTime, closesAt };
+  const votable = canAcceptWagers(schedule);
+  const scheduledForFuture = isBetScheduledForFuture(schedule);
 
   const handleSelectOdd = (odd: OddWithVotes) => {
     if (!votable) return;
@@ -99,13 +103,20 @@ const OddsList = ({
       startTime,
       closesAt,
       totalStakeOnBet:
-        totalStake ?? odds.reduce((sum, item) => sum + item.totalStake, 0),
-      stakeOnOdd: odd.totalStake,
+        totalStakeOnBet ||
+        odds.reduce((sum, item) => sum + item.totalStake, 0),
+      stakeOnOdd: odd.totalStake ?? 0,
     });
   };
 
   return (
-    <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full">
+    <div className="flex flex-col items-start sm:items-end gap-2 w-full">
+      {scheduledForFuture && (
+        <p className="text-[11px] text-warning-400/90 tabular-nums">
+          Abre em {formatScheduleDate(startTime)}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2 justify-start sm:justify-end w-full">
       {odds.map((odd) => (
         <OddCell
           key={odd.id}
@@ -116,6 +127,7 @@ const OddsList = ({
           onSelect={() => handleSelectOdd(odd)}
         />
       ))}
+      </div>
     </div>
   );
 };

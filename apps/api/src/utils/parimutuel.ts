@@ -112,11 +112,6 @@ export function calculateOddsFromStakes(
   });
 }
 
-/** @deprecated Use calculateOddsFromStakes or calculateOddsFromVoteCounts */
-export function calculateOddsFromVotes(voteCounts: number[]): number[] {
-  return calculateOddsFromVoteCounts(voteCounts);
-}
-
 export function estimateReturn(
   stake: number,
   totalPool: number,

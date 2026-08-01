@@ -5,13 +5,18 @@ export type Vote = {
   oddId: number;
   userId: number;
   amount: number;
+  status: string;
 };
 
 export type CreateVoteResponse = {
   vote: Vote;
   betId: number;
-  oddId: number;
-  odds: { id: number; totalVotes: number; totalStake: number; value: number }[];
+  odds: {
+    id: number;
+    totalVotes: number;
+    totalStake: number;
+    value: number;
+  }[];
   totalVotes: number;
   totalStake: number;
 };

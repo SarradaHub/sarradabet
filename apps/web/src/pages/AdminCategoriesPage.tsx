@@ -140,7 +140,11 @@ const AdminCategoriesPage: React.FC = () => {
               </TableRow>
             ) : (
               categories.map((category) => (
-                <TableRow key={category.id} hoverable>
+                <TableRow
+                  key={category.id}
+                  hoverable
+                  className="hover:[&_td]:text-neutral-900 hover:[&_td.text-sportsbook-odds]:text-green-700"
+                >
                   <TableCell className="text-white font-medium">
                     {category.title}
                   </TableCell>
