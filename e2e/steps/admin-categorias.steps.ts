@@ -57,7 +57,6 @@ When("excluo a categoria de teste via API", async ({}) => {
 When(
   "tento excluir a categoria {string}",
   async ({ page }, title: string) => {
-    const adminCategories = new AdminCategoriesPage(page);
     await page.getByRole("button", { name: `Excluir ${title}` }).click();
     await page
       .getByRole("dialog")
