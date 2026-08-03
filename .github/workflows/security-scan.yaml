@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload audit results
         if: always() && steps.node_project.outputs.has_package == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: npm-audit-results
           path: ${{ inputs.working-directory }}/audit-results.json
