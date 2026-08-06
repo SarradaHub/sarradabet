@@ -14,6 +14,7 @@ import { emitPaymentConfirmed } from "../../../realtime/emitter";
 import { CoinService } from "../../coin/services/CoinService";
 import { CoinPackageService } from "../../coin-package/services/CoinPackageService";
 import { PixPaymentRepository } from "../repositories/PixPaymentRepository";
+import { resolvePixPayerEmail } from "../resolvePixPayerEmail";
 import { isMockPixPaymentId } from "./MockMercadoPagoClient";
 import type { PixGateway } from "./PixGateway";
 
@@ -47,7 +48,7 @@ export class PixPaymentService {
       externalReference: idempotencyKey,
       idempotencyKey,
       expirationDate: expiresAt,
-      payerEmail: user.email,
+      payerEmail: resolvePixPayerEmail(user.email),
     });
 
     const pixPayment = await this.pixPaymentRepository.create({

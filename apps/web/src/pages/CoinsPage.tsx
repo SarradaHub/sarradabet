@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import type { CoinPackage, CoinTransactionSource, PixPaymentStatus } from "@sarradabet/types";
 import { RealtimeEvents } from "@sarradabet/types";
@@ -137,12 +137,32 @@ const CoinsPage: React.FC = () => {
     void loadPackages();
   }, []);
 
-  const expiresInSeconds = useMemo(() => {
-    if (!status?.expiresAt) return 0;
-    return Math.max(
-      0,
-      Math.floor((new Date(status.expiresAt).getTime() - Date.now()) / 1000),
-    );
+  const [expiresInSeconds, setExpiresInSeconds] = useState(0);
+
+  useEffect(() => {
+    const expiresAt = status?.expiresAt;
+    if (!expiresAt) {
+      setExpiresInSeconds(0);
+      return;
+    }
+
+    const computeRemaining = () =>
+      Math.max(
+        0,
+        Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000),
+      );
+
+    setExpiresInSeconds(computeRemaining());
+
+    const intervalId = window.setInterval(() => {
+      const remaining = computeRemaining();
+      setExpiresInSeconds(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(intervalId);
+      }
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
   }, [status?.expiresAt]);
 
   const handleCopyPix = async () => {

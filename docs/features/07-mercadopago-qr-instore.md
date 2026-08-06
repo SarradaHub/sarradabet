@@ -1,6 +1,6 @@
 # Feature 07 — Mercado Pago QR Instore (Loja e Caixa)
 
-**Status:** Step 3 complete (orders API + webhook + UI; mock mode for local dev)
+**Status:** Fully Done (orders API + webhooks + UI + admin caixa/monitor + tests + live setup validation)
 
 ## Prompt summary
 
@@ -32,7 +32,10 @@ From [`apps/api/src/config/env.ts`](../../apps/api/src/config/env.ts) and [`apps
 
 | Variable | Purpose |
 |----------|---------|
-| `MERCADOPAGO_ACCESS_TOKEN` | API auth (test or production) |
+| `MERCADOPAGO_PAYMENTS_ACCESS_TOKEN` | Payments API (Pix online). Usually `TEST-...` from Checkout Transparente |
+| `MERCADOPAGO_INSTORE_ACCESS_TOKEN` | Orders API (QR presencial). Usually `APP_USR-...` from QR test credentials |
+| `MERCADOPAGO_ACCESS_TOKEN` | Fallback when the specific tokens above are unset |
+| `MERCADOPAGO_TEST_PAYER_EMAIL` | Optional override for Payments API `payer.email` (advanced; see [Sandbox testing](#sandbox-testing)) |
 | `MERCADOPAGO_USER_ID` | Optional override; resolved via `GET /users/me` if omitted |
 | `MERCADOPAGO_STORE_EXTERNAL_ID` | Idempotent store key (default `SARRADABET001`) |
 | `MERCADOPAGO_STORE_NAME` | Store display name |
@@ -61,14 +64,15 @@ Use **real** address and latitude/longitude for Brazil. Incorrect location data 
 
 Copy [`apps/api/.env.example`](../../apps/api/.env.example) to `apps/api/.env`.
 
-Put the **real test Access Token** in `apps/api/.env.local` (gitignored):
+Put tokens in `apps/api/.env.local` (gitignored):
 
 ```env
-MERCADOPAGO_ACCESS_TOKEN=APP_USR-...
+MERCADOPAGO_PAYMENTS_ACCESS_TOKEN=TEST-...    # Pix online (Checkout/Payments API)
+MERCADOPAGO_INSTORE_ACCESS_TOKEN=APP_USR-...   # QR presencial (Orders API)
 MERCADOPAGO_MOCK_PIX=false
 ```
 
-`.env.local` overrides `.env`. Do not commit tokens to `.env`.
+If only one token is configured, set `MERCADOPAGO_ACCESS_TOKEN` as fallback. See [Sandbox testing](#sandbox-testing) for why two tokens are often required locally.
 
 ### 3. Run setup script
 
@@ -95,6 +99,10 @@ Re-running with the same `external_id` values is safe (idempotent lookup before 
 | `POST /v1/orders` payment processing | Done — [`InstorePaymentService`](../../apps/api/src/modules/payment/services/InstorePaymentService.ts) |
 | Instore order webhooks | Done — `order` / `merchant_order` topic in [`webhook.routes.ts`](../../apps/api/src/routes/webhook.routes.ts) |
 | Frontend QR presencial UI | Done — QR presencial tab on [`CoinsPage.tsx`](../../apps/web/src/pages/CoinsPage.tsx) |
+| Admin caixa + payment monitor | Done — [`AdminPaymentsPage.tsx`](../../apps/web/src/pages/AdminPaymentsPage.tsx) at `/admin/payments` |
+| Admin payment API | Done — [`admin.payment.routes.ts`](../../apps/api/src/routes/admin.payment.routes.ts) |
+| Executable tests (unit/integration/E2E) | Done — see [Test plan](#test-plan) |
+| Live MP setup validation | Done — `npm run mp:validate-live -- --ping` |
 
 ## Gherkin Specifications (BDD)
 
@@ -229,9 +237,9 @@ Funcionalidade: Integração Mercado Pago QR Instore (Loja e Caixa)
   Cenário: Runtime helper falha com erro claro quando envs estão ausentes
     Dado que a variável MERCADOPAGO_STORE_ID NÃO está definida
     Quando a função "getMercadoPagoInstoreRuntimeConfig()" é chamada
-    Então a função lança um erro com a mensagem:
-      "Configuração QR Instore incompleta. Verifique MERCADOPAGO_STORE_ID, MERCADOPAGO_POS_ID e MERCADOPAGO_POS_UUID"
-    E a função retorna undefined ou lança exceção
+    Então a função lança um erro contendo:
+      "Missing Mercado Pago instore runtime environment variables"
+    E a mensagem lista "MERCADOPAGO_STORE_ID"
 
   @runtime @validation
   Cenário: Validação falha se store_id estiver vazio ou inválido
@@ -311,15 +319,25 @@ Funcionalidade: Integração Mercado Pago QR Instore (Loja e Caixa)
 - [x] QR order creation service
 - [x] Webhook handling for instore orders
 - [x] UI for presencial QR payments
+- [x] Admin caixa QR + payment monitor UI
+- [x] Admin payment API (`/admin/payments`)
+- [x] Unit/integration/E2E test coverage
+- [x] Live setup validator (`mp:validate-live`)
 
 ## Key files
 
 | File | Role |
 |------|------|
-| `MercadoPagoInstoreClient.ts` | REST calls to MP stores/POS APIs |
+| `MercadoPagoInstoreClient.ts` | REST calls to MP stores/POS/orders APIs |
+| `InstorePaymentService.ts` | Dynamic QR orders + confirm + coin credit |
+| `AdminPaymentService.ts` | Admin list/detail + create on behalf |
 | `instoreConfig.ts` | Validates setup/runtime env groups |
 | `setupMercadoPagoStore.ts` | One-time provisioning CLI |
+| `validateMercadoPagoLiveSetup.ts` | Live env + MP API ping checklist |
+| `AdminPaymentsPage.tsx` | Admin caixa + monitor UI |
 | `mercadopagoInstoreClient.test.ts` | Unit tests with mocked axios |
+| `instoreConfig.test.ts` / `instorePayment.service.test.ts` | Service/config unit tests |
+| `admin-payment.routes.test.ts` | Admin payment integration tests |
 
 ## Acceptance criteria
 
@@ -330,20 +348,115 @@ Funcionalidade: Integração Mercado Pago QR Instore (Loja e Caixa)
 
 ## Dependencies
 
-- Feature 02 (online Pix) — shared `MERCADOPAGO_ACCESS_TOKEN`
+- Feature 02 (online Pix) — shared Mercado Pago env; see [Sandbox testing](#sandbox-testing) for dual-token setup
 - Mercado Pago QR Code integration docs (step 1 application, step 2 store/POS)
 
 ## Test plan
 
 ```bash
 cd apps/api
-npm run test:unit -- mercadopagoInstoreClient
+npm run test:unit -- instoreConfig instorePayment mercadopagoInstore env.mockPix
+npm run test:integration -- admin-payment instore-payment instore-webhook
+cd ../..
+npm run test:e2e:smoke   # includes QR presencial + admin caixa scenarios
+npm run mp:validate-live -- --ping   # verify credentials + instore IDs
 ```
 
-Manual: run `npm run mp:setup-store` with test token and verify MP panel shows store/POS.
+Manual live Pix: see [`LOCAL_WEBHOOKS.md`](../LOCAL_WEBHOOKS.md) — pay with MP test buyer; confirm coins credit via webhook or status poll.
+
+### Live validation log (2026-08-04)
+
+| Check | Result |
+|-------|--------|
+| MP credentials + `/users/me` | Pass (`mp:validate-live --ping`) |
+| Instore store/POS IDs configured | Pass |
+| `MERCADOPAGO_MOCK_PIX=false` parsing | Pass (fixed env boolean coercion bug) |
+| Online Pix → coins (manual test buyer) | Pending — run with ngrok locally or use deployed API webhook URL |
+| Instore QR → coins (manual test buyer) | Pending — scan QR with MP app; paste often fails (see [Sandbox testing](#sandbox-testing)) |
+| Production go-live | See [Mercado Pago Production](../MERCADOPAGO_PRODUCTION.md) |
+| Instore QR → coins (manual test buyer) | Pending — scan QR with MP app; paste often fails (see [Sandbox testing](#sandbox-testing)) |
+| Production go-live | See [Mercado Pago Production](../MERCADOPAGO_PRODUCTION.md) |
+
+## Sandbox testing
+
+Mercado Pago does **not** expose a separate sandbox API. Local tests hit the production API with **test credentials** and **test accounts** created under [Suas integrações](https://www.mercadopago.com.br/developers/panel/app). SarradaBet runs **two payment flows** that use **different credential prefixes** — this is the main source of confusion during live testing.
+
+### Official Mercado Pago documentation
+
+| Topic | Link |
+|-------|------|
+| Test accounts (Checkout / Pix) | [Contas de teste — Checkout API](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/additional-content/your-integrations/test/accounts) |
+| Test accounts (QR presencial) | [Contas de teste — QR Code](https://www.mercadopago.com.br/developers/pt/docs/qr-code/resources/test-accounts) |
+| Credentials (`TEST-` vs `APP_USR-`) | [Credenciais](https://www.mercadopago.com.br/developers/pt/docs/your-integrations/credentials) |
+| Pix online integration | [Integrar Pix — Checkout API](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-configuration/integrate-with-pix) |
+| QR order creation (Orders API) | [Criar order — QR dynamic](https://www.mercadopago.com.br/developers/pt/reference/in-person-payments/qr-code/orders/create-order/post) |
+| QR → Orders API migration (payload + webhooks) | [Migrar QR para Orders API](https://www.mercadopago.com.br/developers/pt/docs/qr-code-migration/overview) |
+| QR notifications (`order` topic) | [Notificações — QR Code](https://www.mercadopago.com.br/developers/pt/docs/qr-code/notifications) |
+| Error 145 — Invalid users involved | [Erros de pagamento](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/error-messages/card-token-creation-errors) |
+| Local webhooks (ngrok) | [`LOCAL_WEBHOOKS.md`](../LOCAL_WEBHOOKS.md) |
+
+### Three roles (do not mix them up)
+
+| Role | Who | Used for |
+|------|-----|----------|
+| **SarradaBet user** | e.g. `user` / `user123` on `/coins` | Receives coins in the app after payment |
+| **MP seller (vendedor)** | Test account `TESTUSER548...` (`APP_USR-` token) | Receives Pix on QR presencial flow |
+| **MP buyer (comprador)** | Test account `TESTUSER608...` | Pays Pix in Mercado Pago (app or site) |
+| **Real integrator** | Your developer account (Lucas) | Owns the app in the panel; may appear on Pix online sandbox tickets when using `TEST-` credentials |
+
+Logging into Mercado Pago to **pay** must use the **buyer test user** (`Usuário` + `Senha` + **Código de verificação** from [Contas de teste](https://www.mercadopago.com.br/developers/panel/app/7716487240713931/test-accounts)). RG/CNH prompts mean a **real account** is active — use incognito and never your personal MP session.
+
+### Dual credentials in SarradaBet
+
+| Flow | API | Env var | Typical prefix | Webhook topic |
+|------|-----|---------|----------------|---------------|
+| **Pix online** (`/coins` → Pix online) | Payments API | `MERCADOPAGO_PAYMENTS_ACCESS_TOKEN` | `TEST-` | `payment` |
+| **QR presencial** (`/coins` or `/admin/payments`) | Orders API | `MERCADOPAGO_INSTORE_ACCESS_TOKEN` | `APP_USR-` | `order` |
+
+Implementation: [`resolvePixPayerEmail.ts`](../../apps/api/src/modules/payment/resolvePixPayerEmail.ts), [`MercadoPagoClient.ts`](../../apps/api/src/modules/payment/services/MercadoPagoClient.ts), [`MercadoPagoInstoreClient.ts`](../../apps/api/src/modules/payment/services/MercadoPagoInstoreClient.ts).
+
+### Common sandbox errors
+
+| Error | Cause | What to do |
+|-------|-------|------------|
+| **Unauthorized use of live credentials** | Payments API called with wrong token type for the product | Use `TEST-` for Pix online; `APP_USR-` test creds for QR/Orders |
+| **Invalid users involved** (145) | Mixing a **real** collector (`TEST-` integrator token) with a **test** payer email (`test_user_br@...`) | Keep app user email (`user@sarradabet.com`) when creating Pix with `TEST-`; do not force sandbox payer emails unless MP docs require it for your app |
+| **Payer email forbidden** | Payer email format not accepted by Payments API (e.g. `test_payer_{id}@testuser.com`) | Leave `MERCADOPAGO_TEST_PAYER_EMAIL` unset; use app user email |
+| **create instore order 400** | Orders API payload included removed fields (`notification_url`, `payment_method` in `transactions.payments[]`) | Fixed in `MercadoPagoInstoreClient.createOrder`; configure webhooks in the MP panel instead |
+| **Paste Pix gray / disabled** | Instore `qr_data` is for **scanning** with the MP app, not copia-e-cola | Scan QR from a **second device** logged in as buyer test user |
+| **RG/CNH on phone** | Mercado Pago app logged in as **real** account | Log out everywhere; pay from **desktop incognito** as buyer test user, or ignore phone |
+
+### Recommended local test paths
+
+1. **App logic (no MP)** — `MERCADOPAGO_MOCK_PIX=true` → **Simular aprovação** on `/coins`. Validates coins, webhooks, and UI without MP.
+2. **Webhook + API (partial live)** — Pix online with `TEST-` token creates a [sandbox ticket](https://www.mercadopago.com.br/sandbox/payments/{id}/ticket). Collector may show the real integrator name; that is expected. Confirm webhook delivery via ngrok (`npm run webhook:tunnel` + `npm run webhook:configure`) and [`notifications_history`](https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications) in MCP.
+3. **Full instore live** — QR presencial → scan with MP app as **buyer test user** on a second device → `order` webhook → coins credited.
+4. **Preflight** — `npm run mp:validate-live -- --ping` (both tokens + instore store/POS IDs).
+
+### Paying without a phone
+
+- **Pix online:** open the sandbox ticket in **desktop incognito** logged in as **buyer test user** only; pay from the ticket page or paste the code there — not from your real MP app.
+- **QR presencial:** requires scanning; a second device (or another person's phone logged in as buyer test user) is effectively required.
+- Do **not** pay sandbox Pix from a **real bank app** — sandbox codes are not on the production Pix network.
+
+### Environment example (local)
+
+```env
+# apps/api/.env.local
+MERCADOPAGO_PAYMENTS_ACCESS_TOKEN=TEST-...
+MERCADOPAGO_INSTORE_ACCESS_TOKEN=APP_USR-...
+MERCADOPAGO_NOTIFICATION_URL=https://<ngrok-host>/api/v1/webhooks/mercadopago
+MERCADOPAGO_MOCK_PIX=false
+MERCADOPAGO_STORE_ID=...
+MERCADOPAGO_POS_ID=...
+MERCADOPAGO_POS_UUID=...
+```
+
+Do **not** set `MERCADOPAGO_TEST_PAYER_EMAIL` unless Mercado Pago support gives you a value for your app. The default is the SarradaBet user's email.
 
 ## Related documentation
 
 - [Feature 02 — Coins & Pix](./02-coins-and-pix-payments.md)
+- [Mercado Pago Production](../MERCADOPAGO_PRODUCTION.md) — go-live checklist
 - [Deployment](../DEPLOYMENT.md) — production env vars
 - [Mercado Pago — Criar loja e caixa](https://www.mercadopago.com.br/developers/pt/docs/qr-code/create-store-and-pos)

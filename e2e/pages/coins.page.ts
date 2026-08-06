@@ -27,6 +27,28 @@ export class CoinsPage {
     ).toBeVisible({ timeout: 15_000 });
   }
 
+  async selectInstoreChannel(): Promise<void> {
+    await this.page.getByRole("button", { name: "QR presencial" }).click();
+  }
+
+  async buyFirstPackageWithInstoreQr(): Promise<void> {
+    await this.selectInstoreChannel();
+    await this.page
+      .getByRole("button", { name: "Comprar com QR presencial" })
+      .first()
+      .click();
+    await expect(
+      this.page.getByRole("heading", { name: "Pagamento QR presencial" }),
+    ).toBeVisible({ timeout: 15_000 });
+  }
+
+  async expectInstorePaymentVisible(): Promise<void> {
+    await expect(
+      this.page.getByRole("heading", { name: "Pagamento QR presencial" }),
+    ).toBeVisible();
+    await expect(this.page.getByText("Aguardando pagamento")).toBeVisible();
+  }
+
   async expectPixPaymentVisible(): Promise<void> {
     await expect(
       this.page.getByRole("heading", { name: "Pagamento Pix" }),

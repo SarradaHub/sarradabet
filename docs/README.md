@@ -28,6 +28,7 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 ### Deployment & Operations
 
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment (Docker/nginx primary)
+- **[Mercado Pago Production](./MERCADOPAGO_PRODUCTION.md)** - Pix + QR presencial go-live (credentials, webhooks, env)
 - **[Performance Guide](./PERFORMANCE.md)** - Caching, pooling, realtime scaling, blackbox validation
 
 ## 🚀 Quick Navigation
@@ -41,7 +42,8 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 ### For DevOps/System Administrators
 
 1. Follow the [Deployment Guide](./DEPLOYMENT.md) for production setup
-2. Review [Performance Guide](./PERFORMANCE.md) for Supabase pooling and scaling notes
+2. For Mercado Pago Pix go-live, see [Mercado Pago Production](./MERCADOPAGO_PRODUCTION.md)
+3. Review [Performance Guide](./PERFORMANCE.md) for Supabase pooling and scaling notes
 3. Implement backup and monitoring procedures
 
 ### For Product Managers/Business Users

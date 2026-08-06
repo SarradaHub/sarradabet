@@ -223,10 +223,20 @@ describe("MercadoPagoInstoreClient", () => {
         type: "qr",
         external_reference: "ref-123",
         total_amount: "10.00",
+        transactions: {
+          payments: [{ amount: "10.00" }],
+        },
       }),
       expect.objectContaining({
         headers: { "X-Idempotency-Key": "idem-123" },
       }),
+    );
+    expect(httpPost).toHaveBeenCalledWith(
+      "/v1/orders",
+      expect.not.objectContaining({
+        notification_url: expect.anything(),
+      }),
+      expect.any(Object),
     );
     expect(result.id).toBe("ORD123");
     expect(result.qrCode).toContain("000201");

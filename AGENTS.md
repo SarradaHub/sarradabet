@@ -116,6 +116,7 @@ Run from the **repository root** unless noted.
 | Command | Description |
 |---------|-------------|
 | `npm run mp:setup-store` | Mercado Pago in-store QR store/POS setup |
+| `npm run mp:validate-live -- --ping` | Validate MP env + ping API |
 | `npm run webhook:configure` | Configure ngrok webhook tunnel |
 | `npm run webhook:tunnel` | Run ngrok for local Pix webhooks |
 
@@ -324,6 +325,7 @@ Full details: `docs/DEPLOYMENT.md`, `docs/PERFORMANCE.md`.
 | `docs/API.md` | REST endpoints and Socket.io payloads |
 | `docs/DEVELOPER_GUIDE.md` | Extended setup, feature scaffolding, debugging |
 | `docs/DEPLOYMENT.md` | Production deployment |
+| `docs/MERCADOPAGO_PRODUCTION.md` | Mercado Pago production go-live |
 | `docs/PERFORMANCE.md` | Pooling, compression, scaling |
 | `docs/LOCAL_WEBHOOKS.md` | Mercado Pago webhook tunnel setup |
 

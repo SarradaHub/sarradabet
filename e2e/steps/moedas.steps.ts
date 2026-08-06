@@ -5,8 +5,16 @@ When("compro o primeiro pacote com Pix", async ({ page }) => {
   await new CoinsPage(page).buyFirstPackageWithPix();
 });
 
+When("compro o primeiro pacote com QR presencial", async ({ page }) => {
+  await new CoinsPage(page).buyFirstPackageWithInstoreQr();
+});
+
 Then("devo ver o pagamento Pix pendente", async ({ page }) => {
   await new CoinsPage(page).expectPixPaymentVisible();
+});
+
+Then("devo ver o pagamento QR presencial pendente", async ({ page }) => {
+  await new CoinsPage(page).expectInstorePaymentVisible();
 });
 
 When("simulo pagamento aprovado", async ({ page }) => {

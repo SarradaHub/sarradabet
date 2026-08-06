@@ -99,10 +99,6 @@ export interface CreateMercadoPagoOrderInput {
   transactions: {
     payments: Array<{
       amount: string;
-      payment_method: {
-        id: string;
-        type: string;
-      };
     }>;
   };
   config: {

@@ -13,6 +13,7 @@ import type { InstoreOrderGateway } from "./services/InstoreOrderGateway";
 import type { PixGateway } from "./services/PixGateway";
 import { InstorePaymentService } from "./services/InstorePaymentService";
 import { PixPaymentService } from "./services/PixPaymentService";
+import { AdminPaymentService } from "./services/AdminPaymentService";
 
 const coinRepository = new CoinRepository();
 const coinService = new CoinService(coinRepository);
@@ -55,6 +56,11 @@ export const instorePaymentService = new InstorePaymentService(
   coinService,
   coinPackageService,
   instoreGateway,
+);
+
+export const adminPaymentService = new AdminPaymentService(
+  pixPaymentRepository,
+  instorePaymentService,
 );
 
 export { coinService, coinPackageService };

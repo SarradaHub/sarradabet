@@ -50,9 +50,11 @@ async function discoverNgrokPublicUrl(): Promise<string | null> {
 }
 
 async function syncMercadoPagoWebhook(webhookUrl: string): Promise<void> {
-  if (!config.MERCADOPAGO_ACCESS_TOKEN) {
+  const mpToken =
+    config.mercadoPagoPaymentsAccessToken ?? config.mercadoPagoInstoreAccessToken;
+  if (!mpToken) {
     console.warn(
-      "Skipping Mercado Pago panel sync: MERCADOPAGO_ACCESS_TOKEN is not configured.",
+      "Skipping Mercado Pago panel sync: no Mercado Pago access token is configured.",
     );
     return;
   }
@@ -70,7 +72,7 @@ async function syncMercadoPagoWebhook(webhookUrl: string): Promise<void> {
       },
       {
         headers: {
-          Authorization: `Bearer ${config.MERCADOPAGO_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${mpToken}`,
           "Content-Type": "application/json",
         },
       },

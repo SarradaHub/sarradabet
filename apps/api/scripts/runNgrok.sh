@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_LOCAL="${SCRIPT_DIR}/../.env.local"
+
+if [[ -f "$ENV_LOCAL" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_LOCAL"
+  set +a
+fi
+
 resolve_ngrok() {
   if command -v ngrok >/dev/null 2>&1; then
     command -v ngrok
@@ -32,6 +42,12 @@ has_ngrok_authtoken() {
   if [[ -f "$legacy_config" ]] && grep -q "authtoken:" "$legacy_config"; then
     return 0
   fi
+
+  for snap_config in "${HOME}/snap/ngrok/"*/.config/ngrok/ngrok.yml; do
+    if [[ -f "$snap_config" ]] && grep -q "authtoken:" "$snap_config"; then
+      return 0
+    fi
+  done
 
   return 1
 }

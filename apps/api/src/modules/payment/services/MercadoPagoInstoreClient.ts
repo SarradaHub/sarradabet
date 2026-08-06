@@ -53,11 +53,11 @@ export class MercadoPagoInstoreClient implements InstoreOrderGateway {
   constructor(private readonly accessToken?: string) {}
 
   private getAccessToken(): string {
-    const token = this.accessToken ?? config.MERCADOPAGO_ACCESS_TOKEN;
+    const token = this.accessToken ?? config.mercadoPagoInstoreAccessToken;
     if (!token) {
       throw new ExternalServiceError(
         "MercadoPago",
-        "MERCADOPAGO_ACCESS_TOKEN is not configured",
+        "MERCADOPAGO_INSTORE_ACCESS_TOKEN (or MERCADOPAGO_ACCESS_TOKEN) is not configured",
       );
     }
 
@@ -238,10 +238,6 @@ export class MercadoPagoInstoreClient implements InstoreOrderGateway {
         payments: [
           {
             amount: (input.amountCents / 100).toFixed(2),
-            payment_method: {
-              id: "pix",
-              type: "bank_transfer",
-            },
           },
         ],
       },

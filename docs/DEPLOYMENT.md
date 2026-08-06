@@ -318,9 +318,12 @@ CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
 
 # Mercado Pago (Pix coin purchases)
 MERCADOPAGO_ACCESS_TOKEN=your_mercadopago_access_token
+MERCADOPAGO_PAYMENTS_ACCESS_TOKEN=your_production_payments_token
+MERCADOPAGO_INSTORE_ACCESS_TOKEN=your_production_instore_token
 MERCADOPAGO_WEBHOOK_SECRET=your_mercadopago_webhook_secret
 MERCADOPAGO_NOTIFICATION_URL=https://api.your-domain.com/api/v1/webhooks/mercadopago
 PIX_EXPIRATION_MINUTES=30
+# See docs/MERCADOPAGO_PRODUCTION.md for full go-live checklist
 
 # Mercado Pago (in-person QR — store/POS from npm run mp:setup-store)
 MERCADOPAGO_STORE_EXTERNAL_ID=SARRADABET001

@@ -42,3 +42,50 @@ export interface PixPaymentStatusResponse {
   channel?: PixPaymentChannel;
   isMock?: boolean;
 }
+
+export interface AdminCreateInstorePaymentRequest {
+  userId: number;
+  coinPackageId: number;
+}
+
+export interface AdminPixPaymentListQuery {
+  page?: number;
+  limit?: number;
+  status?: PixPaymentStatus;
+  channel?: PixPaymentChannel;
+  userId?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface AdminPixPaymentListItem {
+  id: number;
+  userId: number;
+  username: string;
+  email: string;
+  amountCents: number;
+  coinsAmount: number;
+  status: PixPaymentStatus;
+  channel: PixPaymentChannel;
+  packageName: string;
+  expiresAt: string;
+  paidAt: string | null;
+  createdAt: string;
+  isMock: boolean;
+}
+
+export interface AdminPixPaymentListResponse {
+  items: AdminPixPaymentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminPixPaymentDetail extends AdminPixPaymentListItem {
+  externalId: string;
+  qrCode: string | null;
+  qrCodeBase64: string | null;
+  copyPaste: string | null;
+  ticketUrl: string | null;
+}

@@ -24,6 +24,7 @@
     "db:seed:simple": "npx tsx prisma/seed-simple.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed:simple",
     "mp:setup-store": "tsx scripts/setupMercadoPagoStore.ts",
+    "mp:validate-live": "tsx scripts/validateMercadoPagoLiveSetup.ts",
     "webhook:configure": "tsx scripts/configureWebhookTunnel.ts",
     "webhook:tunnel": "bash scripts/runNgrok.sh"
   },

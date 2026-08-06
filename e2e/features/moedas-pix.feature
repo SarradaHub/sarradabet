@@ -14,6 +14,15 @@ Funcionalidade: Compra de moedas via Pix
     Quando simulo pagamento aprovado
     Então devo ver o texto "Pagamento confirmado! Suas moedas foram creditadas."
 
+  @pix @regression @smoke
+  Cenário: Compra com QR presencial mock e simulação de pagamento
+    Dado que estou logado como "user"
+    Quando navego para "/coins"
+    E compro o primeiro pacote com QR presencial
+    Então devo ver o pagamento QR presencial pendente
+    Quando simulo pagamento aprovado
+    Então devo ver o texto "Pagamento confirmado! Suas moedas foram creditadas."
+
   @regression
   Cenário: Usuário visualiza saldo e histórico
     Dado que estou logado como "user"

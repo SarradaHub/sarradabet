@@ -35,8 +35,8 @@ function isPlaceholderAccessToken(token: string): boolean {
 }
 
 async function main(): Promise<void> {
-  if (!config.MERCADOPAGO_ACCESS_TOKEN) {
-    console.error("MERCADOPAGO_ACCESS_TOKEN is required.");
+  if (!config.mercadoPagoInstoreAccessToken) {
+    console.error("MERCADOPAGO_INSTORE_ACCESS_TOKEN (or MERCADOPAGO_ACCESS_TOKEN) is required.");
     console.error("");
     console.error("Create apps/api/.env.local with:");
     console.error("MERCADOPAGO_ACCESS_TOKEN=APP_USR-your-test-token");
@@ -48,9 +48,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (isPlaceholderAccessToken(config.MERCADOPAGO_ACCESS_TOKEN)) {
+  if (isPlaceholderAccessToken(config.mercadoPagoInstoreAccessToken)) {
     console.error(
-      "MERCADOPAGO_ACCESS_TOKEN is still a placeholder in apps/api/.env.",
+      "MERCADOPAGO_INSTORE_ACCESS_TOKEN is still a placeholder in apps/api/.env.",
     );
     console.error("");
     console.error("Mercado Pago > Suas integrações > sarradabet > Credenciais de teste");

@@ -242,6 +242,27 @@ export const CreatePixPurchaseSchema = z.object({
   coinPackageId: IdSchema,
 });
 
+export const AdminCreateInstorePaymentSchema = z.object({
+  userId: IdSchema,
+  coinPackageId: IdSchema,
+});
+
+export const AdminPixPaymentQuerySchema = PaginationSchema.extend({
+  status: z
+    .enum(["PENDING", "APPROVED", "EXPIRED", "CANCELLED", "FAILED"])
+    .optional(),
+  channel: z.enum(["online", "instore"]).optional(),
+  userId: z.coerce.number().int().positive().optional(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD")
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD")
+    .optional(),
+});
+
 export const CreateRewardSchema = z.object({
   title: z
     .string()

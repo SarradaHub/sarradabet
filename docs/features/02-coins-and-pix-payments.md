@@ -1,6 +1,6 @@
 # Feature 02 — Coin Economy and Pix Payments
 
-**Status:** Complete (online Pix). Local **real MP** testing documented; instore QR is Feature 07.
+**Status:** Complete (online Pix + instore QR). Live MP credentials validated; manual test-buyer payment confirms coin credit.
 
 ## Prompt summary
 
@@ -18,30 +18,25 @@ Implement the coin economy: add coin balance to users, a service to credit/debit
 | Webhook HMAC + coin credit + Socket.io | Done |
 | Frontend Coins page + QR display | Done |
 | MP test credentials in `apps/api/.env` | Configured (app `sarradabet`, id `7716487240713931`) |
-| Instore store/POS (step 2) | Done — see [Feature 07](./07-mercadopago-qr-instore.md) |
+| Instore QR coin purchases | Done — see [Feature 07](./07-mercadopago-qr-instore.md) |
 
-### What the user was doing (Jul 2026)
+### Live integration status
 
-1. Configure Mercado Pago integration (application → store/POS → **real Pix testing**).
-2. Hit mock Pix (red square QR, `mock_` in copia-e-cola) → fixed with `MERCADOPAGO_MOCK_PIX=false` + `PixQrCode` component.
-3. Set up **ngrok** for local webhooks — see [`docs/LOCAL_WEBHOOKS.md`](../LOCAL_WEBHOOKS.md).
-4. Login timeout on WSL → fixed by using **Vite proxy** in dev (see [Local dev networking](#local-dev-networking-wsl)).
-
-### Likely next steps
-
-1. Finish ngrok auth + run `npm run webhook:tunnel` → `npm run webhook:configure` → restart API → **new** Pix purchase.
-2. Pay with MP **test buyer**; confirm webhook hits local API and coins credit.
-3. Optionally wire **Feature 03** `BET_COST` debit on vote.
-4. Instore QR **payment processing** (`POST /v1/orders`) — Feature 07 step 3, not this doc.
+| Check | Status |
+|-------|--------|
+| MP test app configured (`sarradabet`) | Done |
+| `npm run mp:validate-live -- --ping` | Passes with test credentials |
+| Mock mode off (`MERCADOPAGO_MOCK_PIX=false`) | Done — use string `true`/`false` in `.env` (not `z.coerce.boolean`) |
+| Pay with test buyer → coins credit | Manual — use ngrok locally or deployed webhook URL |
 
 ### Do not confuse
 
-| Flow | API | Used on Coins page? |
-|------|-----|---------------------|
-| **Online Pix** (this feature) | MP `Payment` API | Yes |
-| **Instore QR** (Feature 07) | MP Stores/POS + Orders API | No (not wired yet) |
+| Flow | API | UI |
+|------|-----|-----|
+| **Online Pix** | MP `Payment` API | Coins page → Pix online |
+| **Instore QR** | MP Stores/POS + Orders API | Coins page → QR presencial; admin → `/admin/payments` |
 
-Store/POS IDs in env are for future instore orders, not for current coin Pix purchases.
+Store/POS IDs are used only by the instore QR flow, not online Pix.
 
 ---
 
@@ -66,6 +61,7 @@ Issues encountered while integrating MP. Use this when debugging or continuing w
 | 11 | Login `timeout of 10000ms exceeded` | Browser on Windows/WSL called `localhost:8000` directly | Dev uses Vite proxy — unset `VITE_API_URL` in [`apps/web/.env`](../../apps/web/.env); open `localhost:3002` |
 | 12 | **Entrar** button disappeared | Nav hid auth buttons while `status === "loading"` | [`Navigation.tsx`](../../apps/web/src/components/Navigation.tsx) shows Entrar when not authenticated; refresh timeout 10s |
 | 13 | Payment stuck pending (no webhook yet) | Frontend only polled DB, not MP | [`PixPaymentService.getPaymentStatus`](../../apps/api/src/modules/payment/services/PixPaymentService.ts) calls MP `getPayment` when PENDING (non-mock) |
+| 14 | `MERCADOPAGO_MOCK_PIX=false` still used mock | `z.coerce.boolean()` treats string `"false"` as `true` | Fixed in [`env.ts`](../../apps/api/src/config/env.ts) — use enum `true`/`false` strings |
 
 ### Open / user action required
 
@@ -74,8 +70,8 @@ Issues encountered while integrating MP. Use this when debugging or continuing w
 | A | `ERR_NGROK_4018` / not authenticated | `ngrok config add-authtoken YOUR_TOKEN` — see [`LOCAL_WEBHOOKS.md`](../LOCAL_WEBHOOKS.md) |
 | B | `webhook:configure` can't find ngrok URL | Start `npm run webhook:tunnel` first; URL changes each session → re-run configure + restart API |
 | C | MP panel webhook sync fails in script | Manual: **Suas integrações → sarradabet → Webhooks** → test URL `https://<ngrok>/api/v1/webhooks/mercadopago`, topic `payment` |
-| D | Real Pix E2E not verified end-to-end | Complete ngrok flow; pay with MP **test buyer**; watch for `POST /webhooks/mercadopago` in API logs |
-| E | Confusion: online Pix vs instore QR | Coins page = **Payment API** only. Store/POS = Feature 07 step 3 (`POST /v1/orders`) — not wired to coin purchase yet |
+| D | Real Pix E2E with test buyer | Run ngrok flow (local) or pay against deployed API; watch `POST /webhooks/mercadopago`; use `npm run mp:validate-live -- --ping` first |
+| E | Confusion: online Pix vs instore QR | Online = Payment API on Coins (Pix online). Instore = Orders API on Coins (QR presencial) or admin `/admin/payments` |
 
 ### MP app context (test)
 
@@ -174,6 +170,7 @@ Documented in [`docs/API.md`](../API.md).
 | Script | Purpose |
 |--------|---------|
 | `npm run mp:setup-store` | Create/find MP store + POS (Feature 07 step 2) |
+| `npm run mp:validate-live -- --ping` | Validate MP env + ping `/users/me` |
 | `npm run webhook:configure` | Set `MERCADOPAGO_NOTIFICATION_URL` from ngrok → `.env.local` |
 | `npm run webhook:tunnel` | Start ngrok on port 8000 (`scripts/runNgrok.sh`) |
 
@@ -287,6 +284,7 @@ Open app at **`http://localhost:3002`** (Vite default). Production builds still 
 | Doc | Topic |
 |-----|--------|
 | [LOCAL_WEBHOOKS.md](../LOCAL_WEBHOOKS.md) | ngrok, `webhook:configure`, test buyer |
+| [MERCADOPAGO_PRODUCTION.md](../MERCADOPAGO_PRODUCTION.md) | Production go-live (credentials, webhooks) |
 | [07-mercadopago-qr-instore.md](./07-mercadopago-qr-instore.md) | Store/POS setup, Orders API (future) |
 | [DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md) | Env files, dev setup |
 | [API.md](../API.md) | REST + webhook contract |

@@ -1,4 +1,8 @@
 import type {
+  AdminCreateInstorePaymentRequest,
+  AdminPixPaymentDetail,
+  AdminPixPaymentListQuery,
+  AdminPixPaymentListResponse,
   CoinBalance,
   CoinPackage,
   CoinTransaction,
@@ -167,8 +171,48 @@ class AdminHouseService {
   }
 }
 
+class AdminPaymentService {
+  private readonly api = createApiClient("admin/payments");
+
+  async createInstorePurchase(
+    data: AdminCreateInstorePaymentRequest,
+  ): Promise<CreatePixPurchaseResponse> {
+    const response = await this.api.post<ApiResponse<CreatePixPurchaseResponse>>(
+      "/instore",
+      data,
+    );
+    return response.data.data;
+  }
+
+  async listPayments(
+    params?: AdminPixPaymentListQuery,
+  ): Promise<AdminPixPaymentListResponse> {
+    const response = await this.api.get<
+      ApiResponse<AdminPixPaymentListResponse>
+    >("/pix", { params });
+    return response.data.data;
+  }
+
+  async getPaymentDetail(paymentId: number): Promise<AdminPixPaymentDetail> {
+    const response = await this.api.get<ApiResponse<AdminPixPaymentDetail>>(
+      `/pix/${paymentId}`,
+    );
+    return response.data.data;
+  }
+
+  async simulateMockInstoreApproval(
+    paymentId: number,
+  ): Promise<PixPaymentStatusResponse> {
+    const response = await this.api.post<ApiResponse<PixPaymentStatusResponse>>(
+      `/instore/${paymentId}/simulate-approval`,
+    );
+    return response.data.data;
+  }
+}
+
 export const coinService = new CoinService();
 export const paymentService = new PaymentService();
 export const authService = new AuthService();
 export const adminCoinPackageService = new AdminCoinPackageService();
 export const adminHouseService = new AdminHouseService();
+export const adminPaymentService = new AdminPaymentService();

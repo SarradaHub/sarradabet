@@ -104,11 +104,14 @@ npm run webhook:configure -- --no-sync
 
 ## 5. Test real Pix
 
-1. Open the web app → Coins → buy a package
-2. Confirm copia-e-cola **does not** contain `mock`
-3. Pay with a Mercado Pago **test buyer** account
-4. Watch API logs for `POST /api/v1/webhooks/mercadopago`
-5. Coins should credit; UI updates via polling / Socket.io
+1. Validate setup: `cd apps/api && npm run mp:validate-live -- --ping`
+2. Open the web app → Coins → buy a package (Pix online or QR presencial)
+3. Confirm copia-e-cola **does not** contain `mock`
+4. Pay with a Mercado Pago **test buyer** account
+5. Watch API logs for `POST /api/v1/webhooks/mercadopago`
+6. Coins should credit; UI updates via polling / Socket.io
+
+Admin cashier flow: `/admin/payments` → Caixa QR → select user + package → display QR.
 
 ## Required env vars
 

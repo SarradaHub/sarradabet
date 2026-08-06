@@ -106,7 +106,8 @@ Require `Authorization: Bearer <accessToken>`:
 | `DELETE /api/v1/users/:id` | Admin only (cannot delete self) |
 | `GET /api/v1/coins/balance`, `GET /api/v1/coins/transactions` | Any authenticated user |
 | `POST /api/v1/payments/pix`, `GET /api/v1/payments/pix/:id` | Any authenticated user |
-| `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
+| `GET /api/v1/admin/coin-packages` | Admin only |
+| `GET/POST /api/v1/admin/payments/pix` | Admin only — payment monitor + cashier |
 | `GET /api/v1/admin/house/summary` | Admin only |
 
 The admin dashboard uses the same auth flow: login via `POST /auth/login` with a user that has `role: ADMIN`.
@@ -1111,6 +1112,72 @@ On valid payment notifications, the API verifies status with Mercado Pago, credi
 **Instore orders:** webhooks with topic `order` or `merchant_order` are routed to instore order confirmation (`externalId` prefixed with `instore_`). Approved orders credit coins the same way as online Pix.
 
 Invalid signatures return **401**. Non-payment webhook types return `{ "received": true, "ignored": true }`.
+
+## Admin Payment Endpoints
+
+Require admin JWT (`role: ADMIN`). Monitor and create instore QR payments on behalf of users.
+
+### List Pix / Instore Payments
+
+**GET** `/admin/payments/pix`
+
+**Query:** `page`, `limit`, `status` (`PENDING` | `APPROVED` | …), `channel` (`online` | `instore`), `userId`, `startDate`, `endDate` (YYYY-MM-DD).
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "userId": 2,
+        "username": "user",
+        "email": "user@sarradabet.com",
+        "amountCents": 500,
+        "coinsAmount": 100,
+        "status": "PENDING",
+        "channel": "instore",
+        "packageName": "Pacote Básico",
+        "expiresAt": "2024-01-01T00:30:00.000Z",
+        "paidAt": null,
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "isMock": false
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+Channel is inferred from `externalId` prefix (`instore_*` → instore; otherwise online).
+
+### Get Payment Detail
+
+**GET** `/admin/payments/pix/:id`
+
+Returns list fields plus `externalId`, `qrCode`, `qrCodeBase64`, `copyPaste`, `ticketUrl`.
+
+### Create Instore Payment (cashier)
+
+**POST** `/admin/payments/instore`
+
+**Request:**
+
+```json
+{
+  "userId": 2,
+  "coinPackageId": 1
+}
+```
+
+**Response (201):** Same shape as user `POST /payments/instore`.
+
+When `MERCADOPAGO_MOCK_PIX=true`, mock approval: **POST** `/admin/payments/instore/:id/simulate-approval`.
 
 ## Admin Coin Package Endpoints
 

@@ -28,6 +28,8 @@ for (const key of [
   "POSTGRES_URL",
   "POSTGRES_URL_NON_POOLING",
   "MERCADOPAGO_ACCESS_TOKEN",
+  "MERCADOPAGO_PAYMENTS_ACCESS_TOKEN",
+  "MERCADOPAGO_INSTORE_ACCESS_TOKEN",
   "MERCADOPAGO_WEBHOOK_SECRET",
   "MERCADOPAGO_NOTIFICATION_URL",
   "MERCADOPAGO_USER_ID",
@@ -40,9 +42,14 @@ for (const key of [
   unsetIfEmpty(key);
 }
 
-if (process.env.MERCADOPAGO_ACCESS_TOKEN) {
-  process.env.MERCADOPAGO_ACCESS_TOKEN =
-    process.env.MERCADOPAGO_ACCESS_TOKEN.trim();
+for (const key of [
+  "MERCADOPAGO_ACCESS_TOKEN",
+  "MERCADOPAGO_PAYMENTS_ACCESS_TOKEN",
+  "MERCADOPAGO_INSTORE_ACCESS_TOKEN",
+] as const) {
+  if (process.env[key]) {
+    process.env[key] = process.env[key]!.trim();
+  }
 }
 if (process.env.MERCADOPAGO_WEBHOOK_SECRET) {
   process.env.MERCADOPAGO_WEBHOOK_SECRET =
@@ -91,8 +98,14 @@ const envSchema = z.object({
     .optional()
     .transform((value) => value === "true"),
   MERCADOPAGO_ACCESS_TOKEN: z.string().optional(),
+  /** Payments API (online Pix). Use TEST- credentials from Checkout Transparente. */
+  MERCADOPAGO_PAYMENTS_ACCESS_TOKEN: z.string().optional(),
+  /** Orders API (QR presencial). Use APP_USR- credentials from QR / instore setup. */
+  MERCADOPAGO_INSTORE_ACCESS_TOKEN: z.string().optional(),
   MERCADOPAGO_WEBHOOK_SECRET: z.string().optional(),
   MERCADOPAGO_NOTIFICATION_URL: z.string().url().optional(),
+  /** Optional override for Payments API payer.email (advanced; do not use test_user_br@ with TEST- token). */
+  MERCADOPAGO_TEST_PAYER_EMAIL: z.string().email().optional(),
   MERCADOPAGO_USER_ID: z.coerce.number().int().positive().optional(),
   MERCADOPAGO_STORE_EXTERNAL_ID: z.string().default("SARRADABET001"),
   MERCADOPAGO_STORE_NAME: z.string().default("SarradaBet Loja"),
@@ -115,7 +128,10 @@ const envSchema = z.object({
     .min(30, "Pix expiration must be at least 30 minutes (Mercado Pago limit)")
     .max(43200, "Pix expiration cannot exceed 30 days")
     .default(30),
-  MERCADOPAGO_MOCK_PIX: z.coerce.boolean().default(false),
+  MERCADOPAGO_MOCK_PIX: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   BET_TAKEOUT_RATE: z.coerce
     .number()
@@ -139,6 +155,10 @@ const parsed = envSchema.parse(process.env);
 
 export const config = {
   ...parsed,
+  mercadoPagoPaymentsAccessToken:
+    parsed.MERCADOPAGO_PAYMENTS_ACCESS_TOKEN ?? parsed.MERCADOPAGO_ACCESS_TOKEN,
+  mercadoPagoInstoreAccessToken:
+    parsed.MERCADOPAGO_INSTORE_ACCESS_TOKEN ?? parsed.MERCADOPAGO_ACCESS_TOKEN,
   PUBLIC_WEB_URL:
     parsed.PUBLIC_WEB_URL ??
     parsed.CORS_ORIGINS.split(",")[0]?.trim() ??

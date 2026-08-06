@@ -8,6 +8,8 @@ interface PixQrCodeProps {
   qrCodeBase64: string | null;
   copyPaste: string | null;
   isMock?: boolean;
+  size?: number;
+  className?: string;
 }
 
 function shouldRegenerateQr(
@@ -25,6 +27,8 @@ export function PixQrCode({
   qrCodeBase64,
   copyPaste,
   isMock,
+  size = 224,
+  className,
 }: PixQrCodeProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
@@ -34,7 +38,7 @@ export function PixQrCode({
     const renderQr = async () => {
       if (shouldRegenerateQr(qrCodeBase64, isMock) && copyPaste) {
         const dataUrl = await QRCode.toDataURL(copyPaste, {
-          width: 224,
+          width: size,
           margin: 1,
         });
 
@@ -51,7 +55,7 @@ export function PixQrCode({
 
     void renderQr().catch(() => {
       if (!cancelled && copyPaste) {
-        void QRCode.toDataURL(copyPaste, { width: 224, margin: 1 })
+        void QRCode.toDataURL(copyPaste, { width: size, margin: 1 })
           .then((dataUrl) => {
             if (!cancelled) {
               setImageSrc(dataUrl);
@@ -68,18 +72,24 @@ export function PixQrCode({
     return () => {
       cancelled = true;
     };
-  }, [copyPaste, isMock, qrCodeBase64]);
+  }, [copyPaste, isMock, qrCodeBase64, size]);
 
   if (!imageSrc) {
     return null;
   }
+
+  const displaySize = Math.round(size * 1.15);
 
   return (
     <div className="flex justify-center">
       <img
         src={imageSrc}
         alt="QR Code Pix"
-        className="w-56 h-56 rounded-xl bg-white p-3"
+        className={
+          className ??
+          "rounded-xl bg-white p-3"
+        }
+        style={{ width: displaySize, height: displaySize }}
       />
     </div>
   );

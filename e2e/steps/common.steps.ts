@@ -7,6 +7,7 @@ import { AdminBetsPage } from "../pages/admin-bets.page";
 import { AdminCategoriesPage } from "../pages/admin-categories.page";
 import { AdminUsersPage } from "../pages/admin-users.page";
 import { AdminCoinPackagesPage } from "../pages/admin-coin-packages.page";
+import { AdminPaymentsPage } from "../pages/admin-payments.page";
 import { AdminRewardsPage } from "../pages/admin-rewards.page";
 
 Given("que não estou autenticado", async ({ page }) => {
@@ -33,6 +34,10 @@ When("navego para {string}", async ({ page }, path: string) => {
   }
   if (path === "/admin/coin-packages") {
     await new AdminCoinPackagesPage(page).goto();
+    return;
+  }
+  if (path === "/admin/payments") {
+    await new AdminPaymentsPage(page).goto();
     return;
   }
   if (path === "/admin/rewards") {

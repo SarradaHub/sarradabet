@@ -18,16 +18,16 @@ export class MercadoPagoClient implements PixGateway {
   private paymentApi: Payment | null = null;
 
   private getPaymentApi(): Payment {
-    if (!config.MERCADOPAGO_ACCESS_TOKEN) {
+    if (!config.mercadoPagoPaymentsAccessToken) {
       throw new ExternalServiceError(
         "MercadoPago",
-        "MERCADOPAGO_ACCESS_TOKEN is not configured",
+        "MERCADOPAGO_PAYMENTS_ACCESS_TOKEN (or MERCADOPAGO_ACCESS_TOKEN) is not configured",
       );
     }
 
     if (!this.paymentApi) {
       const client = new MercadoPagoConfig({
-        accessToken: config.MERCADOPAGO_ACCESS_TOKEN,
+        accessToken: config.mercadoPagoPaymentsAccessToken,
       });
       this.paymentApi = new Payment(client);
     }
