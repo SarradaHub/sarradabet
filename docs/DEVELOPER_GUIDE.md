@@ -9,7 +9,7 @@ This guide will help you set up your development environment and understand how 
 ### Required Software
 
 - **Node.js** 20.0.0 or higher
-- **npm** 9.0.0 or higher
+- **npm** 10.9.0 or higher
 - **Docker Desktop** (for database)
 - **Git** (for version control)
 - **VS Code** (recommended editor)
@@ -64,18 +64,19 @@ CORS_ORIGINS=http://localhost:3002,http://localhost:5173
 DATABASE_URL=postgresql://appuser:sarradabet1234@localhost:5433/sarradabet
 DIRECT_URL=postgresql://appuser:sarradabet1234@localhost:5433/sarradabet
 JWT_SECRET=dev-jwt-secret-change-me
+REDIS_URL=redis://localhost:6379
 ```
 
 - **`DIRECT_URL`** is required by Prisma (same as `DATABASE_URL` for local Docker; use Supabase direct port `5432` in production).
 - **`CORS_ORIGINS`** must include the web dev URL or Socket.io connections will fail.
+- **`REDIS_URL`** is required for auth token blacklist, leaderboard cache, and Bull jobs.
+- Mercado Pago vars: see [`apps/api/.env.example`](../apps/api/.env.example) and [LOCAL_WEBHOOKS.md](./LOCAL_WEBHOOKS.md).
 
 #### Frontend (`apps/web/.env`)
 
-```env
-VITE_API_URL=http://localhost:8000
-```
+For local dev, **leave `VITE_API_URL` unset** and use the Vite proxy (`/api`, `/socket.io` → port 8000). See [`apps/web/.env.example`](../apps/web/.env.example).
 
-Use the API **base URL only** — do not append `/api/v1` (the client adds it).
+If you set it explicitly, use the API **base URL only** — do not append `/api/v1`.
 
 ### Mercado Pago webhooks (local Pix testing)
 
@@ -98,8 +99,8 @@ cd apps/api && npm run webhook:configure
 ### 4. Database Setup
 
 ```bash
-# Start PostgreSQL (service name is "db", not "postgres")
-docker compose up -d db
+# Start PostgreSQL and Redis
+docker compose up -d db redis
 
 # Run migrations
 cd apps/api
@@ -125,7 +126,11 @@ This will start:
 | Socket.io | http://localhost:8000/socket.io |
 | Database | localhost:5433 |
 
-Vite proxies `/api` and `/socket.io` to the API in dev when using relative URLs. With `VITE_API_URL` set, the client connects directly to the API.
+Vite proxies `/api` and `/socket.io` to the API in dev when using relative URLs (default). With `VITE_API_URL` set, the client connects directly to the API.
+
+### Design system
+
+The web app depends on `@sarradahub/design-system` from a sibling checkout at `../platform/design-system`. Run `npm run build:design-system` (or `scripts/clone-platform.sh`) before building the web app. CI clones the platform repo automatically.
 
 ## Project Structure
 
@@ -153,7 +158,7 @@ apps/api/
 │   │   ├── cache/          # node-cache wrapper
 │   │   └── middleware/     # Validation, security, cache headers
 │   ├── realtime/           # Socket.io server + event emitter
-│   ├── modules/            # Feature modules (bet, category, admin)
+│   ├── modules/            # Feature modules (auth, user, bet, payment, …)
 │   ├── config/             # env, db, consul
 │   ├── routes/             # Route aggregation
 │   ├── utils/              # Logger, auth helpers
@@ -579,7 +584,7 @@ describe("Your Feature Routes", () => {
 
       const response = await request(app)
         .post("/api/v1/your-features")
-        .set("X-API-Key", "test-api-key")
+        .set("Authorization", "Bearer <test-access-token>")
         .send(featureData)
         .expect(201);
 
@@ -592,7 +597,7 @@ describe("Your Feature Routes", () => {
 
       const response = await request(app)
         .post("/api/v1/your-features")
-        .set("X-API-Key", "test-api-key")
+        .set("Authorization", "Bearer <test-access-token>")
         .send(invalidData)
         .expect(400);
 
@@ -820,7 +825,6 @@ docker compose exec db psql -U appuser -d sarradabet
 
 # View database logs
 docker compose logs db
-```
 ```
 
 ### Frontend Debugging

@@ -119,6 +119,8 @@ npm run webhook:configure -- --no-sync
 | `MERCADOPAGO_NOTIFICATION_URL` | ngrok HTTPS URL (set by `webhook:configure`) |
 | `MERCADOPAGO_MOCK_PIX=false` | Use real Mercado Pago Payment API |
 
+Set `MERCADOPAGO_MOCK_PIX=true` to test Pix locally **without ngrok** (mock QR codes; no real MP webhook).
+
 Keep secrets in `.env.local` (gitignored).
 
 ## Troubleshooting
@@ -140,5 +142,5 @@ Keep secrets in `.env.local` (gitignored).
 
 ## Related docs
 
-- [Feature 02 — Coins & Pix](./features/02-coins-and-pix-payments.md)
-- [Feature 07 — QR instore setup](./features/07-mercadopago-qr-instore.md)
+- [API — Payments & Pix](./API.md) — online Pix and instore QR endpoints
+- [Developer Guide](./DEVELOPER_GUIDE.md) — env setup and `MERCADOPAGO_MOCK_PIX=true` for local testing without ngrok

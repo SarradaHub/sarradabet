@@ -18,8 +18,10 @@ The SarradaBet API is a RESTful API built with Express.js and TypeScript, with a
 
 No authentication required:
 
-- `GET` `/api/v1/bets`, `/api/v1/categories`, `/api/v1/coins/packages`, `/api/v1/leaderboard`, `/api/v1/rewards`
-- `POST` `/api/v1/votes`
+- `GET` `/api/v1/bets`, `/api/v1/bets/status/:status`, `/api/v1/bets/category/:categoryId`
+- `GET` `/api/v1/categories`, `/api/v1/categories/search`
+- `GET` `/api/v1/coins/packages`, `/api/v1/leaderboard`, `/api/v1/rewards`
+- `GET` `/api/v1/tickets/verify/:code`
 - `POST` `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`
 - `GET /health`, `GET /ready`
 
@@ -97,6 +99,7 @@ Require `Authorization: Bearer <accessToken>`:
 | Route | Permission |
 |-------|------------|
 | `GET /api/v1/auth/me` | Any authenticated user |
+| `POST /api/v1/votes` | Any authenticated user (body: `{ oddId, amount }` — debits coins) |
 | `POST /api/v1/bets` | Any authenticated user |
 | `PUT/DELETE/PATCH /api/v1/bets/*` | User with `role: ADMIN` |
 | `POST/PUT/DELETE /api/v1/categories/*` | User with `role: ADMIN` |
@@ -104,10 +107,18 @@ Require `Authorization: Bearer <accessToken>`:
 | `GET /api/v1/users/:id` | Self or admin |
 | `PUT /api/v1/users/:id` | Self or admin |
 | `DELETE /api/v1/users/:id` | Admin only (cannot delete self) |
+| `GET /api/v1/users/me`, `GET /api/v1/users/me/dashboard`, `GET /api/v1/users/me/stats` | Self |
 | `GET /api/v1/coins/balance`, `GET /api/v1/coins/transactions` | Any authenticated user |
 | `POST /api/v1/payments/pix`, `GET /api/v1/payments/pix/:id` | Any authenticated user |
+| `POST /api/v1/payments/instore`, `GET /api/v1/payments/instore/:id` | Any authenticated user |
+| `POST /api/v1/rewards/:id/redeem` | Any authenticated user |
+| `GET /api/v1/rewards/tickets/:uuid/image` | Ticket owner |
 | `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
+| `GET/POST/PUT/DELETE /api/v1/admin/rewards` | Admin only |
+| `POST /api/v1/admin/rewards/tickets/:code/validate` | Admin only |
+| `GET /api/v1/admin/analytics/*` | Admin only |
 | `GET /api/v1/admin/house/summary` | Admin only |
+| `POST /api/v1/jobs/bet-status/run`, `POST /api/v1/jobs/analytics-refresh/run` | Admin (when enabled) |
 
 The admin dashboard uses the same auth flow: login via `POST /auth/login` with a user that has `role: ADMIN`.
 
@@ -178,10 +189,13 @@ interface BetListItem {
   id: number;
   title: string;
   description?: string | null;
-  status: "open" | "closed" | "resolved";
+  status: "scheduled" | "open" | "closed" | "resolved";
   categoryId: number;
   category?: { id: number; title: string };
   totalVotes: number;
+  totalStake: number;
+  startTime?: string | null;
+  closesAt?: string | null;
   createdAt: string; // ISO 8601
   odds: OddWithVotes[];
 }
@@ -191,6 +205,7 @@ interface OddWithVotes {
   title: string;
   value: number;
   totalVotes: number;
+  totalStake: number;
 }
 ```
 
@@ -254,7 +269,7 @@ Connect to the same host as REST. Event names and payloads match [`packages/type
 
 | Event | Payload | Trigger |
 |-------|---------|---------|
-| `vote:created` | `{ betId, oddId, odds[{id,totalVotes}], totalVotes }` | `POST /votes` |
+| `vote:created` | `{ betId, oddId, odds[{id,totalVotes,totalStake,value}], totalVotes, totalStake }` | `POST /votes` |
 | `bet:created` | `BetListItem` | `POST /bets` |
 | `bet:updated` | `BetListItem` | bet update, close, resolve |
 | `bet:resolved` | `{ betId, winningOddId, amount, newBalance }` | bet payout to winning voter |
@@ -766,88 +781,27 @@ Delete a category (only if it has no associated bets).
 
 ## Vote Endpoints
 
-### List Votes
-
-#### GET /votes
-
-Retrieve all votes with optional filtering and pagination.
-
-**Query Parameters:**
-
-- `page` (number, optional): Page number (default: 1)
-- `limit` (number, optional): Items per page (default: 10, max: 100)
-- `betId` (number, optional): Filter by bet ID
-- `oddId` (number, optional): Filter by odd ID
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "data": [
-      {
-        "id": 1,
-        "oddId": 1,
-        "createdAt": "2024-01-01T00:00:00.000Z"
-      }
-    ],
-    "meta": {
-      "page": 1,
-      "limit": 10,
-      "total": 50,
-      "totalPages": 5,
-      "hasNext": true,
-      "hasPrev": false
-    }
-  }
-}
-```
-
-### Get Single Vote
-
-#### GET /votes/:id
-
-Retrieve a specific vote by ID.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "vote": {
-      "id": 1,
-      "oddId": 1,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "odd": {
-        "id": 1,
-        "title": "Yes",
-        "value": 2.5,
-        "betId": 1
-      }
-    }
-  }
-}
-```
+There is no public vote list endpoint. Votes are created via authenticated `POST /votes` only.
 
 ### Create Vote
 
 #### POST /votes
 
-Create a new vote.
+Place a stake on an odd. Requires authentication. Debits `amount` coins from the user's balance (`BET_COST` transaction).
 
 **Request Body:**
 
 ```json
 {
-  "oddId": 1
+  "oddId": 1,
+  "amount": 10
 }
 ```
 
 **Validation Rules:**
 
 - `oddId`: Required, must exist and belong to an open bet
+- `amount`: Required positive integer; user must have sufficient `coinBalance`
 
 **Response:**
 
@@ -1523,7 +1477,7 @@ Returns accumulated parimutuel takeout credited to the system `house` user, plus
 - `200` - Success
 - `201` - Created
 - `400` - Bad Request (validation errors)
-- `401` - Unauthorized (invalid API key)
+- `401` - Unauthorized (missing or invalid JWT)
 - `403` - Forbidden (insufficient permissions)
 - `404` - Not Found
 - `409` - Conflict (duplicate or business rule violation)
@@ -1600,78 +1554,76 @@ Cross-Origin Resource Sharing is configured with:
 
 0. **Optional — listen for realtime events** (see Realtime API section above).
 
-1. **Create a category:**
+1. **Create a category** (admin):
 
    ```bash
    curl -X POST http://localhost:8000/api/v1/categories \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <adminToken>" \
      -d '{"title": "Sports"}'
    ```
 
-2. **Create a bet:**
+2. **Create a bet** (authenticated user):
 
    ```bash
    curl -X POST http://localhost:8000/api/v1/bets \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <token>" \
      -d '{
        "title": "Will Team A win?",
        "categoryId": 1,
        "odds": [
-         {"title": "Yes", "value": 2.50},
-         {"title": "No", "value": 1.67}
+         {"title": "Yes"},
+         {"title": "No"}
        ]
      }'
    ```
 
-3. **Vote on an odd:**
+   Odds values are parimutuel — calculated after stakes, not set at creation.
+
+3. **Vote on an odd** (authenticated, with coin stake):
 
    ```bash
    curl -X POST http://localhost:8000/api/v1/votes \
      -H "Content-Type: application/json" \
-     -d '{"oddId": 1}'
+     -H "Authorization: Bearer <token>" \
+     -d '{"oddId": 1, "amount": 10}'
    ```
 
-4. **Close the bet:**
+4. **Close the bet** (admin):
 
    ```bash
-   curl -X PATCH http://localhost:8000/api/v1/bets/1/close
+   curl -X PATCH http://localhost:8000/api/v1/bets/1/close \
+     -H "Authorization: Bearer <adminToken>"
    ```
 
-5. **Resolve the bet:**
+5. **Resolve the bet** (admin):
 
    ```bash
    curl -X PATCH http://localhost:8000/api/v1/bets/1/resolve \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <adminToken>" \
      -d '{"winningOddId": 1}'
    ```
 
-## SDKs and Libraries
+## Client libraries
 
-### JavaScript/TypeScript
+There is no published `@sarradabet/api-client` package yet (planned — see [ROADMAP](./ROADMAP.md)). Use:
+
+- **Web:** Axios services under `apps/web/src/services/` with custom `useQuery` / `useMutation` hooks
+- **Types:** `@sarradabet/types` for DTOs and realtime event shapes
+- **Mobile (planned):** shared `packages/api-client` per Feature 06
+
+### JavaScript/TypeScript (manual fetch)
 
 ```typescript
-import {
-  BetService,
-  CategoryService,
-  VoteService,
-} from "@sarradabet/api-client";
-
-const betService = new BetService({
-  baseURL: "http://localhost:8000/api/v1",
+const res = await fetch("http://localhost:8000/api/v1/bets", {
+  headers: { Authorization: `Bearer ${accessToken}` },
 });
-
-// Create a bet
-const bet = await betService.create({
-  title: "Will Team A win?",
-  categoryId: 1,
-  odds: [
-    { title: "Yes", value: 2.5 },
-    { title: "No", value: 1.67 },
-  ],
-});
+const { data } = await res.json();
 ```
 
-### Python
+### Python (example)
 
 ```python
 import requests
