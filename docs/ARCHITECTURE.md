@@ -58,16 +58,21 @@ apps/api/src/
 │   ├── socket.ts                  # IO server on HTTP server
 │   └── emitter.ts                 # Typed event broadcast
 ├── modules/                       # Feature modules
+│   ├── auth/
+│   ├── user/
 │   ├── bet/
-│   │   ├── repositories/
-│   │   ├── services/
-│   │   ├── controllers/
-│   │   ├── mappers/               # Slim BetListItem / BetDetail DTOs
-│   │   └── __tests__/
 │   ├── category/
-│   └── admin/
-├── config/                        # env.ts, db.ts, consul
-├── routes/                        # Route aggregation
+│   ├── coin/
+│   ├── coin-package/
+│   ├── payment/
+│   ├── reward/
+│   ├── stats/
+│   ├── dashboard/
+│   ├── analytics/
+│   └── ticket/
+├── routes/                        # Legacy route aggregation (votes, webhooks, jobs)
+├── controllers/                   # Legacy controllers
+├── config/                        # env.ts, db, Redis
 ├── utils/
 ├── app.ts                         # Express + REST + compression
 └── server.ts                      # HTTP server + Socket.io bootstrap
@@ -95,9 +100,12 @@ sequenceDiagram
 
 | Event | Emitter | Payload |
 |-------|---------|---------|
-| `vote:created` | `vote.service.ts` | `{ betId, oddId, odds[], totalVotes }` |
+| `vote:created` | vote service | `{ betId, oddId, odds[], totalVotes, totalStake }` |
 | `bet:created` | `BetService.create` | `BetListItem` |
 | `bet:updated` | `BetService` update/close/resolve | `BetListItem` |
+| `bet:resolved` | payout worker | `{ betId, winningOddId, amount, newBalance }` |
+| `payment:confirmed` | Pix/instore webhook | `{ paymentId, coinsAmount, newBalance, paidAt }` |
+| `reward:validated` | admin ticket validate | `{ redemptionId, rewardTitle, ticketCode, ... }` |
 
 Event contracts: [`packages/types/src/realtime.ts`](../packages/types/src/realtime.ts). API reference: [API.md](./API.md#realtime-api-socketio).
 
@@ -108,15 +116,17 @@ Event contracts: [`packages/types/src/realtime.ts`](../packages/types/src/realti
 | Layer | Implementation | Notes |
 |-------|----------------|-------|
 | Backend memory | `CacheService` (node-cache) | Categories 5m, resolved bets 2m, bet detail 30s |
+| Redis | ioredis | Auth token blacklist, leaderboard, dashboard cache, ticket PNG cache |
+| Bull jobs | Redis-backed queues | Bet status transitions, analytics materialized-view refresh |
 | HTTP headers | `cacheHeaders` middleware | `GET /api/v1/categories` |
-| Response size | `bet.mapper.ts` | Slim list DTOs vs full detail |
+| Response size | `bet.mapper.ts` | Slim list DTOs with `totalStake`; full detail on `GET /bets/:id` |
 | Wire format | `compression` middleware | gzip above ~1KB |
-| Frontend | `useQuery` + `queryCache` | Stale-while-revalidate; `RealtimeProvider` patches cache and notifies `useQuery` subscribers |
+| Frontend | `useQuery` + `queryCache` | Stale-while-revalidate; `RealtimeProvider` patches cache |
 | Frontend UI | `VoteSlip` optimistic vote | Rollback on error; socket reconciles counts |
 
 ## Shared Types
 
-The `@sarradabet/types` package exports `BetListItem`, `BetDetail`, `Category`, and `RealtimeEvents`. Both `apps/api` and `apps/web` depend on it.
+The `@sarradabet/types` package exports bet, category, coin, payment, user, and realtime contracts. Both `apps/api` and `apps/web` depend on it.
 
 ### Layer Responsibilities
 
@@ -306,23 +316,23 @@ apps/web/src/
 ├── context/
 │   └── RealtimeProvider.tsx     # Socket listeners → cache patches
 ├── services/                    # API services
-│   ├── BetService.ts           # Bet API service
-│   ├── CategoryService.ts      # Category API service
-│   └── VoteService.ts          # Vote API service
+│   ├── AuthService.ts, UserService.ts, BetService.ts
+│   ├── CategoryService.ts, VoteService.ts, CoinService.ts
+│   ├── PaymentService.ts, RewardService.ts, DashboardService.ts
+│   └── AnalyticsService.ts, TicketService.ts
 ├── hooks/                       # Domain-specific hooks
-│   ├── useBets.ts              # staleTime 2m
-│   ├── useCategories.ts        # staleTime 5m
-│   └── useCategories.ts        # staleTime 5m
+│   ├── useBets.ts, useCategories.ts, useAuth.ts, useCoins.ts
+│   └── useAdminAuth.ts, useDashboard.ts, …
 ├── components/
 │   ├── ui/                     # Button, Modal, BetRowSkeleton, etc.
-│   ├── CreateBetModal.tsx
-│   ├── BetCard.tsx             # Socket vote updates + category from list
-│   ├── OddsList.tsx            # Selection UI + odd flash animation
-│   └── sportsbook/VoteSlip.tsx # Optimistic vote + rollback
+│   ├── CreateBetModal.tsx, BetCard.tsx, OddsList.tsx
+│   ├── sportsbook/VoteSlip.tsx # Optimistic vote + rollback
+│   └── admin/AdminLayout.tsx
 ├── pages/
-│   ├── HomePage.tsx
-│   ├── AdminLogin.tsx          # lazy-loaded
-│   └── AdminDashboard.tsx      # lazy-loaded
+│   ├── HomePage.tsx, LoginPage.tsx, RegisterPage.tsx
+│   ├── DashboardPage.tsx, CoinsPage.tsx, LeaderboardPage.tsx
+│   ├── RewardsPage.tsx, ProfilePage.tsx, TicketVerifyPage.tsx
+│   └── admin/                  # AdminBets, AdminCategories, AdminRewards, …
 ├── types/                       # Re-exports from @sarradabet/types
 └── App.tsx                     # Router + RealtimeProvider
 ```
@@ -628,7 +638,9 @@ const validateBetForm = (data: CreateBetDto) => {
 
 **Security Features:**
 
-- API key authentication
+- JWT authentication with refresh token rotation and Redis blacklist
+- RBAC via `UserRole` (`USER`, `ADMIN`) and `authenticateAdmin` middleware
+- Optional `X-API-Key` middleware exists but is **not mounted** on routes
 - Request size limiting
 - Input sanitization
 - SQL injection prevention (Prisma ORM)

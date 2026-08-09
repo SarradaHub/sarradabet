@@ -1,197 +1,54 @@
-# 📚 SarradaBet Documentation
+# SarradaBet Documentation
 
-Welcome to the comprehensive documentation for the SarradaBet betting platform. This documentation covers all aspects of the application, from architecture to deployment.
+Documentation for the SarradaBet betting platform: architecture, API reference, deployment, and planned work.
 
-## 📖 Documentation Index
+## Start here
 
-### Getting Started
+- **[Main README](../README.md)** — clone, install, `npm run dev`
+- **[Developer Guide](./DEVELOPER_GUIDE.md)** — env, Docker (`db` + `redis`), tests, conventions
 
-- **[Main README](../README.md)** - Project overview, quick start, and basic setup
-- **[Developer Guide](./DEVELOPER_GUIDE.md)** - Development setup, workflow, and contribution guidelines
+## Reference (shipped behavior)
 
-### Architecture & Design
+- **[API](./API.md)** — REST + Socket.io contracts
+- **[Architecture](./ARCHITECTURE.md)** — Clean Architecture, modules, realtime, caching
+- **[Performance](./PERFORMANCE.md)** — indexes, Redis, pooling, validation checklist
 
-- **[Architecture Documentation](./ARCHITECTURE.md)** - Clean architecture, realtime data flow, and patterns
-- **[API Documentation](./API.md)** - REST reference, Socket.io events, and schemas
+## Operations
 
-### Feature Implementation Guides
+- **[Deployment](./DEPLOYMENT.md)** — Vercel/Render (primary); optional self-hosted templates
+- **[Local Mercado Pago webhooks](./LOCAL_WEBHOOKS.md)** — ngrok + real Pix testing
 
-- **[Feature Guides Index](./features/README.md)** - Status matrix, dependency graph, and links to all specs
-- **[01 — User Auth & CRUD](./features/01-user-auth-and-crud.md)** - Complete
-- **[02 — Coins & Pix Payments](./features/02-coins-and-pix-payments.md)** - Complete (online Pix)
-- **[03 — Bet Closure & Payout](./features/03-bet-closure-and-payout.md)** - Done
-- **[04 — Gamification & Rewards](./features/04-gamification-and-rewards.md)** - Done
-- **[05 — Dashboard & Analytics](./features/05-dashboard-and-analytics.md)** - Done
-- **[06 — Mobile App & Advanced Admin](./features/06-mobile-app-and-admin-panel.md)** - Planned
-- **[07 — Mercado Pago QR Instore](./features/07-mercadopago-qr-instore.md)** - Complete
+## Planned work
 
-### Agent Action Plans
+- **[Roadmap](./ROADMAP.md)** — single source of truth for unshipped items
+- **[Feature 06 — Mobile & advanced admin](./features/06-mobile-app-and-admin-panel.md)**
+- **[Action plans](./action-plans/)** — granular implementation specs (social login, dark mode, etc.)
 
-Step-by-step, MCP-aware implementation guides for Cursor agents and developers:
-
-- **[Action Plans Index](./action-plans/)** - Six executable initiative plans (TDD, Clean Code, design patterns)
-- **[01 — Social Login](./action-plans/01-social-login.md)**
-- **[02 — Dark Mode Toggle](./action-plans/02-dark-mode-toggle.md)**
-- **[03 — Admin Coin Management](./action-plans/03-admin-coin-management.md)**
-- **[04 — Financial Disclaimers](./action-plans/04-disclaimers.md)**
-- **[05 — UX Flow & Breadcrumbs](./action-plans/05-ux-flow-breadcrumbs.md)**
-- **[06 — Supabase Image Upload](./action-plans/06-supabase-upload.md)**
-
-### Deployment & Operations
-
-- **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment (Docker/nginx primary)
-- **[Performance Guide](./PERFORMANCE.md)** - Caching, pooling, realtime scaling, blackbox validation
-
-## 🚀 Quick Navigation
-
-### For Developers
-
-1. Start with the [Main README](../README.md) or [Developer Guide](./DEVELOPER_GUIDE.md) for setup
-2. Review [Architecture Documentation](./ARCHITECTURE.md) for realtime and caching design
-3. Use [API Documentation](./API.md) for REST + Socket.io integration
-
-### For DevOps/System Administrators
-
-1. Follow the [Deployment Guide](./DEPLOYMENT.md) for production setup
-2. Review [Performance Guide](./PERFORMANCE.md) for Supabase pooling and scaling notes
-3. Implement backup and monitoring procedures
-
-### For Product Managers/Business Users
-
-1. Start with the [Main README](../README.md) for feature overview
-2. Review the [API Documentation](./API.md) for integration capabilities
-3. Check deployment options in the [Deployment Guide](./DEPLOYMENT.md)
-
-## 📋 Documentation Structure
+## Documentation structure
 
 ```
 docs/
-├── README.md              # This index file
-├── ARCHITECTURE.md        # System architecture and design patterns
-├── API.md                 # REST + Socket.io API documentation
-├── DEVELOPER_GUIDE.md     # Development setup and workflow
-├── DEPLOYMENT.md          # Production deployment guide
-├── PERFORMANCE.md         # Performance, caching, and validation
-├── features/              # Implementation guides (prompt specs + codebase map)
-│   ├── README.md          # Status matrix and dependency graph
-│   ├── 01-user-auth-and-crud.md
-│   ├── 02-coins-and-pix-payments.md
-│   ├── 03-bet-closure-and-payout.md
-│   ├── 04-gamification-and-rewards.md
-│   ├── 05-dashboard-and-analytics.md
-│   ├── 06-mobile-app-and-admin-panel.md
-│   └── 07-mercadopago-qr-instore.md
-└── action-plans/          # Agent-executable initiative plans (MCP + TDD)
-    ├── 01-social-login.md
-    ├── 02-dark-mode-toggle.md
-    ├── 03-admin-coin-management.md
-    ├── 04-disclaimers.md
-    ├── 05-ux-flow-breadcrumbs.md
-    └── 06-supabase-upload.md
+├── README.md              # This index
+├── ROADMAP.md             # Planned work only
+├── API.md                 # REST + Socket.io
+├── ARCHITECTURE.md        # System design
+├── DEVELOPER_GUIDE.md     # Setup and workflow
+├── DEPLOYMENT.md          # Production deployment
+├── PERFORMANCE.md         # Caching, scaling, validation
+├── LOCAL_WEBHOOKS.md      # Mercado Pago local testing
+├── features/
+│   ├── README.md          # Feature 06 only
+│   └── 06-mobile-app-and-admin-panel.md
+└── action-plans/          # Agent-executable plans
+    ├── README.md
+    └── 01–06-*.md
 ```
 
-## 🎯 Key Features Covered
+## Contributing to docs
 
-### Backend Architecture
+1. **Shipped behavior** → update living refs (`API.md`, `ARCHITECTURE.md`, etc.).
+2. **New planned work** → add to [ROADMAP.md](./ROADMAP.md) and optionally an action plan.
+3. **Completed plan** → remove from ROADMAP; trim or delete the action-plan file.
+4. Keep `packages/types` in sync when changing API or realtime contracts.
 
-- **Clean Architecture** with separation of concerns
-- **Socket.io** realtime layer (`realtime/` — push on vote and bet mutations)
-- **Repository / Service / Controller** layers with Prisma ORM
-- **In-memory cache** (`node-cache`) for categories and resolved bets
-- **Response compression** and slim list DTOs via bet mappers
-- **Validation** with Zod; **security** middleware (Helmet, rate limiting, CORS)
-
-### Frontend Architecture
-
-- **React 19** with custom hooks (`useQuery`, `useMutation`, `useSocket`)
-- **`RealtimeProvider`** — patches query cache on Socket.io events
-- **Optimistic voting** in `VoteSlip` with rollback on error
-- **Lazy-loaded admin routes** and skeleton loaders
-- **Shared types** via `@sarradabet/types`
-
-### API Features
-
-- **RESTful API** at `/api/v1` plus **Socket.io** at `/socket.io`
-- **Public endpoints** for bets (read), categories, votes; **JWT user auth** with refresh cookies and `UserRole`
-- Pagination, filtering, health checks
-- **HTTP cache headers** on category list responses
-
-### Testing
-
-- Unit tests for business logic and hooks
-- Integration tests for REST bet routes
-- Blackbox validation checklist in [Performance Guide](./PERFORMANCE.md)
-
-### Security
-
-- Input validation and sanitization
-- Rate limiting and security headers
-- CORS configuration (must include frontend origin for Socket.io)
-- JWT user authentication with refresh token rotation
-
-### Deployment
-
-- **Docker / nginx / PM2** (primary path in Deployment Guide)
-- **Vercel** for web (`apps/web`) and API (`apps/api`) — two projects, separate `vercel.json` per app
-- **Render** as an alternative API host
-- Database migrations with `DATABASE_URL` + `DIRECT_URL`
-
-## 🔧 Technology Stack
-
-### Backend
-
-- **Node.js** ≥20, **Express.js**, **Socket.io**
-- **TypeScript**, **PostgreSQL**, **Prisma ORM**
-- **node-cache**, **compression**, **Zod**, **Jest**, **Winston**
-
-### Frontend
-
-- **React** 19, **Vite**, **Tailwind CSS**
-- **socket.io-client**, custom query/mutation hooks
-- **Vitest**, **React Testing Library**
-
-### Shared
-
-- **`@sarradabet/types`** — `BetListItem`, `BetDetail`, `RealtimeEvents`
-
-### DevOps
-
-- **Docker Compose** (local `db` service on port 5433)
-- **Nginx** reverse proxy (including WebSocket upgrade for `/socket.io`)
-- **Supabase** connection pooling in production
-
-## 🤝 Contributing
-
-1. Read the [Developer Guide](./DEVELOPER_GUIDE.md)
-2. Follow patterns in [Architecture Documentation](./ARCHITECTURE.md)
-3. Keep `packages/types` in sync when changing API or realtime contracts
-4. Write tests and update docs with your changes
-
-## 📈 Roadmap
-
-### Documentation
-
-- [x] **Performance Optimization Guide** — [PERFORMANCE.md](./PERFORMANCE.md)
-- [ ] **Security Best Practices** — comprehensive security guidelines
-- [ ] **Monitoring and Alerting** — production monitoring setup
-- [ ] **API Versioning Guide** — managing API evolution
-- [ ] **Testing Strategies** — advanced testing patterns
-- [ ] **CI/CD Pipeline** — automated deployment workflows
-
-### Features
-
-- [x] **Real-time Updates** — Socket.io (see [ARCHITECTURE.md](./ARCHITECTURE.md) and [API.md](./API.md))
-- [x] **User Authentication** — see [Feature 01](./features/01-user-auth-and-crud.md)
-- [x] **Payment Integration (Pix)** — online Pix via Mercado Pago; see [Feature 02](./features/02-coins-and-pix-payments.md)
-- [x] **Bet Closure & Payout** — see [Feature 03](./features/03-bet-closure-and-payout.md)
-- [x] **Gamification & Rewards** — see [Feature 04](./features/04-gamification-and-rewards.md)
-- [x] **Dashboard & Analytics** — see [Feature 05](./features/05-dashboard-and-analytics.md)
-- [x] **Admin Panel (web SPA)** — bets, categories, coin packages, users, rewards, analytics
-- [x] **Mercado Pago QR Instore** — see [Feature 07](./features/07-mercadopago-qr-instore.md)
-- [ ] **Mobile App & Advanced Admin** — see [Feature 06](./features/06-mobile-app-and-admin-panel.md)
-
----
-
-**Happy coding!** 🚀
-
-For quick local setup, start with the [Main README](../README.md).
+See [Developer Guide](./DEVELOPER_GUIDE.md) for the full contribution workflow.

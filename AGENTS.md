@@ -1,37 +1,60 @@
 # AGENTS.md
 
-Cross-agent memory for [SarradaBet](https://github.com/SarradaHub/sarradabet): a mock betting platform with real-time odds, optimistic voting, coin purchases via Mercado Pago Pix, and shared TypeScript contracts.
+Cross-agent memory for [SarradaBet](https://github.com/SarradaHub/sarradabet): a mock betting platform with real-time parimutuel odds, authenticated stake voting, coin purchases via Mercado Pago Pix (online + instore QR), gamification, and shared TypeScript contracts.
 
-## Project overview
+> **Purpose:** Primes Cursor Agent/Composer with repo context — what is **shipped**, what is **planned**, coding standards, and gotchas.  
+> **Last updated:** 2026-08-09  
+> **Maintainer:** Update when features ship or architecture changes.
 
-SarradaBet is an **npm workspaces + Turborepo** monorepo. The backend is an Express API with Prisma/PostgreSQL, Socket.io realtime, and Clean Architecture layers. The frontend is a React 19 SPA (Vite + Tailwind). Shared API and realtime contracts live in `@sarradabet/types`.
+---
 
-| Workspace | Path | Purpose |
-|-----------|------|---------|
-| `api` | `apps/api` | Express REST (`/api/v1`), Socket.io, Prisma, Mercado Pago |
-| `web` | `apps/web` | React SPA, optimistic voting, admin UI |
-| `@sarradabet/types` | `packages/types` | Shared types for bets, categories, coins, payments, realtime, users |
-| `e2e` | `e2e` | Playwright + Gherkin BDD end-to-end tests |
+## 1. Project baseline
 
-**Local URLs (default)**
+| Aspect | Detail |
+|--------|--------|
+| **Repository** | npm workspaces + Turborepo monorepo |
+| **Package manager** | npm 10.9.0 |
+| **Node** | ≥ 20 |
+| **API** | `apps/api` — Express, Prisma, Socket.io, Bull, Redis |
+| **Web** | `apps/web` — React 19 SPA (Vite + Tailwind + `@sarradahub/design-system`) |
+| **Mobile** | `apps/mobile` — **Planned** (Feature 06) |
+| **Shared packages** | `@sarradabet/types` only today; `@sarradabet/api-client` **Planned** |
+| **Database** | PostgreSQL (local Docker; Supabase in production) |
+| **Cache & queues** | Redis + Bull (ioredis) |
+| **Auth** | JWT access token + HttpOnly refresh cookie (web); Bearer for API clients |
+| **Realtime** | Socket.io |
+| **State (web)** | Custom `useQuery` / `useMutation` — not React Query |
+| **E2E** | `e2e/` — Playwright + Gherkin BDD |
+
+### Local URLs (default)
 
 | Service | URL |
 |---------|-----|
 | Web | http://localhost:3002 |
 | API | http://localhost:8000 |
 | Health | http://localhost:8000/health |
+| Ready | http://localhost:8000/ready |
 | Socket.io | http://localhost:8000/socket.io |
-| Postgres (Docker) | localhost:5433 |
-| Redis (Docker) | localhost:6379 |
+| Postgres (Docker `db`) | localhost:5433 |
+| Redis (Docker `redis`) | localhost:6379 |
 
-## Prerequisites
+### Environment variables (critical)
 
-- Node.js **≥ 20** (see root `engines`)
-- npm **10.9.0** (`packageManager` in root `package.json`)
-- Docker (local Postgres and Redis)
-- Git access to clone [`SarradaHub/platform`](https://github.com/SarradaHub/platform) for the web design system (see Build notes)
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` / `DIRECT_URL` | Prisma (pooler + direct for migrations) |
+| `JWT_SECRET` | JWT signing |
+| `REDIS_URL` | Token blacklist, leaderboard, dashboard cache, Bull |
+| `CORS_ORIGINS` | Must include web origin for Socket.io |
+| `MERCADOPAGO_ACCESS_TOKEN` | Pix online + instore |
+| `MERCADOPAGO_WEBHOOK_SECRET` | Webhook HMAC validation |
+| `MERCADOPAGO_STORE_ID`, `MERCADOPAGO_POS_ID`, `MERCADOPAGO_POS_UUID` | Instore QR |
+| `BET_TAKEOUT_RATE`, `HOUSE_USER_USERNAME` | Parimutuel house takeout |
+| `MERCADOPAGO_MOCK_PIX` | Local Pix without real MP |
 
-## Dev environment setup
+Full list: [`apps/api/.env.example`](apps/api/.env.example). Mercado Pago local testing: [`docs/LOCAL_WEBHOOKS.md`](docs/LOCAL_WEBHOOKS.md).
+
+### Dev setup
 
 ```bash
 git clone https://github.com/SarradaHub/sarradabet.git
@@ -45,295 +68,227 @@ docker compose up -d db redis
 npm run prisma:migrate:dev
 npm run db:seed:simple   # optional
 
-npm run dev              # starts api + web in parallel via Turbo
+npm run dev              # api + web via Turbo
 ```
 
-**Environment files**
+**Web env:** leave `VITE_API_URL` unset for Vite proxy. **Design system:** `npm run build:design-system` clones/builds `@sarradahub/design-system` from `SarradaHub/platform`.
 
-- `apps/api/.env` — copy from `apps/api/.env.example`. Key vars: `DATABASE_URL`, `DIRECT_URL`, `CORS_ORIGINS`, `JWT_SECRET`, `REDIS_URL`, Mercado Pago tokens in `.env.local` (gitignored).
-- `apps/web/.env` — copy from `apps/web/.env.example`. For local dev, leave `VITE_API_URL` unset and use the Vite proxy (`/api`, `/socket.io` → port 8000). If set, use base URL only — **no** `/api/v1` suffix.
+---
 
-**Docker Compose service names**
+## 2. Coding standards & patterns
 
-- Postgres service is named `db` (not `postgres`), host port **5433**.
-- Redis service is named `redis`, host port **6379**.
+### Backend (Express modules)
 
-**Design system dependency**
+- New endpoints → `apps/api/src/modules/<feature>/` (repository → service → controller → routes).
+- Legacy routes under `apps/api/src/routes/` and `controllers/` still exist (votes, webhooks, jobs) — prefer modules for new work.
+- Validate with **Zod** + `ValidationMiddleware`.
+- Throw typed errors from `apps/api/src/core/errors/AppError.ts`.
+- Emit Socket.io events **after** successful DB transactions.
+- Coin balance writes → use `prisma.$transaction` via `CoinService`.
 
-The web app depends on `@sarradahub/design-system` from a sibling checkout at `../platform/design-system`. Root `npm run build:design-system` and `scripts/clone-platform.sh` clone `SarradaHub/platform` automatically. CI does the same before build.
+### Frontend (Vite React SPA)
 
-## Commands reference
-
-Run from the **repository root** unless noted.
-
-### Development
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start `api` and `web` dev servers in parallel |
-| `npm run -w apps/api dev` | API only (`tsx watch src/server.ts`) |
-| `npm run -w apps/web dev` | Web only (Vite on port 3002) |
-
-### Build and typecheck
-
-| Command | Description |
-|---------|-------------|
-| `npm run build` | Clone/build design system, then `turbo run build` |
-| `npm run build:design-system` | Clone platform repo and build design system |
-| `npm run check-types` | Typecheck all workspaces |
-| `npm run lint` | ESLint across workspaces |
-| `npm run format` | Prettier on `**/*.{ts,tsx,md}` |
-
-### Database (Prisma)
-
-| Command | Description |
-|---------|-------------|
-| `npm run prisma:generate` | Generate Prisma client |
-| `npm run prisma:migrate:dev` | Create/apply dev migrations |
-| `npm run prisma:migrate:deploy` | Apply migrations (CI/production) |
-| `npm run prisma:studio` | Open Prisma Studio |
-| `npm run prisma:check` | Migration status |
-| `npm run db:seed` | Full seed |
-| `npm run db:seed:simple` | Minimal seed (used in CI) |
-| `npm run db:reset` | Reset DB and run simple seed |
-
-### Testing
-
-| Command | Description |
-|---------|-------------|
-| `npm test` | All workspace tests via Turbo |
-| `npm run test:api` | API tests (Jest) |
-| `npm run test:api:unit` | API unit tests only |
-| `npm run test:api:integration` | API integration tests only |
-| `npm run test:api:coverage` | API with coverage (CI) |
-| `npm run test:web` | Web tests (Vitest) |
-| `npm run test:web:coverage` | Web with coverage (CI) |
-| `npm run test:e2e` | Playwright BDD E2E (full suite) |
-| `npm run test:e2e:smoke` | E2E smoke scenarios only (`@smoke`) |
-
-### API-only scripts (`apps/api`)
-
-| Command | Description |
-|---------|-------------|
-| `npm run mp:setup-store` | Mercado Pago in-store QR store/POS setup |
-| `npm run webhook:configure` | Configure ngrok webhook tunnel |
-| `npm run webhook:tunnel` | Run ngrok for local Pix webhooks |
-
-See `docs/LOCAL_WEBHOOKS.md` and `docs/features/07-mercadopago-qr-instore.md` for Mercado Pago local testing.
-
-## Repository layout
-
-```
-sarradabet/
-├── apps/
-│   ├── api/                 # Express + Prisma + Socket.io
-│   │   ├── prisma/          # schema + migrations
-│   │   ├── src/
-│   │   │   ├── core/        # Base classes, cache, middleware, errors
-│   │   │   ├── modules/     # Feature modules (see below)
-│   │   │   ├── realtime/    # Socket.io server + typed emitter
-│   │   │   ├── routes/      # Route aggregation
-│   │   │   ├── config/      # env.ts, db, auth middleware
-│   │   │   ├── app.ts       # Express app
-│   │   │   └── server.ts    # HTTP + Socket.io bootstrap
-│   │   └── scripts/         # Mercado Pago, ngrok, env helpers
-│   └── web/                 # React SPA
-│       └── src/
-│           ├── core/        # useApi, useQuery, useMutation, useSocket
-│           ├── context/     # RealtimeProvider
-│           ├── services/    # Axios API clients
-│           ├── hooks/       # Domain hooks (useBets, useAuth, …)
-│           ├── components/  # UI + feature components
-│           └── pages/       # Route pages (admin lazy-loaded)
-├── packages/
-│   └── types/               # @sarradabet/types — change contracts here first
-├── docs/                    # Architecture, API, deployment, feature specs
-├── scripts/
-│   └── clone-platform.sh    # Clones SarradaHub/platform for design system
-├── docker-compose.yml       # db (5433), redis (6379)
-├── turbo.json
-└── package.json             # Root workspace scripts
-```
-
-### API feature modules
-
-Each module follows **repository → service → controller → routes**, extending base classes in `apps/api/src/core/`:
-
-| Module | Path | Domain |
-|--------|------|--------|
-| `auth` | `modules/auth/` | JWT login, refresh tokens |
-| `user` | `modules/user/` | User CRUD |
-| `bet` | `modules/bet/` | Markets, odds, resolution |
-| `category` | `modules/category/` | Bet categories |
-| `coin` | `modules/coin/` | Coin balance and transactions |
-| `coin-package` | `modules/coin-package/` | Purchasable coin packages |
-| `payment` | `modules/payment/` | Mercado Pago Pix, in-store QR |
-
-Legacy route files also exist under `apps/api/src/routes/` and `apps/api/src/controllers/`; prefer adding new endpoints inside `modules/`.
+- Functional components + TypeScript.
+- Data: custom `useQuery`, `useMutation`, `useSocket` — not React Query.
+- `RealtimeProvider` patches query cache on Socket.io events.
+- Optimistic voting in `VoteSlip` with rollback on error.
+- Admin routes lazy-loaded; `@sarradahub/design-system` for shared UI.
 
 ### Shared types
 
-When changing REST payloads or Socket.io events, update `packages/types/src/` first, then API mappers/services and web consumers in the same change.
+- Cross-boundary contracts → `packages/types/src/` first, then API mappers and web consumers.
+- Realtime: `packages/types/src/realtime.ts`.
 
-Realtime event contracts: `packages/types/src/realtime.ts` (`vote:created`, `bet:created`, `bet:updated`).
+### Imports
 
-Exports: `bet`, `category`, `coin`, `payment`, `realtime`, `user`.
+- Follow existing app conventions (`apps/api/src/...`, `apps/web/src/...`).
+- Shared: `@sarradabet/types`.
 
-## Architecture conventions
+### Style
 
-### Backend (Clean Architecture)
+- TypeScript strict; Prettier; ESLint per workspace.
+- Conventional Commits: `feat(scope): description`.
 
-```
-Presentation  → routes, middleware, controllers
-Application   → controllers parse/validate requests
-Domain        → services (business logic, Socket.io emission after DB commit)
-Infrastructure → repositories (Prisma), external clients (Mercado Pago)
-```
+---
 
-- Validate with **Zod** schemas and `ValidationMiddleware`.
-- Throw typed errors from `apps/api/src/core/errors/AppError.ts` (`ValidationError`, `NotFoundError`, `ConflictError`, etc.).
-- Emit Socket.io events **after** successful database transactions.
-- Use `node-cache` via `CacheService` for categories and resolved bets; slim list DTOs via `bet.mapper.ts`.
+## 3. Current feature state
 
-### Frontend
+| Domain | Status | Key areas |
+|--------|--------|-----------|
+| User auth & CRUD | Shipped | `modules/auth/`, `modules/user/`, JWT + refresh rotation, Redis blacklist |
+| Coins & Pix (online) | Shipped | `modules/coin/`, `modules/payment/` — Pix create/status, webhook |
+| Bet closure & payout | Shipped | Parimutuel odds, authenticated stake votes, Bull bet-status job |
+| Gamification & rewards | Shipped | Leaderboard, stats, rewards redeem, ticket verify/PNG |
+| Dashboard & analytics | Shipped | User dashboard, admin analytics + CSV export |
+| Mercado Pago QR instore | Shipped | Instore orders, webhook, Coins page tab |
+| Mobile & advanced admin | **Planned** | See [Feature 06](docs/features/06-mobile-app-and-admin-panel.md) |
 
-- Functional React components with TypeScript.
-- Data fetching via custom hooks (`useQuery`, `useMutation`) — not React Query.
-- `RealtimeProvider` patches the in-memory query cache on Socket.io events.
-- Optimistic voting in `VoteSlip` with rollback on error.
-- Tailwind CSS for styling; `@sarradahub/design-system` for shared UI primitives.
+**Planned initiatives:** [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/action-plans/](docs/action-plans/) (social login, dark mode, disclaimers, breadcrumbs, Supabase upload).
 
-## Code style
+---
 
-- **TypeScript strict mode** in all workspaces.
-- **Naming**: PascalCase (classes, types), camelCase (functions, variables), UPPER_SNAKE_CASE (constants), kebab-case (file names, URLs).
-- **Formatting**: Prettier (`npm run format`).
-- **Linting**: ESLint per app (`apps/api/eslint.config.mjs`, `apps/web/eslint.config.js`).
-- Keep business logic in services, data access in repositories, HTTP handling in controllers.
-- Minimize scope: match existing patterns; do not introduce unrelated abstractions.
+## 4. Key API & Socket.io contracts
 
-## Testing instructions
+Base: `http://localhost:8000/api/v1`. Full reference: [`docs/API.md`](docs/API.md).
 
-Before finishing a task that changes behavior, run the relevant checks:
+| Method | Route | Auth | Notes |
+|--------|-------|------|-------|
+| POST | `/auth/login`, `/auth/register`, `/auth/refresh`, `/auth/logout` | Public | Refresh via HttpOnly cookie |
+| GET | `/bets`, `/categories`, `/leaderboard`, `/rewards` | Public | Filters on bets |
+| POST | `/votes` | **Required** | Body `{ oddId, amount }` — debits coins |
+| POST | `/bets` | Required | Odds titles only at create (parimutuel) |
+| POST | `/payments/pix`, `/payments/instore` | Required | Online + instore QR |
+| GET | `/users/me/dashboard` | Required | User dashboard |
+| POST | `/rewards/:id/redeem` | Required | Generates ticket |
+| GET/POST | `/admin/rewards`, `/admin/analytics/*` | Admin | CRUD + analytics |
+| POST | `/webhooks/mercadopago` | MP HMAC | No JWT |
 
-```bash
-npm run lint
-npm run check-types
-npm test
-```
+**Not shipped (Planned — Feature 06):** `PATCH /admin/users/:id/ban`, `POST /admin/users/:id/coins/adjust`, `GET /admin/payments/pix`.
 
-For focused work:
+### Socket.io events
 
-```bash
-npm run test:api:unit          # API unit tests
-npm run test:api:integration   # API route integration tests (needs test DB)
-npm run test:web               # Vitest + React Testing Library
-```
+| Event | Scope |
+|-------|-------|
+| `vote:created` | Broadcast — includes `totalStake` |
+| `bet:created`, `bet:updated` | Broadcast — `BetListItem` |
+| `bet:resolved`, `payment:confirmed`, `reward:validated` | User room `user:{userId}` |
 
-**Test locations**
+Payloads: `packages/types/src/realtime.ts`.
 
-- API: `apps/api/src/**/__tests__/`, `apps/api/src/__tests__/integration/`
-- Web: `apps/web/src/**/__tests__/`
+---
 
-**Test tooling**
+## 5. Data model highlights (Prisma)
 
-- API: Jest, Supertest, Fishery factories in `apps/api/src/__tests__/factories/`
-- Web: Vitest, jsdom, React Testing Library
+Coins and stakes use **Int** (not Decimal). `Odd.value` is Float (parimutuel-calculated).
 
-Add or update tests for changed behavior. Integration tests use database `sarradabet_test` (initialized by Docker init script and CI).
+```prisma
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  role         UserRole @default(USER)
+  coinBalance  Int      @default(0)
+  votes        Vote[]
+  // isBanned — Planned (Feature 06)
+}
 
-## CI pipeline
+model Bet {
+  status     BetStatus  // scheduled | open | closed | resolved
+  startTime  DateTime?
+  closesAt   DateTime?
+  categoryId Int        // required
+  odds       Odd[]
+}
 
-`.github/workflows/ci.yml` delegates to `SarradaHub/platform/.github/workflows/node-monorepo-ci.yaml` and runs:
-
-1. `npm ci`
-2. `npm run lint`
-3. `npm run check-types`
-4. Clone platform + `npm run build`
-5. `prisma generate` + `prisma migrate deploy` + `db:seed:simple`
-6. `npm run test:api:coverage` and `npm run test:web:coverage`
-
-PRs targeting `main` or `develop` trigger CI. Large PRs (>1000 changed lines) get an automated warning via `.github/workflows/pr.yml`.
-
-## Security considerations
-
-- Never commit secrets. Use `apps/api/.env.local` for Mercado Pago tokens and other sensitive values.
-- `JWT_SECRET`, database URLs, and Mercado Pago credentials must be set in deployment environments.
-- `CORS_ORIGINS` must include the web app origin or Socket.io connections fail.
-- Input validation via Zod on all mutating endpoints; Helmet, rate limiting, and request sanitization middleware are enabled.
-- Prisma ORM prevents SQL injection; sanitize user-facing error messages on the frontend.
-- Mercado Pago webhooks require HTTPS — use ngrok locally (`npm run webhook:tunnel`, `npm run webhook:configure`).
-- Set `MERCADOPAGO_MOCK_PIX=true` for local Pix testing without real payments when appropriate.
-
-## Pull request and commit guidelines
-
-**Branches**: `feature/…`, `fix/…`, `refactor/…`, `docs/…`
-
-**Commits**: [Conventional Commits](https://www.conventionalcommits.org/) — `type(scope): description`
-
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-
-Examples:
-
-```
-feat(bets): add bet closure endpoint
-fix(auth): handle expired refresh token
-docs(api): document coin purchase flow
+model Vote {
+  userId  Int
+  oddId   Int
+  amount  Int           // coin stake
+  status  VoteStatus    // pending | paid | lost
+}
 ```
 
-**PR requirements**
+Schema: [`apps/api/prisma/schema.prisma`](apps/api/prisma/schema.prisma).
 
-- Clear description; link related issues
-- Screenshots for UI changes
-- Update `packages/types` and docs when changing API or realtime contracts
-- All CI checks green before merge
-- Prefer smaller PRs (CI warns above 1000 changed lines)
+---
 
-## Feature work
+## 6. Gotchas
 
-Planned and in-progress features are documented in `docs/features/`. Read the relevant guide before implementing:
+### Money & stakes
 
-| Guide | Topic | Status |
-|-------|-------|--------|
-| `docs/features/01-user-auth-and-crud.md` | Auth & user CRUD | Complete |
-| `docs/features/02-coins-and-pix-payments.md` | Coins & Pix | Complete (online Pix) |
-| `docs/features/03-bet-closure-and-payout.md` | Bet closure | Done |
-| `docs/features/04-gamification-and-rewards.md` | Gamification | Done |
-| `docs/features/05-dashboard-and-analytics.md` | Analytics | Done |
-| `docs/features/06-mobile-app-and-admin-panel.md` | Mobile & admin | Planned |
-| `docs/features/07-mercadopago-qr-instore.md` | In-store QR | Complete |
+- Coin balances and vote `amount` are **Int** in Prisma.
+- `POST /votes` requires auth + sufficient balance; not anonymous.
+- Parimutuel: odd values computed from stakes, not fixed at bet creation.
 
-Recommended order: 01 → 02 → 03 → 04 → 05 → 06. Feature 07 depends on 02.
+### Auth
 
-## Deployment notes
+- Web: HttpOnly refresh cookie on `/api/v1/auth`; send `credentials: 'include'`.
+- Access token blacklist in Redis on logout.
+- Mobile auth pattern not implemented yet (Feature 06).
 
-- **Web**: Vercel, root `apps/web`, requires platform design-system clone at build time.
-- **API**: Vercel (`apps/api`) or Render; set `DATABASE_URL`, `DIRECT_URL`, `CORS_ORIGINS`, `JWT_SECRET`.
-- **Database**: Supabase in production; use pooler URL for `DATABASE_URL` and direct URL for `DIRECT_URL`.
-- **Migrations**: `npm run prisma:migrate:deploy` in CI/production.
-- Multi-instance Socket.io requires `@socket.io/redis-adapter` — see `docs/PERFORMANCE.md`.
+### Dark mode
 
-Full details: `docs/DEPLOYMENT.md`, `docs/PERFORMANCE.md`.
+- **Not shipped.** Action plan 02 — custom `ThemeProvider`, not `next-themes`.
 
-## Documentation index
+### Realtime & scaling
+
+- Socket.io in-process; multi-instance needs `@socket.io/redis-adapter` — see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
+
+### Mercado Pago
+
+- Webhooks need HTTPS locally → ngrok (`npm run webhook:tunnel`, `webhook:configure`).
+- Or `MERCADOPAGO_MOCK_PIX=true` for mock Pix without ngrok.
+
+---
+
+## 7. Commands reference
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start api + web |
+| `npm run build` | Design system + turbo build |
+| `npm run lint` / `check-types` / `npm test` | Quality gates |
+| `npm run prisma:migrate:dev` | Dev migrations |
+| `npm run test:api` / `test:web` / `test:e2e` | Targeted tests |
+| `npm run mp:setup-store` | MP instore store/POS |
+
+---
+
+## 8. Planned work
+
+- **[docs/ROADMAP.md](docs/ROADMAP.md)** — SSOT for unshipped items
+- **[docs/features/06-mobile-app-and-admin-panel.md](docs/features/06-mobile-app-and-admin-panel.md)** — mobile + ban/coin-adjust/Pix monitor
+- **[docs/action-plans/](docs/action-plans/)** — granular plans
+
+Shipped behavior lives in living docs — not in deleted feature guides 01–05/07.
+
+---
+
+## 9. Documentation index
 
 | Doc | Purpose |
 |-----|---------|
-| `README.md` | Human-facing overview and quick start |
-| `docs/ARCHITECTURE.md` | Layers, realtime flow, caching, error handling |
-| `docs/API.md` | REST endpoints and Socket.io payloads |
-| `docs/DEVELOPER_GUIDE.md` | Extended setup, feature scaffolding, debugging |
-| `docs/DEPLOYMENT.md` | Production deployment |
-| `docs/PERFORMANCE.md` | Pooling, compression, scaling |
-| `docs/LOCAL_WEBHOOKS.md` | Mercado Pago webhook tunnel setup |
+| [`docs/README.md`](docs/README.md) | Docs hub |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Planned work only |
+| [`docs/API.md`](docs/API.md) | REST + Socket.io |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Layers, modules, caching |
+| [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md) | Setup, testing, conventions |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Vercel/Render; Docker templates |
+| [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) | Redis, indexes, scaling |
+| [`docs/LOCAL_WEBHOOKS.md`](docs/LOCAL_WEBHOOKS.md) | MP webhook tunnel |
 
-## Agent workflow checklist
+---
 
-When implementing changes:
+## 10. Agent workflow checklist
 
-1. Read the nearest `AGENTS.md` (this file at repo root; add nested files under `apps/*` if package-specific rules emerge).
-2. Identify affected workspace (`api`, `web`, or `types`).
-3. For API/realtime contract changes, start in `packages/types`.
-4. Follow existing module structure and base classes.
-5. Run `npm run lint`, `npm run check-types`, and targeted tests.
-6. Update relevant docs in `docs/` when behavior or APIs change.
+1. Read this file + relevant living doc (`API.md`, `ARCHITECTURE.md`).
+2. For new work, check [`docs/ROADMAP.md`](docs/ROADMAP.md) and action plans.
+3. API/realtime changes → start in `packages/types`.
+4. Follow module structure and base classes in `apps/api/src/core/`.
+5. Run `npm run lint`, `npm run check-types`, targeted tests.
+6. When shipping: update living docs; remove item from ROADMAP.
+
+---
+
+## 11. CI, security, PR guidelines
+
+**CI** (`.github/workflows/ci.yml`): lint → types → build (with design-system clone) → migrate → test.
+
+**Security:** never commit secrets; use `apps/api/.env.local` for MP tokens; validate all mutating endpoints; Helmet + rate limiting + CORS.
+
+**PRs:** Conventional Commits; update `packages/types` + docs when contracts change; screenshots for UI; CI green.
+
+**Branches:** `feature/…`, `fix/…`, `refactor/…`, `docs/…`
+
+---
+
+## 12. Recent changes log
+
+| Date | Change |
+|------|--------|
+| 2026-08-09 | Docs cleanup: deleted feature guides 01–05/07; added ROADMAP; refreshed living docs; rewrote AGENTS.md |
+| — | Shipped: auth, coins/Pix, bet payout, gamification, analytics, instore QR |
+
+---
+
+**End of AGENTS.md**

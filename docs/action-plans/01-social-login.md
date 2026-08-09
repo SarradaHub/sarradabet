@@ -140,7 +140,7 @@ model OAuthAccount {
 ### Phase D — Documentation
 
 - [ ] **MCP: filesystem** — Update [`docs/API.md`](../API.md) with OAuth endpoints.
-- [ ] **MCP: filesystem** — Update [`docs/features/01-user-auth-and-crud.md`](../features/01-user-auth-and-crud.md) status note.
+- [ ] **MCP: filesystem** — Update [API.md](../API.md) auth section if OAuth providers are added.
 
 ## 7. UI/UX Implementation Details
 

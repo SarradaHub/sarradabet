@@ -48,21 +48,32 @@ The API pushes events on `/socket.io`:
 
 | Event | Trigger |
 |-------|---------|
-| `vote:created` | New vote |
+| `vote:created` | New authenticated stake vote |
 | `bet:created` | New bet |
 | `bet:updated` | Bet update, close, resolve |
+| `bet:resolved` | Payout to winning voter |
+| `payment:confirmed` | Pix/instore payment approved |
+| `reward:validated` | Admin validates reward ticket |
 
 Payload shapes: [`packages/types/src/realtime.ts`](../packages/types/src/realtime.ts). REST + listener examples: [API.md](./API.md#realtime-api-socketio).
 
 ## Caching
 
-| Layer | What | TTL |
-|-------|------|-----|
+| Layer | What | TTL / notes |
+|-------|------|-------------|
 | Backend `node-cache` | Categories list | 5 min |
 | Backend `node-cache` | Resolved bets | 2 min |
 | Backend `node-cache` | Single bet detail | 30 s |
+| Redis | Leaderboard top 100 | configurable |
+| Redis | User dashboard aggregate | per-user keys |
+| Redis | Auth token blacklist | until JWT expiry |
+| Redis | Ticket PNG cache | configurable |
+| Bull + Redis | Bet status job | scheduled transitions |
+| Bull + Redis | Analytics refresh | materialized views |
 | HTTP `Cache-Control` | `GET /api/v1/categories` | 5 min + SWR 60 s |
 | Frontend query cache | Categories | 5 min stale |
+
+List bet DTOs include `totalStake` (parimutuel aggregation). Use `GET /ready` for readiness probes (DB check; 503 on failure).
 
 ## Horizontal scaling note
 
@@ -92,8 +103,8 @@ curl -s -H 'Accept-Encoding: gzip' -D - \
 ### Socket.io + vote
 
 1. Start a Socket.io listener (see [API.md](./API.md#realtime-api-socketio)).
-2. `curl -X POST http://localhost:8000/api/v1/votes -H 'Content-Type: application/json' -d '{"oddId": 1}'`
-3. Expect `vote:created` on the listener with updated `totalVotes`.
+2. `curl -X POST http://localhost:8000/api/v1/votes -H 'Content-Type: application/json' -H 'Authorization: Bearer <token>' -d '{"oddId": 1, "amount": 10}'`
+3. Expect `vote:created` on the listener with updated `totalVotes` and `totalStake`.
 
 ### Browser (two clients)
 

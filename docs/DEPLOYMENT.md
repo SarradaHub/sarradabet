@@ -2,9 +2,13 @@
 
 ## Overview
 
-This guide covers deploying the SarradaBet application to production. The stack includes an Express API with **Socket.io**, a React frontend, and PostgreSQL. For local development setup, see the [Main README](../README.md).
+This guide covers deploying the SarradaBet application to production. The stack includes an Express API with **Socket.io**, a React (Vite) frontend, PostgreSQL, and **Redis**.
+
+**Primary deployment path:** Vercel (web + API) or Render (API). The Docker/nginx/PM2 sections below are **reference templates** — the repo does not ship production Dockerfiles today.
 
 **Default API port:** `8000` (configurable via `PORT`).
+
+> **Production requirements:** set `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `CORS_ORIGINS`, `JWT_SECRET`, and Mercado Pago credentials. See [`apps/api/.env.example`](../apps/api/.env.example).
 
 ## Deployment Options
 
@@ -14,7 +18,9 @@ This guide covers deploying the SarradaBet application to production. The stack 
 
 ### 3. Cloud Platform Deployment
 
-## Docker Deployment
+## Docker Deployment (reference template)
+
+> Not shipped in repo — create these files if self-hosting with Docker.
 
 ### Prerequisites
 
@@ -49,6 +55,13 @@ services:
       timeout: 10s
       retries: 3
 
+  redis:
+    image: redis:7-alpine
+    container_name: sarradabet-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   api:
     build:
       context: ./apps/api
@@ -61,6 +74,7 @@ services:
       DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sarradabet_prod
       CORS_ORIGINS: ${CORS_ORIGINS}
       JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
       MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET}
       MERCADOPAGO_NOTIFICATION_URL: ${MERCADOPAGO_NOTIFICATION_URL}
@@ -70,6 +84,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

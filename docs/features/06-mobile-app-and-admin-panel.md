@@ -20,19 +20,19 @@ Build a React Native + Expo mobile app in the monorepo, sharing types and API cl
 
 | Page | Path | Status |
 |------|------|--------|
-| Dashboard | [`AdminDashboard.tsx`](../../apps/web/src/pages/AdminDashboard.tsx) | Basic stats/charts |
-| Bets | [`AdminBetsPage.tsx`](../../apps/web/src/pages/AdminBetsPage.tsx) | CRUD + resolve |
-| Categories | [`AdminCategoriesPage.tsx`](../../apps/web/src/pages/AdminCategoriesPage.tsx) | CRUD |
-| Coin packages | [`AdminCoinPackagesPage.tsx`](../../apps/web/src/pages/AdminCoinPackagesPage.tsx) | CRUD |
+| Dashboard | [`AdminDashboard.tsx`](../../apps/web/src/pages/AdminDashboard.tsx) | Done — stats/charts |
+| Bets | [`AdminBetsPage.tsx`](../../apps/web/src/pages/AdminBetsPage.tsx) | Done — CRUD + resolve |
+| Categories | [`AdminCategoriesPage.tsx`](../../apps/web/src/pages/AdminCategoriesPage.tsx) | Done — CRUD |
+| Coin packages | [`AdminCoinPackagesPage.tsx`](../../apps/web/src/pages/AdminCoinPackagesPage.tsx) | Done — CRUD |
+| Rewards | [`AdminRewardsPage.tsx`](../../apps/web/src/pages/AdminRewardsPage.tsx) | Done — CRUD |
+| Users | [`AdminUsersPage.tsx`](../../apps/web/src/pages/AdminUsersPage.tsx) | Partial — list only (no ban/coin adjust) |
 | Admin layout + auth | [`AdminLayout.tsx`](../../apps/web/src/components/admin/AdminLayout.tsx), [`useAdminAuth.ts`](../../apps/web/src/hooks/useAdminAuth.ts) | Done |
 
 ### Missing admin capabilities
 
-- User list with ban/unban
+- User ban/unban
 - Manual coin adjustment per user
 - Pix payment monitor (pending/approved/expired)
-- Rewards CRUD (Feature 04)
-- Advanced analytics (Feature 05)
 
 ### RBAC
 
@@ -106,8 +106,8 @@ Middleware: reject auth for `isBanned` users.
 | PATCH | `/api/v1/admin/users/:id/ban` | Ban/unban |
 | POST | `/api/v1/admin/users/:id/coins/adjust` | Credit/debit with `ADMIN_ADJUSTMENT` |
 | GET | `/api/v1/admin/payments/pix` | Monitor Pix payments by status |
-| CRUD | `/api/v1/admin/rewards` | Feature 04 |
-| GET | `/api/v1/admin/analytics/*` | Feature 05 |
+| CRUD | `/api/v1/admin/rewards` | Shipped — see [API.md](../API.md) |
+| GET | `/api/v1/admin/analytics/*` | Shipped — see [API.md](../API.md) |
 
 ### Push notifications
 
@@ -505,7 +505,7 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 - [ ] Token storage + auto refresh via api-client
 - [ ] Home: bet list with live odds (Socket.io)
 - [ ] Coins: purchase flow (display QR or deep link)
-- [ ] Profile/dashboard (Feature 05 endpoint)
+- [ ] Profile/dashboard (uses `/api/v1/users/me/dashboard` — see [API.md](../API.md))
 - [ ] Push: register token on login, handle notifications
 - [ ] Navigation: React Navigation
 
@@ -513,9 +513,9 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 
 - [ ] Admin users page: list, search, ban, coin adjust
 - [ ] Admin Pix monitor: filter by status, view details
-- [ ] Admin rewards CRUD (depends Feature 04)
-- [ ] Enhanced analytics charts (depends Feature 05)
-- [ ] Confirm all `/admin/*` routes use `authenticateAdmin`
+- [x] Admin rewards CRUD — shipped
+- [x] Analytics dashboards — shipped
+- [x] Confirm all `/admin/*` routes use `authenticateAdmin`
 
 ### Backend
 
@@ -551,11 +551,10 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 
 ## Dependencies
 
-- [Feature 01 — User auth](./01-user-auth-and-crud.md)
-- [Feature 02 — Coins & Pix](./02-coins-and-pix-payments.md)
-- [Feature 03 — Bet payout](./03-bet-closure-and-payout.md)
-- [Feature 04 — Gamification](./04-gamification-and-rewards.md)
-- [Feature 05 — Dashboard & analytics](./05-dashboard-and-analytics.md)
+Shipped prerequisites (documented in living refs):
+
+- [API.md](../API.md) — auth, coins/Pix, votes, gamification, dashboard, analytics, instore QR
+- [ARCHITECTURE.md](../ARCHITECTURE.md) — module layout, realtime, caching
 
 ## Test plan
 
