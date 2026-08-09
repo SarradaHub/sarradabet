@@ -25,6 +25,18 @@ Welcome to the comprehensive documentation for the SarradaBet betting platform. 
 - **[06 — Mobile App & Advanced Admin](./features/06-mobile-app-and-admin-panel.md)** - Planned
 - **[07 — Mercado Pago QR Instore](./features/07-mercadopago-qr-instore.md)** - Complete
 
+### Agent Action Plans
+
+Step-by-step, MCP-aware implementation guides for Cursor agents and developers:
+
+- **[Action Plans Index](./action-plans/)** - Six executable initiative plans (TDD, Clean Code, design patterns)
+- **[01 — Social Login](./action-plans/01-social-login.md)**
+- **[02 — Dark Mode Toggle](./action-plans/02-dark-mode-toggle.md)**
+- **[03 — Admin Coin Management](./action-plans/03-admin-coin-management.md)**
+- **[04 — Financial Disclaimers](./action-plans/04-disclaimers.md)**
+- **[05 — UX Flow & Breadcrumbs](./action-plans/05-ux-flow-breadcrumbs.md)**
+- **[06 — Supabase Image Upload](./action-plans/06-supabase-upload.md)**
+
 ### Deployment & Operations
 
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment (Docker/nginx primary)
@@ -60,15 +72,22 @@ docs/
 ├── DEVELOPER_GUIDE.md     # Development setup and workflow
 ├── DEPLOYMENT.md          # Production deployment guide
 ├── PERFORMANCE.md         # Performance, caching, and validation
-└── features/              # Implementation guides (prompt specs + codebase map)
-    ├── README.md          # Status matrix and dependency graph
-    ├── 01-user-auth-and-crud.md
-    ├── 02-coins-and-pix-payments.md
-    ├── 03-bet-closure-and-payout.md
-    ├── 04-gamification-and-rewards.md
-    ├── 05-dashboard-and-analytics.md
-    ├── 06-mobile-app-and-admin-panel.md
-    └── 07-mercadopago-qr-instore.md
+├── features/              # Implementation guides (prompt specs + codebase map)
+│   ├── README.md          # Status matrix and dependency graph
+│   ├── 01-user-auth-and-crud.md
+│   ├── 02-coins-and-pix-payments.md
+│   ├── 03-bet-closure-and-payout.md
+│   ├── 04-gamification-and-rewards.md
+│   ├── 05-dashboard-and-analytics.md
+│   ├── 06-mobile-app-and-admin-panel.md
+│   └── 07-mercadopago-qr-instore.md
+└── action-plans/          # Agent-executable initiative plans (MCP + TDD)
+    ├── 01-social-login.md
+    ├── 02-dark-mode-toggle.md
+    ├── 03-admin-coin-management.md
+    ├── 04-disclaimers.md
+    ├── 05-ux-flow-breadcrumbs.md
+    └── 06-supabase-upload.md
 ```
 
 ## 🎯 Key Features Covered
