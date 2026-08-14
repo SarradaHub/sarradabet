@@ -238,6 +238,21 @@ export const CreateCoinPackageSchema = z.object({
 
 export const UpdateCoinPackageSchema = CreateCoinPackageSchema.partial();
 
+export const AdjustCoinsSchema = z.object({
+  amount: z
+    .number()
+    .int("Amount must be an integer")
+    .positive("Amount must be greater than zero"),
+  direction: z.enum(["credit", "debit"], {
+    errorMap: () => ({ message: "Direction must be credit or debit" }),
+  }),
+  reason: z
+    .string()
+    .min(3, "Reason must be at least 3 characters")
+    .max(500, "Reason cannot exceed 500 characters")
+    .trim(),
+});
+
 export const CreatePixPurchaseSchema = z.object({
   coinPackageId: IdSchema,
 });
@@ -330,6 +345,7 @@ export type UserLoginInput = z.infer<typeof UserLoginSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 export type CreateCoinPackageInput = z.infer<typeof CreateCoinPackageSchema>;
 export type UpdateCoinPackageInput = z.infer<typeof UpdateCoinPackageSchema>;
+export type AdjustCoinsInput = z.infer<typeof AdjustCoinsSchema>;
 export type CreatePixPurchaseInput = z.infer<typeof CreatePixPurchaseSchema>;
 export type CreateRewardInput = z.infer<typeof CreateRewardSchema>;
 export type UpdateRewardInput = z.infer<typeof UpdateRewardSchema>;

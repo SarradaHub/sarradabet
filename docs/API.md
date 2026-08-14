@@ -114,6 +114,7 @@ Require `Authorization: Bearer <accessToken>`:
 | `POST /api/v1/rewards/:id/redeem` | Any authenticated user |
 | `GET /api/v1/rewards/tickets/:uuid/image` | Ticket owner |
 | `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
+| `POST /api/v1/admin/users/:id/coins/adjust` | Admin only |
 | `GET/POST/PUT/DELETE /api/v1/admin/rewards` | Admin only |
 | `POST /api/v1/admin/rewards/tickets/:code/validate` | Admin only |
 | `GET /api/v1/admin/analytics/*` | Admin only |
@@ -1103,6 +1104,51 @@ Partial update — same fields as create, all optional.
 **DELETE** `/admin/coin-packages/:id`
 
 Soft-deactivates the package (`isActive: false`). Does not delete historical payments.
+
+## Admin User Coin Adjustment
+
+### Adjust User Coins
+
+**POST** `/admin/users/:id/coins/adjust`
+
+Credits or debits a user's coin balance atomically. Creates a `CoinTransaction` with source `ADMIN_ADJUSTMENT` and an `AdminAuditLog` entry.
+
+**Auth:** Admin only.
+
+**Request:**
+
+```json
+{
+  "amount": 100,
+  "direction": "credit",
+  "reason": "Promotional bonus"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `amount` | integer | Yes | Positive coin amount |
+| `direction` | `"credit"` \| `"debit"` | Yes | Add or remove coins |
+| `reason` | string | Yes | Audit reason (min 3 chars) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "balance": 150,
+    "transactionId": 42
+  }
+}
+```
+
+**Errors:**
+
+- `400` — Invalid amount, insufficient balance on debit, or validation failure
+- `401` — Unauthenticated
+- `403` — Non-admin
+- `404` — Target user not found
 
 ## Leaderboard and User Stats
 
