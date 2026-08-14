@@ -30,6 +30,7 @@ import {
   testIfDbAvailable,
 } from "../helpers/authTestHelper";
 import { createOAuthProvider } from "../../modules/auth/oauth/createOAuthProvider";
+import { oauthStateStore } from "../../modules/auth/services/OAuthStateStore";
 
 jest.mock("../../modules/auth/oauth/createOAuthProvider");
 
@@ -61,6 +62,7 @@ describe("OAuth Routes Integration Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    oauthStateStore.clearMemoryStore();
   });
 
   afterAll(async () => {

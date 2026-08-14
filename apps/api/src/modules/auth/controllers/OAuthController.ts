@@ -14,12 +14,11 @@ import {
 } from "../oauth/createOAuthProvider";
 import {
   buildStoredOAuthState,
-  createSignedOAuthState,
   getOAuthStateCookieName,
   getOAuthStateMaxAgeMs,
-  parseSignedOAuthState,
 } from "../oauth/oauthState";
 import { OAuthService } from "../services/OAuthService";
+import { oauthStateStore } from "../services/OAuthStateStore";
 
 export class OAuthController {
   private readonly oauthService = new OAuthService();
@@ -49,11 +48,14 @@ export class OAuthController {
     });
   }
 
-  private setOAuthStateCookie(res: Response, value: string): void {
+  private setOAuthStateSessionCookie(
+    res: Response,
+    sessionId: string,
+  ): void {
     const cookieSecure =
       config.COOKIE_SECURE ?? config.NODE_ENV === "production";
 
-    res.cookie(getOAuthStateCookieName(), value, {
+    res.cookie(getOAuthStateCookieName(), sessionId, {
       httpOnly: true,
       secure: cookieSecure,
       sameSite: "lax",
@@ -76,7 +78,7 @@ export class OAuthController {
 
       const adapter = createOAuthProvider(provider);
       const authorizationRequest = adapter.createAuthorizationRequest();
-      const signedState = createSignedOAuthState(
+      const sessionId = await oauthStateStore.save(
         buildStoredOAuthState({
           state: authorizationRequest.state,
           provider,
@@ -84,7 +86,7 @@ export class OAuthController {
         }),
       );
 
-      this.setOAuthStateCookie(res, signedState);
+      this.setOAuthStateSessionCookie(res, sessionId);
       res.redirect(authorizationRequest.url.toString());
     } catch (error) {
       if (error instanceof AppError && error.statusCode === 502) {
@@ -116,13 +118,13 @@ export class OAuthController {
 
       const stateParam = typeof req.query.state === "string" ? req.query.state : null;
       const code = typeof req.query.code === "string" ? req.query.code : null;
-      const signedState = req.cookies?.[getOAuthStateCookieName()];
+      const sessionId = req.cookies?.[getOAuthStateCookieName()];
 
-      if (!stateParam || !code || !signedState) {
+      if (!stateParam || !code || !sessionId) {
         throw new ServiceUnavailableError("Invalid OAuth callback parameters");
       }
 
-      const storedState = parseSignedOAuthState(signedState);
+      const storedState = await oauthStateStore.consume(sessionId);
       if (storedState.provider !== provider || storedState.state !== stateParam) {
         throw new ServiceUnavailableError("OAuth state mismatch");
       }

@@ -95,7 +95,7 @@ Returns the authenticated user's profile. Requires `Authorization: Bearer <acces
 
 #### GET /auth/oauth/:provider
 
-Starts OAuth authorization for `google` or `facebook`. Redirects the browser to the provider consent screen and sets a short-lived signed `oauth_state` HttpOnly cookie for CSRF protection.
+Starts OAuth authorization for `google` or `facebook`. Redirects the browser to the provider consent screen and sets a short-lived `oauth_state` HttpOnly cookie containing an opaque session id. PKCE verifier and provider state are stored server-side (Redis with in-memory fallback) for CSRF protection.
 
 Returns `404` for unknown providers. Returns `503` when the provider credentials are not configured.
 
