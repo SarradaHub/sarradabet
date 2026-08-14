@@ -2,7 +2,7 @@ import React from "react";
 import type { AnalyticsOverview } from "@sarradabet/types";
 
 const statCards = [
-  { key: "activeUsers" as const, label: "Usuários ativos", accent: "text-white" },
+  { key: "activeUsers" as const, label: "Usuários ativos", accent: "text-sportsbook-fg" },
   { key: "totalBets" as const, label: "Apostas criadas", accent: "text-sportsbook-odds" },
   {
     key: "totalCoinVolume" as const,

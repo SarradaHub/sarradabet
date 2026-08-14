@@ -69,7 +69,7 @@ const AdminLogin: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
           <BrandLogo size="lg" showText={false} />
-          <h2 className="mt-4 text-center font-display text-3xl font-bold text-white tracking-wide">
+          <h2 className="mt-4 text-center font-display text-3xl font-bold text-sportsbook-fg tracking-wide">
             Admin Login
           </h2>
           <p className="mt-2 text-center text-sm text-sportsbook-muted">
@@ -129,7 +129,7 @@ const AdminLogin: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="text-sportsbook-muted hover:text-white transition-colors text-sm"
+              className="text-sportsbook-muted hover:text-sportsbook-fg transition-colors text-sm"
             >
               ← Voltar para o site
             </button>

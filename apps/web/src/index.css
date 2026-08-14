@@ -5,23 +5,41 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .light {
+    --sb-bg: #f4f4f5;
+    --sb-surface: #ffffff;
+    --sb-surface-raised: #f4f4f5;
+    --sb-border: #e4e4e7;
+    --sb-border-subtle: #d4d4d8;
+    --sb-text: #18181b;
+    --sb-text-muted: #71717a;
+    --sb-odds: #16a34a;
+    --sb-odds-hover: #15803d;
+    --sb-brand-from: #facc15;
+    --sb-brand-to: #f97316;
+    color-scheme: light;
+  }
+
+  .dark {
     --sb-bg: #0a0a0b;
     --sb-surface: #121214;
     --sb-surface-raised: #1a1a1e;
     --sb-border: #2a2a2e;
     --sb-border-subtle: #1f1f23;
+    --sb-text: #f4f4f5;
     --sb-text-muted: #8b8b95;
     --sb-odds: #22c55e;
     --sb-odds-hover: #16a34a;
     --sb-brand-from: #facc15;
     --sb-brand-to: #f97316;
+    color-scheme: dark;
   }
 
   body {
     @apply overflow-x-hidden;
     background-color: var(--sb-bg);
-    color: #f4f4f5;
+    color: var(--sb-text);
     font-family: "Barlow", system-ui, sans-serif;
   }
 
@@ -103,6 +121,26 @@
     );
   }
 
+  .light .sb-nav-active {
+    background: linear-gradient(
+      90deg,
+      rgba(250, 204, 21, 0.28) 0%,
+      rgba(250, 204, 21, 0.08) 100%
+    );
+  }
+
+  .sb-glow-brand {
+    background: radial-gradient(
+      circle,
+      var(--sb-brand-from) 0%,
+      transparent 70%
+    );
+  }
+
+  .sb-glow-odds {
+    background: radial-gradient(circle, var(--sb-odds) 0%, transparent 70%);
+  }
+
   .sb-slip-enter {
     animation: slip-enter 0.2s ease-out;
   }
@@ -154,10 +192,10 @@
   .sb-modal-form input,
   .sb-modal-form textarea,
   .sb-modal-form select {
-    @apply bg-black border-sportsbook-border text-white;
+    @apply sb-surface border-sportsbook-border text-sportsbook-fg;
   }
 
   .sb-datetime-input {
-    color-scheme: dark;
+    color-scheme: inherit;
   }
 }

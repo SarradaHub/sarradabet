@@ -58,8 +58,8 @@ const CategorySidebar = ({
                 onClick={() => onSelectCategory(item.id)}
                 className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors duration-150 ${
                   isActive
-                    ? "sb-nav-active text-warning-400 font-semibold"
-                    : "text-zinc-300 hover:bg-sportsbook-raised hover:text-white border-l-[3px] border-transparent"
+                    ? "sb-nav-active text-amber-900 dark:text-warning-400 font-semibold"
+                    : "text-sportsbook-muted hover:bg-sportsbook-raised hover:text-sportsbook-fg border-l-[3px] border-transparent"
                 }`}
                 aria-pressed={isActive}
               >
@@ -69,7 +69,7 @@ const CategorySidebar = ({
                 <span
                   className={`ml-2 shrink-0 text-xs tabular-nums px-1.5 py-0.5 rounded ${
                     isActive
-                      ? "bg-warning-400/20 text-warning-400"
+                      ? "bg-amber-200 text-amber-900 dark:bg-warning-400/20 dark:text-warning-400"
                       : "bg-sportsbook-raised text-sportsbook-muted"
                   }`}
                 >

@@ -1,5 +1,7 @@
 # Action Plan 02 — Dark/Light Mode Toggle
 
+**Status: Shipped** (2026-08-13)
+
 ## 1. Goal
 
 Add a functional dark/light theme toggle to the SarradaBet Vite React SPA, persisting user preference in `localStorage` and applying theme classes before first paint to prevent flash of wrong theme.

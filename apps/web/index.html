@@ -13,6 +13,19 @@
     />
   </head>
   <body>
+    <script>
+      (function () {
+        var key = "sarradabet-theme";
+        var stored = localStorage.getItem(key);
+        var theme =
+          stored === "light" || stored === "dark"
+            ? stored
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

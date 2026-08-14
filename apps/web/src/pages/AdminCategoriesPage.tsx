@@ -100,7 +100,7 @@ const AdminCategoriesPage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-bold text-white tracking-wide">
+          <h2 className="font-display text-2xl font-bold text-sportsbook-fg tracking-wide">
             Categorias
           </h2>
           <p className="text-sportsbook-muted text-sm mt-1">
@@ -145,7 +145,7 @@ const AdminCategoriesPage: React.FC = () => {
                   hoverable
                   className="hover:[&_td]:text-neutral-900 hover:[&_td.text-sportsbook-odds]:text-green-700"
                 >
-                  <TableCell className="text-white font-medium">
+                  <TableCell className="text-sportsbook-fg font-medium">
                     {category.title}
                   </TableCell>
                   <TableCell className="text-sportsbook-odds tabular-nums">
@@ -163,7 +163,7 @@ const AdminCategoriesPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setEditingCategory(category)}
-                        className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+                        className="p-1.5 rounded text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised transition-colors"
                         aria-label={`Editar ${category.title}`}
                       >
                         <Pencil className="w-4 h-4" />

@@ -71,7 +71,7 @@ const AdminUsersPage: React.FC = () => {
       />
 
       <div>
-        <h1 className="font-display text-2xl font-bold text-white">Usuários</h1>
+        <h1 className="font-display text-2xl font-bold text-sportsbook-fg">Usuários</h1>
         <p className="text-sportsbook-muted text-sm">
           Gerencie contas de usuários da plataforma.
         </p>
@@ -109,7 +109,7 @@ const AdminUsersPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setEditingUser(user)}
-                        className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+                        className="p-1.5 rounded text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised transition-colors"
                         aria-label={`Editar ${user.username}`}
                       >
                         <Pencil className="w-4 h-4" />
@@ -141,7 +141,7 @@ const AdminUsersPage: React.FC = () => {
         <div className="space-y-4">
           <p className="text-sportsbook-muted">
             Tem certeza que deseja excluir{" "}
-            <span className="text-white font-medium">
+            <span className="text-sportsbook-fg font-medium">
               {confirmUser?.username}
             </span>
             ? Esta ação não pode ser desfeita.

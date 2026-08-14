@@ -117,7 +117,7 @@ const AdminRewardsPage: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-white">
+        <h1 className="font-display text-2xl font-bold text-sportsbook-fg">
           Recompensas
         </h1>
         <p className="text-sportsbook-muted text-sm mt-1">
@@ -223,7 +223,7 @@ const AdminRewardsPage: React.FC = () => {
               {validateResult.rewardTitle && (
                 <div>
                   <dt className="text-sportsbook-muted">Recompensa</dt>
-                  <dd className="font-medium text-white">
+                  <dd className="font-medium text-sportsbook-fg">
                     {validateResult.rewardTitle}
                   </dd>
                 </div>
@@ -231,7 +231,7 @@ const AdminRewardsPage: React.FC = () => {
               {validateResult.username && (
                 <div>
                   <dt className="text-sportsbook-muted">Usuário</dt>
-                  <dd className="font-medium text-white">
+                  <dd className="font-medium text-sportsbook-fg">
                     {validateResult.username}
                   </dd>
                 </div>
@@ -239,7 +239,7 @@ const AdminRewardsPage: React.FC = () => {
               {validateResult.redeemedAt && (
                 <div>
                   <dt className="text-sportsbook-muted">Resgatado em</dt>
-                  <dd className="font-medium text-white">
+                  <dd className="font-medium text-sportsbook-fg">
                     {formatDate(validateResult.redeemedAt)}
                   </dd>
                 </div>
@@ -247,7 +247,7 @@ const AdminRewardsPage: React.FC = () => {
               {validateResult.validatedAt && (
                 <div>
                   <dt className="text-sportsbook-muted">Validado em</dt>
-                  <dd className="font-medium text-white">
+                  <dd className="font-medium text-sportsbook-fg">
                     {formatDate(validateResult.validatedAt)}
                   </dd>
                 </div>

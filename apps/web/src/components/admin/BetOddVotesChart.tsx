@@ -33,6 +33,19 @@ const ODD_COLORS = [
   "#8b5cf6",
 ];
 
+const ODD_TEXT_CLASSES = [
+  "text-emerald-500",
+  "text-warning-400",
+  "text-orange-500",
+  "text-blue-500",
+  "text-purple-500",
+  "text-pink-500",
+  "text-teal-500",
+  "text-yellow-500",
+  "text-red-500",
+  "text-violet-500",
+];
+
 function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
@@ -60,24 +73,18 @@ function BetOddTooltip({ active, payload }: TooltipProps) {
   );
 
   return (
-    <div
-      style={{
-        backgroundColor: "#1a1a1e",
-        border: "1px solid #2a2a2e",
-        borderRadius: "8px",
-        padding: "10px 12px",
-        fontSize: "12px",
-        color: "#f4f4f5",
-      }}
-    >
+    <div className="sb-surface-raised border sb-border rounded-lg px-3 py-2.5 text-xs text-sportsbook-fg">
       <p className="font-semibold mb-2">{row.betFullTitle}</p>
       <div className="space-y-1">
         {entries.map((entry) => {
-          const index = String(entry.dataKey).replace("votes_", "");
+          const index = Number(String(entry.dataKey).replace("votes_", ""));
           const label = row[`label_${index}`];
           const value = row[`value_${index}`];
           return (
-            <p key={entry.dataKey} style={{ color: entry.color }}>
+            <p
+              key={entry.dataKey}
+              className={ODD_TEXT_CLASSES[index % ODD_TEXT_CLASSES.length]}
+            >
               {label}: {entry.value} votos ·{" "}
               {typeof value === "number" ? `${value.toFixed(2)}x` : "—"}
             </p>

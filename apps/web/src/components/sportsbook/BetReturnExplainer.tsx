@@ -32,7 +32,7 @@ export function BetReturnExplainer({ lines }: BetReturnExplainerProps) {
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+          className="p-1.5 rounded text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised transition-colors"
           aria-expanded={open}
           aria-label="Como o retorno é calculado?"
         >
@@ -43,7 +43,7 @@ export function BetReturnExplainer({ lines }: BetReturnExplainerProps) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between text-left text-xs text-sportsbook-muted hover:text-white transition-colors"
+        className="flex w-full items-center justify-between text-left text-xs text-sportsbook-muted hover:text-sportsbook-fg transition-colors"
         aria-expanded={open}
       >
         <span>Como o retorno é calculado?</span>

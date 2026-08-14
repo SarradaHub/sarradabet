@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router";
 import { LayoutDashboard, Ticket, FolderOpen, Coins, Users, Gift } from "lucide-react";
 import BrandLogo from "../BrandLogo";
 import { Button } from "../ui/Button";
+import ThemeToggle from "../ThemeToggle";
 import { ErrorMessage } from "../ui/ErrorMessage";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { useAdminAuth } from "../../hooks/useAdminAuth";
@@ -46,19 +47,11 @@ const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-sportsbook-bg relative overflow-hidden">
       <div
-        className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, var(--sb-brand-from) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl sb-glow-brand"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -bottom-48 -left-24 w-80 h-80 rounded-full opacity-10 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, var(--sb-odds) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute -bottom-48 -left-24 w-80 h-80 rounded-full opacity-10 blur-3xl sb-glow-odds"
         aria-hidden="true"
       />
 
@@ -68,7 +61,7 @@ const AdminLayout: React.FC = () => {
             <div className="flex items-center gap-3">
               <BrandLogo size="sm" showText={false} />
               <div>
-                <h1 className="font-display text-xl font-bold text-white tracking-wide">
+                <h1 className="font-display text-xl font-bold text-sportsbook-fg tracking-wide">
                   Admin Dashboard
                 </h1>
                 <p className="text-sportsbook-muted text-xs">
@@ -78,6 +71,7 @@ const AdminLayout: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Button
                 variant="secondary"
                 size="sm"
@@ -108,7 +102,7 @@ const AdminLayout: React.FC = () => {
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-display font-semibold tracking-wide whitespace-nowrap transition-colors",
                   isActive
                     ? "sb-brand-gradient text-black"
-                    : "sb-surface-raised border sb-border text-sportsbook-muted hover:text-white",
+                    : "sb-surface-raised border sb-border text-sportsbook-muted hover:text-sportsbook-fg",
                 )
               }
             >
@@ -130,7 +124,7 @@ const AdminLayout: React.FC = () => {
                       "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-display font-semibold tracking-wide transition-colors",
                       isActive
                         ? "sb-brand-gradient text-black"
-                        : "text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised",
+                        : "text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised",
                     )
                   }
                 >
