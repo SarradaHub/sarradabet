@@ -47,19 +47,11 @@ const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-sportsbook-bg relative overflow-hidden">
       <div
-        className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, var(--sb-brand-from) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl sb-glow-brand"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -bottom-48 -left-24 w-80 h-80 rounded-full opacity-10 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, var(--sb-odds) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute -bottom-48 -left-24 w-80 h-80 rounded-full opacity-10 blur-3xl sb-glow-odds"
         aria-hidden="true"
       />
 

@@ -129,6 +129,18 @@
     );
   }
 
+  .sb-glow-brand {
+    background: radial-gradient(
+      circle,
+      var(--sb-brand-from) 0%,
+      transparent 70%
+    );
+  }
+
+  .sb-glow-odds {
+    background: radial-gradient(circle, var(--sb-odds) 0%, transparent 70%);
+  }
+
   .sb-slip-enter {
     animation: slip-enter 0.2s ease-out;
   }
