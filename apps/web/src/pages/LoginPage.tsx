@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Input } from "@sarradahub/design-system";
 import BrandLogo from "../components/BrandLogo";
+import { SocialLoginButtons } from "../components/auth/SocialLoginButtons";
 import { Button } from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -15,6 +16,14 @@ const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (searchParams.get("error") === "oauth") {
+      setError(
+        "Não foi possível entrar com esta conta. Tente novamente ou use email e senha.",
+      );
+    }
+  }, [searchParams]);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -57,6 +66,8 @@ const LoginPage: React.FC = () => {
         </div>
 
         {error && <ErrorMessage error={error} />}
+
+        <SocialLoginButtons />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

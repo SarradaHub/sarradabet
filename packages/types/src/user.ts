@@ -1,10 +1,12 @@
 export type UserRole = "USER" | "ADMIN";
 
+export type OAuthProvider = "google" | "facebook";
+
 export interface UserPublic {
   id: number;
   username: string;
   email: string;
-  phone: string;
+  phone: string | null;
   role: UserRole;
   coinBalance: number;
   createdAt: string;

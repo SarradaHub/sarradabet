@@ -4,7 +4,7 @@ Step-by-step, MCP-aware implementation guides for Cursor agents and developers. 
 
 | # | Plan | Status | Guide |
 |---|------|--------|-------|
-| 01 | Social login | Planned | [01-social-login.md](./01-social-login.md) |
+| 01 | Social login | Shipped | [API.md](../API.md#authentication) |
 | 02 | Dark mode toggle | Shipped | [02-dark-mode-toggle.md](./02-dark-mode-toggle.md) |
 | 03 | Admin coin management | Planned | [03-admin-coin-management.md](./03-admin-coin-management.md) |
 | 04 | Financial disclaimers | Planned | [04-disclaimers.md](./04-disclaimers.md) |

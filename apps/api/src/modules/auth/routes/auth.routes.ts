@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/AuthController";
+import { OAuthController } from "../controllers/OAuthController";
 import { validateBody } from "../../../core/middleware/ValidationMiddleware";
 import { authenticateUser } from "../../../core/middleware/AuthMiddleware";
 import { createRateLimit } from "../../../core/middleware/SecurityMiddleware";
@@ -12,6 +13,7 @@ import {
 
 const router = Router();
 const authController = new AuthController();
+const oauthController = new OAuthController();
 
 const isTestEnv = config.NODE_ENV === "test";
 
@@ -50,5 +52,8 @@ router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
 
 router.get("/me", authenticateUser, authController.getMe);
+
+router.get("/oauth/:provider", oauthController.start);
+router.get("/oauth/:provider/callback", oauthController.callback);
 
 export default router;

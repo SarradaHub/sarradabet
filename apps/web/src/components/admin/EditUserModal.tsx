@@ -40,7 +40,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       setFormData({
         username: user.username,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone ?? "",
         role: user.role,
         password: "",
       });

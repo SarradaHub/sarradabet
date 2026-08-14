@@ -31,7 +31,7 @@ export interface AuthResult {
     id: number;
     username: string;
     email: string;
-    phone: string;
+    phone: string | null;
     role: UserRole;
     coinBalance: number;
     createdAt: Date;
@@ -72,6 +72,12 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedError("Invalid credentials");
+    }
+
+    if (!user.passwordHash) {
+      throw new UnauthorizedError(
+        "Esta conta usa login social. Entre com Google ou Facebook.",
+      );
     }
 
     const isPasswordValid = await comparePassword(
@@ -164,11 +170,11 @@ export class AuthService {
     });
   }
 
-  private async issueTokens(user: {
+  async issueTokens(user: {
     id: number;
     username: string;
     email: string;
-    phone: string;
+    phone: string | null;
     role: UserRole;
     coinBalance: number;
     createdAt: Date;
@@ -240,7 +246,7 @@ export class AuthService {
     id: number;
     username: string;
     email: string;
-    phone: string;
+    phone: string | null;
     role: UserRole;
     coinBalance: number;
     createdAt: Date;

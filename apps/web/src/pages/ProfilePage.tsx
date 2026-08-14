@@ -110,7 +110,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-xs text-sportsbook-muted">Telefone</p>
-                  <p className="font-medium">{profile.phone}</p>
+                  <p className="font-medium">{profile.phone ?? "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-sportsbook-muted">Função</p>

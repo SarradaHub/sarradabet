@@ -23,5 +23,6 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@sarradabet/types$': '<rootDir>/../../packages/types/src/index.ts',
+    '^arctic$': '<rootDir>/src/__tests__/__mocks__/arctic.ts',
   },
 };

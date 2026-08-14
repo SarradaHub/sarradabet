@@ -18,7 +18,7 @@ Detailed spec: [features/06-mobile-app-and-admin-panel.md](./features/06-mobile-
 | Admin manual coin adjust (`ADMIN_ADJUSTMENT`) | Planned |
 | Admin Pix payment monitor UI | Planned |
 
-**Already shipped (not on this list):** web admin for bets, categories, coin packages, rewards CRUD, analytics dashboards, basic user management pages.
+**Already shipped (not on this list):** web admin for bets, categories, coin packages, rewards CRUD, analytics dashboards, basic user management pages, social login (Google + Facebook OAuth), dark/light mode toggle.
 
 ## Action plans
 
@@ -26,7 +26,6 @@ Executable agent/developer plans. All **Planned**.
 
 | # | Initiative | Guide |
 |---|------------|-------|
-| 01 | Social login (Google + Facebook OAuth) | [action-plans/01-social-login.md](./action-plans/01-social-login.md) |
 | 03 | Admin coin management (audit trail) | [action-plans/03-admin-coin-management.md](./action-plans/03-admin-coin-management.md) |
 | 04 | Financial disclaimers (PT/EN) | [action-plans/04-disclaimers.md](./action-plans/04-disclaimers.md) |
 | 05 | UX flow, breadcrumbs, 404 page | [action-plans/05-ux-flow-breadcrumbs.md](./action-plans/05-ux-flow-breadcrumbs.md) |
