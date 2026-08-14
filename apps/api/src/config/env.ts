@@ -133,6 +133,14 @@ const envSchema = z.object({
   PUBLIC_WEB_URL: z.string().url().optional(),
   TICKET_IMAGE_CACHE_TTL: z.coerce.number().int().positive().default(3600),
   TICKET_IMAGE_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().url().optional(),
+  FACEBOOK_APP_ID: z.string().optional(),
+  FACEBOOK_APP_SECRET: z.string().optional(),
+  FACEBOOK_CALLBACK_URL: z.string().url().optional(),
+  OAUTH_FRONTEND_SUCCESS_URL: z.string().url().optional(),
+  OAUTH_FRONTEND_ERROR_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.parse(process.env);
@@ -143,6 +151,16 @@ export const config = {
     parsed.PUBLIC_WEB_URL ??
     parsed.CORS_ORIGINS.split(",")[0]?.trim() ??
     "http://localhost:3002",
+  OAUTH_FRONTEND_SUCCESS_URL:
+    parsed.OAUTH_FRONTEND_SUCCESS_URL ??
+    (parsed.PUBLIC_WEB_URL ??
+      parsed.CORS_ORIGINS.split(",")[0]?.trim() ??
+      "http://localhost:3002") + "/oauth/callback",
+  OAUTH_FRONTEND_ERROR_URL:
+    parsed.OAUTH_FRONTEND_ERROR_URL ??
+    (parsed.PUBLIC_WEB_URL ??
+      parsed.CORS_ORIGINS.split(",")[0]?.trim() ??
+      "http://localhost:3002") + "/login?error=oauth",
 };
 
 if (config.MERCADOPAGO_MOCK_PIX && config.NODE_ENV === "production") {

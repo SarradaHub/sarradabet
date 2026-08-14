@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Input } from "@sarradahub/design-system";
 import BrandLogo from "../components/BrandLogo";
+import { SocialLoginButtons } from "../components/auth/SocialLoginButtons";
 import { Button } from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -55,6 +56,8 @@ const RegisterPage: React.FC = () => {
         </div>
 
         {error && <ErrorMessage error={error} />}
+
+        <SocialLoginButtons />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

@@ -84,6 +84,7 @@ export const cleanupAuthData = async (prisma: PrismaClient): Promise<void> => {
   await prisma.bet.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.userAction.deleteMany();
+  await prisma.oAuthAccount.deleteMany();
   await prisma.user.deleteMany();
 };
 

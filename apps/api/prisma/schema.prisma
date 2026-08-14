@@ -83,11 +83,12 @@ model User {
   id            Int            @id @default(autoincrement())
   username      String         @unique @db.VarChar(50)
   email         String         @unique @db.VarChar(255)
-  phone         String         @unique @db.VarChar(20)
-  passwordHash  String         @map("password_hash")
+  phone         String?        @unique @db.VarChar(20)
+  passwordHash  String?        @map("password_hash")
   role          UserRole       @default(USER)
   coinBalance      Int                @default(0) @map("coin_balance")
   refreshTokens    RefreshToken[]
+  oauthAccounts    OAuthAccount[]
   actions          UserAction[]
   coinTransactions CoinTransaction[]
   pixPayments      PixPayment[]
@@ -98,6 +99,18 @@ model User {
   updatedAt         DateTime           @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model OAuthAccount {
+  id                Int      @id @default(autoincrement())
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  userId            Int      @map("user_id")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@unique([provider, providerAccountId])
+  @@map("oauth_accounts")
 }
 
 model UserStats {

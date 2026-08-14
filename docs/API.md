@@ -23,6 +23,7 @@ No authentication required:
 - `GET` `/api/v1/coins/packages`, `/api/v1/leaderboard`, `/api/v1/rewards`
 - `GET` `/api/v1/tickets/verify/:code`
 - `POST` `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`
+- `GET` `/api/v1/auth/oauth/:provider`, `/api/v1/auth/oauth/:provider/callback` (Google, Facebook)
 - `GET /health`, `GET /ready`
 
 ### User authentication
@@ -91,6 +92,29 @@ Revokes the current refresh token, clears the cookie, and **blacklists the acces
 #### GET /auth/me
 
 Returns the authenticated user's profile. Requires `Authorization: Bearer <accessToken>`.
+
+#### GET /auth/oauth/:provider
+
+Starts OAuth authorization for `google` or `facebook`. Redirects the browser to the provider consent screen and sets a short-lived signed `oauth_state` HttpOnly cookie for CSRF protection.
+
+Returns `404` for unknown providers. Returns `503` when the provider credentials are not configured.
+
+#### GET /auth/oauth/:provider/callback
+
+Handles the provider redirect. Validates `state`, exchanges the authorization code, links or creates the user, sets the HttpOnly `refreshToken` cookie, and redirects to `OAUTH_FRONTEND_SUCCESS_URL` (default `http://localhost:3002/oauth/callback`).
+
+On failure, redirects to `OAUTH_FRONTEND_ERROR_URL` (default `http://localhost:3002/login?error=oauth`).
+
+**Environment variables:**
+
+| Variable | Purpose |
+|----------|---------|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth |
+| `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_CALLBACK_URL` | Facebook OAuth |
+| `OAUTH_FRONTEND_SUCCESS_URL` | SPA route after successful login |
+| `OAUTH_FRONTEND_ERROR_URL` | Login page with error query on failure |
+
+Social-only users have no `passwordHash`; password login returns `401` with a message to use social login. Existing users are auto-linked by email on first social sign-in.
 
 ### Protected endpoints
 
