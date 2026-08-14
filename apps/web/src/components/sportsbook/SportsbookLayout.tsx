@@ -7,6 +7,7 @@ interface SportsbookLayoutProps {
   board: ReactNode;
   slip: ReactNode;
   mobileSlipChip?: ReactNode;
+  footer?: ReactNode;
 }
 
 const SportsbookLayout = ({
@@ -16,6 +17,7 @@ const SportsbookLayout = ({
   board,
   slip,
   mobileSlipChip,
+  footer,
 }: SportsbookLayoutProps) => (
   <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
     {header}
@@ -35,6 +37,8 @@ const SportsbookLayout = ({
     </div>
 
     <div className="xl:hidden">{mobileSlipChip}</div>
+
+    {footer}
   </div>
 );
 

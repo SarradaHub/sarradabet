@@ -3,6 +3,7 @@ import { useBets, useCategories, CATEGORIES_LIST_PARAMS } from "../hooks";
 import { Bet } from "../types/bet";
 import { Category } from "../types/category";
 import Navigation from "../components/Navigation";
+import { AppFooter } from "../components/legal/AppFooter";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import SportsbookLayout from "../components/sportsbook/SportsbookLayout";
 import CategorySidebar from "../components/sportsbook/CategorySidebar";
@@ -176,6 +177,7 @@ const HomePage: React.FC = () => {
         }
         slip={<VoteSlip />}
         mobileSlipChip={<MobileVoteSlipChip />}
+        footer={<AppFooter />}
       />
     </VoteSlipProvider>
   );

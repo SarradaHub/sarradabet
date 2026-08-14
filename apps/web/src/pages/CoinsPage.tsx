@@ -4,6 +4,8 @@ import type { CoinPackage, CoinTransactionSource, PixPaymentStatus } from "@sarr
 import { RealtimeEvents } from "@sarradabet/types";
 import { PixQrCode } from "../components/PixQrCode";
 import Navigation from "../components/Navigation";
+import { AppFooter } from "../components/legal/AppFooter";
+import { FinancialDisclaimer } from "../components/legal/FinancialDisclaimer";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -15,6 +17,7 @@ import { usePixPurchase } from "../hooks/usePixPurchase";
 import { useInstorePurchase } from "../hooks/useInstorePurchase";
 import { coinService, paymentService } from "../services/CoinPaymentService";
 import { getApiErrorMessage } from "../utils/apiError";
+import { DISCLAIMERS } from "../constants/disclaimers";
 
 function formatCurrency(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", {
@@ -62,6 +65,7 @@ const CoinsPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [simulateError, setSimulateError] = useState<string | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const { balance, loading: balanceLoading, refetch, setBalance } =
     useCoinBalance();
@@ -192,9 +196,9 @@ const CoinsPage: React.FC = () => {
     status?.status === "CANCELLED";
 
   return (
-    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
       <Navigation />
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 flex-1 w-full">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold">Minhas moedas</h1>
@@ -251,6 +255,18 @@ const CoinsPage: React.FC = () => {
           </p>
         )}
 
+        <FinancialDisclaimer />
+
+        <label className="flex items-start gap-3 text-sm leading-relaxed cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-1 shrink-0"
+            checked={acknowledged}
+            onChange={(event) => setAcknowledged(event.target.checked)}
+          />
+          <span>{DISCLAIMERS.pt.acknowledge}</span>
+        </label>
+
         {packagesLoading ? (
           <LoadingSpinner text="Carregando pacotes..." />
         ) : packages.length === 0 ? (
@@ -273,7 +289,7 @@ const CoinsPage: React.FC = () => {
                 </p>
                 <Button
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || !acknowledged}
                   onClick={() => void startPurchase(coinPackage.id)}
                 >
                   {paymentChannel === "online"
@@ -433,6 +449,7 @@ const CoinsPage: React.FC = () => {
           )}
         </div>
       </div>
+      <AppFooter />
     </div>
   );
 };

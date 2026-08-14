@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router";
 import type { Reward } from "@sarradabet/types";
 import Navigation from "../components/Navigation";
+import { AppFooter } from "../components/legal/AppFooter";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -50,9 +51,9 @@ const RewardsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
       <Navigation />
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 flex-1 w-full">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold">Recompensas</h1>
@@ -175,6 +176,7 @@ const RewardsPage: React.FC = () => {
           </div>
         )}
       </div>
+      <AppFooter />
     </div>
   );
 };
