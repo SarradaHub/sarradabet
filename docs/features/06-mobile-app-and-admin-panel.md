@@ -25,7 +25,7 @@ Build a React Native + Expo mobile app in the monorepo, sharing types and API cl
 | Categories | [`AdminCategoriesPage.tsx`](../../apps/web/src/pages/AdminCategoriesPage.tsx) | Done — CRUD |
 | Coin packages | [`AdminCoinPackagesPage.tsx`](../../apps/web/src/pages/AdminCoinPackagesPage.tsx) | Done — CRUD |
 | Rewards | [`AdminRewardsPage.tsx`](../../apps/web/src/pages/AdminRewardsPage.tsx) | Done — CRUD |
-| Users | [`AdminUsersPage.tsx`](../../apps/web/src/pages/AdminUsersPage.tsx) | Partial — list only (no ban/coin adjust) |
+| Users | [`AdminUsersPage.tsx`](../../apps/web/src/pages/AdminUsersPage.tsx) | Partial — list + coin adjust (no ban) |
 | Admin layout + auth | [`AdminLayout.tsx`](../../apps/web/src/components/admin/AdminLayout.tsx), [`useAdminAuth.ts`](../../apps/web/src/hooks/useAdminAuth.ts) | Done |
 
 ### Missing admin capabilities
@@ -511,7 +511,7 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 
 ### Advanced admin (web)
 
-- [ ] Admin users page: list, search, ban, coin adjust
+- [ ] Admin users page: list, search, ban
 - [ ] Admin Pix monitor: filter by status, view details
 - [x] Admin rewards CRUD — shipped
 - [x] Analytics dashboards — shipped
@@ -521,7 +521,7 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 
 - [ ] Ban middleware on auth routes
 - [ ] Admin user management endpoints
-- [ ] Admin coin adjustment via `CoinService` + audit log
+- [x] Admin coin adjustment via `CoinService` + audit log
 - [ ] Push token registration endpoint
 - [ ] Notification service triggered from payment/payout events
 

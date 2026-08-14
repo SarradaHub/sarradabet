@@ -94,10 +94,28 @@ model User {
   votes             Vote[]
   stats             UserStats?
   rewardRedemptions RewardRedemption[]
+  adminAuditLogs    AdminAuditLog[]    @relation("AdminAuditLogs")
+  targetAuditLogs   AdminAuditLog[]    @relation("TargetAuditLogs")
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model AdminAuditLog {
+  id           Int      @id @default(autoincrement())
+  adminId      Int      @map("admin_id")
+  action       String
+  targetUserId Int      @map("target_user_id")
+  payload      Json
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  admin      User @relation("AdminAuditLogs", fields: [adminId], references: [id])
+  targetUser User @relation("TargetAuditLogs", fields: [targetUserId], references: [id])
+
+  @@index([adminId])
+  @@index([targetUserId])
+  @@map("admin_audit_logs")
 }
 
 model UserStats {

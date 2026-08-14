@@ -58,3 +58,14 @@ export interface UpdateCoinPackageDto {
   isActive?: boolean;
   sortOrder?: number;
 }
+
+export interface AdjustCoinsRequest {
+  amount: number;
+  direction: "credit" | "debit";
+  reason: string;
+}
+
+export interface AdjustCoinsResponse {
+  balance: number;
+  transactionId: number;
+}

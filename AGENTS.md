@@ -141,9 +141,10 @@ Base: `http://localhost:8000/api/v1`. Full reference: [`docs/API.md`](docs/API.m
 | GET | `/users/me/dashboard` | Required | User dashboard |
 | POST | `/rewards/:id/redeem` | Required | Generates ticket |
 | GET/POST | `/admin/rewards`, `/admin/analytics/*` | Admin | CRUD + analytics |
+| POST | `/admin/users/:id/coins/adjust` | Admin | Credit/debit + audit log |
 | POST | `/webhooks/mercadopago` | MP HMAC | No JWT |
 
-**Not shipped (Planned — Feature 06):** `PATCH /admin/users/:id/ban`, `POST /admin/users/:id/coins/adjust`, `GET /admin/payments/pix`.
+**Not shipped (Planned — Feature 06):** `PATCH /admin/users/:id/ban`, `GET /admin/payments/pix`.
 
 ### Socket.io events
 
@@ -286,6 +287,7 @@ Shipped behavior lives in living docs — not in deleted feature guides 01–05/
 
 | Date | Change |
 |------|--------|
+| 2026-08-13 | Shipped admin coin adjust API + UI (`ADMIN_ADJUSTMENT`, `AdminAuditLog`) |
 | 2026-08-13 | Shipped dark/light mode toggle (ThemeProvider, ThemeToggle, dual CSS palette) |
 | 2026-08-09 | Docs cleanup: deleted feature guides 01–05/07; added ROADMAP; refreshed living docs; rewrote AGENTS.md |
 | — | Shipped: auth, coins/Pix, bet payout, gamification, analytics, instore QR |

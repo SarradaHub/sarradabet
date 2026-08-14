@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Coins, Pencil } from "lucide-react";
 import type { UserPublic } from "@sarradabet/types";
 import { Button } from "../components/ui/Button";
+import AdjustCoinsModal from "../components/admin/AdjustCoinsModal";
 import EditUserModal from "../components/admin/EditUserModal";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -21,6 +22,7 @@ const AdminUsersPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [confirmUser, setConfirmUser] = useState<UserPublic | null>(null);
   const [editingUser, setEditingUser] = useState<UserPublic | null>(null);
+  const [adjustingUser, setAdjustingUser] = useState<UserPublic | null>(null);
 
   const loadUsers = async () => {
     try {
@@ -70,6 +72,16 @@ const AdminUsersPage: React.FC = () => {
         }}
       />
 
+      <AdjustCoinsModal
+        isOpen={Boolean(adjustingUser)}
+        onClose={() => setAdjustingUser(null)}
+        user={adjustingUser}
+        onCoinsAdjusted={() => {
+          setAdjustingUser(null);
+          void loadUsers();
+        }}
+      />
+
       <div>
         <h1 className="font-display text-2xl font-bold text-sportsbook-fg">Usuários</h1>
         <p className="text-sportsbook-muted text-sm">
@@ -106,6 +118,15 @@ const AdminUsersPage: React.FC = () => {
                   <td className="px-4 py-3">{formatDate(user.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAdjustingUser(user)}
+                        className="p-1.5 rounded text-sportsbook-muted hover:text-emerald-400 hover:bg-sportsbook-raised transition-colors"
+                        aria-label={`Ajustar moedas de ${user.username}`}
+                        title="Ajustar moedas"
+                      >
+                        <Coins className="w-4 h-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => setEditingUser(user)}
