@@ -18,7 +18,7 @@ const sizeClasses = {
 };
 
 export const sportsbookFieldClass =
-  "bg-black border-sportsbook-border text-white placeholder:text-sportsbook-muted focus:ring-warning-400/40 focus:border-warning-400/60";
+  "sb-surface border-sportsbook-border text-sportsbook-fg placeholder:text-sportsbook-muted focus:ring-warning-400/40 focus:border-warning-400/60";
 
 const SportsbookModal = ({
   isOpen,
@@ -89,7 +89,7 @@ const SportsbookModal = ({
             <div className="min-w-0">
               <h2
                 id="sportsbook-modal-title"
-                className="font-display text-lg font-bold tracking-wide text-white uppercase truncate"
+                className="font-display text-lg font-bold tracking-wide text-sportsbook-fg uppercase truncate"
               >
                 {title}
               </h2>
@@ -104,7 +104,7 @@ const SportsbookModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+            className="shrink-0 p-1.5 rounded text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised transition-colors"
             aria-label="Fechar modal"
           >
             <X className="w-5 h-5" />

@@ -175,7 +175,7 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b sb-border shrink-0">
         <div className="min-w-0">
-          <h2 className="font-display text-lg font-bold tracking-wide text-white">
+          <h2 className="font-display text-lg font-bold tracking-wide text-sportsbook-fg">
             Cupom de Votos
           </h2>
           <p className="text-xs text-sportsbook-muted">
@@ -199,7 +199,7 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+              className="p-1.5 rounded text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised transition-colors"
               aria-label="Fechar cupom"
             >
               <X className="w-5 h-5" />
@@ -254,7 +254,7 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
                     <p className="text-xs text-sportsbook-muted truncate">
                       {selection.betTitle}
                     </p>
-                    <p className="text-sm font-medium text-white truncate mt-0.5">
+                    <p className="text-sm font-medium text-sportsbook-fg truncate mt-0.5">
                       {selection.oddTitle}
                     </p>
                     {!selectionOpen && (
@@ -332,7 +332,7 @@ const VoteSlip = ({ variant = "rail", onClose }: VoteSlipProps) => {
           <button
             type="button"
             onClick={clearSelections}
-            className="w-full text-xs text-sportsbook-muted hover:text-white transition-colors py-1"
+            className="w-full text-xs text-sportsbook-muted hover:text-sportsbook-fg transition-colors py-1"
           >
             Limpar cupom
           </button>

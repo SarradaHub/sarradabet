@@ -246,7 +246,7 @@ const AdminDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="sb-surface-raised border sb-border rounded-lg p-5">
-          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+          <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-1 tracking-wide">
             Receita Pix
           </h2>
           <p className="text-xs text-sportsbook-muted mb-4">
@@ -256,7 +256,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="sb-surface-raised border sb-border rounded-lg p-5">
-          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+          <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-1 tracking-wide">
             Apostas por categoria
           </h2>
           <p className="text-xs text-sportsbook-muted mb-4">
@@ -268,7 +268,7 @@ const AdminDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="sb-surface-raised border sb-border rounded-lg p-5">
-          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+          <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-1 tracking-wide">
             Horários de pico
           </h2>
           <p className="text-xs text-sportsbook-muted mb-4">
@@ -278,7 +278,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="sb-surface-raised border sb-border rounded-lg p-5">
-          <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+          <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-1 tracking-wide">
             Apostas por status
           </h2>
           <p className="text-xs text-sportsbook-muted mb-4">
@@ -289,7 +289,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="sb-surface-raised border sb-border rounded-lg p-5">
-        <h2 className="font-display text-lg font-bold text-white mb-1 tracking-wide">
+        <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-1 tracking-wide">
           Votos por aposta e odd
         </h2>
         <p className="text-xs text-sportsbook-muted mb-4">
@@ -299,7 +299,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="sb-surface-raised border sb-border rounded-lg p-5">
-        <h2 className="font-display text-lg font-bold text-white mb-4 tracking-wide">
+        <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-4 tracking-wide">
           Ações Rápidas
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -329,7 +329,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="sb-surface-raised border sb-border rounded-lg p-5">
-        <h2 className="font-display text-lg font-bold text-white mb-4 tracking-wide">
+        <h2 className="font-display text-lg font-bold text-sportsbook-fg mb-4 tracking-wide">
           Atividade Recente
         </h2>
         {recentBets.length === 0 ? (
@@ -346,7 +346,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-2 h-2 rounded-full shrink-0 bg-sportsbook-odds" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm text-white font-medium">{bet.title}</p>
+                    <p className="text-sm text-sportsbook-fg font-medium">{bet.title}</p>
                     <BetStatusBadge status={bet.status} />
                   </div>
                   <p className="text-xs text-sportsbook-muted truncate">

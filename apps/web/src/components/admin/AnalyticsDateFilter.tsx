@@ -34,7 +34,7 @@ const AnalyticsDateFilter: React.FC<AnalyticsDateFilterProps> = ({
             type="date"
             value={startDate}
             onChange={(event) => onStartDateChange(event.target.value)}
-            className="w-full sb-surface border sb-border rounded-lg px-3 py-2 text-white"
+            className="w-full sb-surface border sb-border rounded-lg px-3 py-2 text-sportsbook-fg"
           />
         </label>
         <label className="space-y-1 text-sm">
@@ -43,7 +43,7 @@ const AnalyticsDateFilter: React.FC<AnalyticsDateFilterProps> = ({
             type="date"
             value={endDate}
             onChange={(event) => onEndDateChange(event.target.value)}
-            className="w-full sb-surface border sb-border rounded-lg px-3 py-2 text-white"
+            className="w-full sb-surface border sb-border rounded-lg px-3 py-2 text-sportsbook-fg"
           />
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
@@ -55,7 +55,7 @@ const AnalyticsDateFilter: React.FC<AnalyticsDateFilterProps> = ({
                 event.target.value ? Number(event.target.value) : undefined,
               )
             }
-            className="w-full sb-surface border sb-border rounded-lg px-3 py-2 text-white"
+            className="w-full sb-surface border sb-border rounded-lg px-3 py-2 text-sportsbook-fg"
           >
             <option value="">Todas as categorias</option>
             {categories.map((category) => (

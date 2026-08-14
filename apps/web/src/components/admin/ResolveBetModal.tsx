@@ -72,8 +72,8 @@ const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
               className={cn(
                 "w-full text-left px-4 py-3 rounded-lg border transition-colors",
                 winningOddId === odd.id
-                  ? "border-warning-400 bg-warning-400/10 text-white"
-                  : "sb-border sb-surface text-sportsbook-muted hover:text-white hover:border-sportsbook-muted",
+                  ? "border-warning-400 bg-warning-400/10 text-sportsbook-fg"
+                  : "sb-border sb-surface text-sportsbook-muted hover:text-sportsbook-fg hover:border-sportsbook-muted",
               )}
             >
               <span className="font-medium">{odd.title}</span>

@@ -59,7 +59,7 @@ const TicketVerifyPage: React.FC = () => {
   const isValidated = result?.status === "VALIDATED";
 
   return (
-    <div className="min-h-screen bg-sportsbook-bg text-white">
+    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
       <Navigation />
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
         <div>

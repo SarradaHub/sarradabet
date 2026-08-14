@@ -123,7 +123,7 @@ npm run dev              # api + web via Turbo
 | Mercado Pago QR instore | Shipped | Instore orders, webhook, Coins page tab |
 | Mobile & advanced admin | **Planned** | See [Feature 06](docs/features/06-mobile-app-and-admin-panel.md) |
 
-**Planned initiatives:** [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/action-plans/](docs/action-plans/) (social login, dark mode, disclaimers, breadcrumbs, Supabase upload).
+**Planned initiatives:** [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/action-plans/](docs/action-plans/) (social login, disclaimers, breadcrumbs, Supabase upload).
 
 ---
 
@@ -208,7 +208,7 @@ Schema: [`apps/api/prisma/schema.prisma`](apps/api/prisma/schema.prisma).
 
 ### Dark mode
 
-- **Not shipped.** Action plan 02 — custom `ThemeProvider`, not `next-themes`.
+- **Shipped.** Custom `ThemeProvider` + `ThemeToggle` in [`apps/web/src/context/ThemeProvider.tsx`](../../apps/web/src/context/ThemeProvider.tsx); preference key `sarradabet-theme` (`light` | `dark` | `system`); FOUC boot script in [`apps/web/index.html`](../../apps/web/index.html).
 
 ### Realtime & scaling
 
@@ -286,6 +286,7 @@ Shipped behavior lives in living docs — not in deleted feature guides 01–05/
 
 | Date | Change |
 |------|--------|
+| 2026-08-13 | Shipped dark/light mode toggle (ThemeProvider, ThemeToggle, dual CSS palette) |
 | 2026-08-09 | Docs cleanup: deleted feature guides 01–05/07; added ROADMAP; refreshed living docs; rewrote AGENTS.md |
 | — | Shipped: auth, coins/Pix, bet payout, gamification, analytics, instore QR |
 

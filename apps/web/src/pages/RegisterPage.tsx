@@ -46,7 +46,7 @@ const RegisterPage: React.FC = () => {
       <div className="w-full max-w-md sb-surface border sb-border rounded-2xl p-6 space-y-6">
         <div className="flex flex-col items-center gap-3">
           <BrandLogo size="md" />
-          <h1 className="font-display text-2xl font-bold text-white">
+          <h1 className="font-display text-2xl font-bold text-sportsbook-fg">
             Criar conta
           </h1>
           <p className="text-sportsbook-muted text-sm text-center">
