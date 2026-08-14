@@ -5,6 +5,7 @@ import { PendingRedemptionsCard } from "../components/gamification/PendingRedemp
 import { RegisteredRedemptionsCard } from "../components/gamification/RegisteredRedemptionsCard";
 import { StatsCard } from "../components/gamification/StatsCard";
 import Navigation from "../components/Navigation";
+import { AppFooter } from "../components/legal/AppFooter";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -71,9 +72,9 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
       <Navigation />
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6 flex-1 w-full">
         <div className="flex items-center justify-between gap-4">
           <h1 className="font-display text-3xl font-bold">Meu perfil</h1>
           <Link to="/">
@@ -153,6 +154,7 @@ const ProfilePage: React.FC = () => {
         currentUserId={user?.id}
         onUserUpdated={handleProfileUpdated}
       />
+      <AppFooter />
     </div>
   );
 };

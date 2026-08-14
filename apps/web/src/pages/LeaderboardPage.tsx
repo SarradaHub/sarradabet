@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import Navigation from "../components/Navigation";
+import { AppFooter } from "../components/legal/AppFooter";
 import { RankTierBadge } from "../components/gamification/RankTierBadge";
 import { StatsCard } from "../components/gamification/StatsCard";
 import { Button } from "../components/ui/Button";
@@ -25,9 +26,9 @@ const LeaderboardPage: React.FC = () => {
   } = useUserStats();
 
   return (
-    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
       <Navigation />
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 flex-1 w-full">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold">Ranking</h1>
@@ -112,6 +113,7 @@ const LeaderboardPage: React.FC = () => {
           </div>
         )}
       </div>
+      <AppFooter />
     </div>
   );
 };

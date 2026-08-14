@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router";
 import type { CoinTransactionSource, VoteStatus } from "@sarradabet/types";
 import Navigation from "../components/Navigation";
+import { AppFooter } from "../components/legal/AppFooter";
 import { RankTierBadge } from "../components/gamification/RankTierBadge";
 import { Button } from "../components/ui/Button";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -63,25 +64,27 @@ const UserDashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+      <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
         <Navigation />
-        <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
           <LoadingSpinner text="Carregando dashboard..." />
         </div>
+        <AppFooter />
       </div>
     );
   }
 
   if (error || !dashboard) {
     return (
-      <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+      <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
         <Navigation />
-        <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
           <ErrorMessage
             error={error ?? "Dashboard indisponível"}
             onRetry={() => void refetch()}
           />
         </div>
+        <AppFooter />
       </div>
     );
   }
@@ -90,9 +93,9 @@ const UserDashboardPage: React.FC = () => {
   const { pagination: betsPagination } = dashboard.recentBets;
 
   return (
-    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg">
+    <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
       <Navigation />
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 flex-1 w-full">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold">Meu Dashboard</h1>
@@ -264,6 +267,7 @@ const UserDashboardPage: React.FC = () => {
           )}
         </div>
       </div>
+      <AppFooter />
     </div>
   );
 };
