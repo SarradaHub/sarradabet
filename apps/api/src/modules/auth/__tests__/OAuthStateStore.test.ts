@@ -43,4 +43,54 @@ describe("OAuthStateStore", () => {
       "Invalid OAuth state",
     );
   });
+
+  it("validates callback using server-stored OAuth state", async () => {
+    const sessionId = await store.save(
+      buildStoredOAuthState({
+        state: "provider-state",
+        provider: "google",
+        codeVerifier: "pkce-verifier",
+      }),
+    );
+
+    const result = await store.validateCallbackRequest({
+      sessionId,
+      provider: "google",
+      authorizationCode: "auth-code",
+      returnedState: "provider-state",
+    });
+
+    expect(result.authorizationCode).toBe("auth-code");
+    expect(result.storedState.codeVerifier).toBe("pkce-verifier");
+  });
+
+  it("rejects callback when returned state does not match server state", async () => {
+    const sessionId = await store.save(
+      buildStoredOAuthState({
+        state: "provider-state",
+        provider: "google",
+        codeVerifier: "pkce-verifier",
+      }),
+    );
+
+    await expect(
+      store.validateCallbackRequest({
+        sessionId,
+        provider: "google",
+        authorizationCode: "auth-code",
+        returnedState: "wrong-state",
+      }),
+    ).rejects.toThrow("OAuth state mismatch");
+  });
+
+  it("rejects malformed session ids before lookup", async () => {
+    await expect(
+      store.validateCallbackRequest({
+        sessionId: "not-a-valid-session-id",
+        provider: "google",
+        authorizationCode: "auth-code",
+        returnedState: "provider-state",
+      }),
+    ).rejects.toThrow("Invalid OAuth callback session");
+  });
 });

@@ -3,7 +3,6 @@ import { config } from "../../../config/env";
 import {
   AppError,
   NotFoundError,
-  ServiceUnavailableError,
 } from "../../../core/errors/AppError";
 import {
   getRefreshTokenMaxAgeMs,
@@ -116,22 +115,17 @@ export class OAuthController {
         throw new NotFoundError("OAuth provider", req.params.provider);
       }
 
-      const stateParam = typeof req.query.state === "string" ? req.query.state : null;
-      const code = typeof req.query.code === "string" ? req.query.code : null;
-      const sessionId = req.cookies?.[getOAuthStateCookieName()];
-
-      if (!stateParam || !code || !sessionId) {
-        throw new ServiceUnavailableError("Invalid OAuth callback parameters");
-      }
-
-      const storedState = await oauthStateStore.consume(sessionId);
-      if (storedState.provider !== provider || storedState.state !== stateParam) {
-        throw new ServiceUnavailableError("OAuth state mismatch");
-      }
+      const { authorizationCode, storedState } =
+        await oauthStateStore.validateCallbackRequest({
+          sessionId: req.cookies?.[getOAuthStateCookieName()],
+          provider,
+          authorizationCode: req.query.code,
+          returnedState: req.query.state,
+        });
 
       const adapter = createOAuthProvider(provider);
       const profile = await adapter.validateCallback(
-        code,
+        authorizationCode,
         storedState.codeVerifier,
       );
       const result = await this.oauthService.linkOrCreateUser(profile);
