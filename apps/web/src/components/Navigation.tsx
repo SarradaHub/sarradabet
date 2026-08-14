@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useState, type ReactNode } from "react";
 import BrandLogo from "./BrandLogo";
 import { Button } from "./ui/Button";
+import ThemeToggle from "./ThemeToggle";
 import { Settings } from "@sarradahub/design-system";
 import { useAuth } from "../hooks/useAuth";
 
@@ -100,12 +101,17 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
           <BrandLogo size="sm" linkToHome />
         </div>
 
-        <div className="hidden md:flex items-center gap-2">{authButtons}</div>
+        <div className="hidden md:flex items-center gap-2">
+          <ThemeToggle />
+          {authButtons}
+        </div>
 
-        <button
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
           type="button"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-1.5 text-zinc-400 hover:text-white"
+          className="md:hidden p-1.5 text-zinc-400 hover:text-sportsbook-fg"
           aria-label="Menu"
           aria-expanded={isMobileMenuOpen}
         >
@@ -117,6 +123,7 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
             )}
           </svg>
         </button>
+        </div>
       </div>
 
       {isMobileMenuOpen && (

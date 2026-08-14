@@ -65,7 +65,7 @@ const BetCard = ({ bet }: BetCardProps) => {
             {statusLabel}
           </span>
         </div>
-        <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2 group-hover:text-warning-400 transition-colors">
+        <h3 className="text-sm font-semibold text-sportsbook-fg leading-snug line-clamp-2 group-hover:text-warning-400 transition-colors">
           {bet.title}
         </h3>
         {bet.description && (

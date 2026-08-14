@@ -27,7 +27,6 @@ Executable agent/developer plans. All **Planned**.
 | # | Initiative | Guide |
 |---|------------|-------|
 | 01 | Social login (Google + Facebook OAuth) | [action-plans/01-social-login.md](./action-plans/01-social-login.md) |
-| 02 | Dark/light mode toggle | [action-plans/02-dark-mode-toggle.md](./action-plans/02-dark-mode-toggle.md) |
 | 03 | Admin coin management (audit trail) | [action-plans/03-admin-coin-management.md](./action-plans/03-admin-coin-management.md) |
 | 04 | Financial disclaimers (PT/EN) | [action-plans/04-disclaimers.md](./action-plans/04-disclaimers.md) |
 | 05 | UX flow, breadcrumbs, 404 page | [action-plans/05-ux-flow-breadcrumbs.md](./action-plans/05-ux-flow-breadcrumbs.md) |

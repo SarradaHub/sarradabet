@@ -10,7 +10,7 @@ export interface DashboardStats {
 }
 
 const statCards = [
-  { key: "totalBets" as const, label: "Total de Apostas", accent: "text-white" },
+  { key: "totalBets" as const, label: "Total de Apostas", accent: "text-sportsbook-fg" },
   {
     key: "totalCategories" as const,
     label: "Categorias",

@@ -16,6 +16,7 @@ import RewardsPage from "./pages/RewardsPage";
 import TicketVerifyPage from "./pages/TicketVerifyPage";
 import { AuthProvider } from "./context/AuthProvider";
 import { RealtimeProvider } from "./context/RealtimeProvider";
+import { ThemeProvider } from "./context/ThemeProvider";
 import PayoutNotification from "./components/PayoutNotification";
 import RewardValidatedNotification from "./components/RewardValidatedNotification";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -35,9 +36,10 @@ const AdminRewardsPage = lazy(() => import("./pages/AdminRewardsPage"));
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <RealtimeProvider>
+    <ThemeProvider>
+      <Router>
+        <AuthProvider>
+          <RealtimeProvider>
           <PayoutNotification />
           <RewardValidatedNotification />
           <main>
@@ -145,6 +147,7 @@ function App() {
         </RealtimeProvider>
       </AuthProvider>
     </Router>
+    </ThemeProvider>
   );
 }
 

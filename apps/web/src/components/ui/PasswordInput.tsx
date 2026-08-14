@@ -48,7 +48,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
         type="button"
         onClick={() => setShowPassword((current) => !current)}
         disabled={disabled}
-        className="absolute right-3 top-[2.125rem] text-sportsbook-muted hover:text-white transition-colors disabled:opacity-50"
+        className="absolute right-3 top-[2.125rem] text-sportsbook-muted hover:text-sportsbook-fg transition-colors disabled:opacity-50"
         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
         aria-pressed={showPassword}
       >

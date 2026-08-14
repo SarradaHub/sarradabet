@@ -17,7 +17,7 @@ const SportsbookLayout = ({
   slip,
   mobileSlipChip,
 }: SportsbookLayoutProps) => (
-  <div className="min-h-screen bg-sportsbook-bg text-white flex flex-col">
+  <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
     {header}
     {promo}
     <div className="flex flex-1 min-h-0">

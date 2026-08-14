@@ -254,7 +254,7 @@ const CreateBetModal: React.FC<CreateBetModalProps> = ({
         <section className="sb-surface border sb-border rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-display font-semibold tracking-wide text-white uppercase">
+              <h3 className="text-sm font-display font-semibold tracking-wide text-sportsbook-fg uppercase">
                 Opções
               </h3>
               <p className="text-xs text-sportsbook-muted mt-1">

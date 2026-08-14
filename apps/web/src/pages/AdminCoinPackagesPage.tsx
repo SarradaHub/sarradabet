@@ -98,7 +98,7 @@ const AdminCoinPackagesPage: React.FC = () => {
       />
 
       <div>
-        <h1 className="font-display text-2xl font-bold text-white">
+        <h1 className="font-display text-2xl font-bold text-sportsbook-fg">
           Pacotes de moedas
         </h1>
         <p className="text-sportsbook-muted text-sm">
@@ -184,7 +184,7 @@ const AdminCoinPackagesPage: React.FC = () => {
               className="sb-surface border sb-border rounded-xl p-4 flex items-center justify-between gap-4"
             >
               <div>
-                <h2 className="font-display text-lg font-bold text-white">
+                <h2 className="font-display text-lg font-bold text-sportsbook-fg">
                   {coinPackage.name}
                 </h2>
                 <p className="text-sportsbook-muted text-sm">
@@ -204,7 +204,7 @@ const AdminCoinPackagesPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingPackage(coinPackage)}
-                  className="p-2 rounded text-sportsbook-muted hover:text-white hover:bg-sportsbook-raised transition-colors"
+                  className="p-2 rounded text-sportsbook-muted hover:text-sportsbook-fg hover:bg-sportsbook-raised transition-colors"
                   aria-label={`Editar ${coinPackage.name}`}
                 >
                   <Pencil className="w-4 h-4" />

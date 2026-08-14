@@ -25,7 +25,7 @@ const OddsBoard = ({ groupedBets, loading }: OddsBoardProps) => {
   if (groupedBets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
-        <p className="font-display text-2xl font-bold text-white mb-2">
+        <p className="font-display text-2xl font-bold text-sportsbook-fg mb-2">
           Nenhum mercado encontrado
         </p>
         <p className="text-sportsbook-muted text-sm max-w-sm">
@@ -42,7 +42,7 @@ const OddsBoard = ({ groupedBets, loading }: OddsBoardProps) => {
           <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2.5 sb-surface-raised border-b sb-border">
             <div className="w-1 h-5 sb-brand-gradient rounded-full shrink-0" />
             <div className="min-w-0 flex-1">
-              <h2 className="font-display text-base font-bold tracking-wide text-white truncate uppercase">
+              <h2 className="font-display text-base font-bold tracking-wide text-sportsbook-fg truncate uppercase">
                 {group.name}
               </h2>
               <p className="text-[11px] text-sportsbook-muted">

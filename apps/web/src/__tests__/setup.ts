@@ -24,6 +24,29 @@ if (!(global as any).TextDecoder) {
     TextDecoder as unknown as typeof globalThis.TextDecoder;
 }
 
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+  writable: true,
+});
+
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
