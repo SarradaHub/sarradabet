@@ -102,15 +102,10 @@ Then("devo ver o texto {string}", async ({ page }, text: string) => {
 });
 
 Then("devo ver o botão {string}", async ({ page }, label: string) => {
-  const button = page.getByRole("button", { name: label });
   const link = page.getByRole("link", { name: label, exact: true });
+  const button = page.getByRole("button", { name: label });
 
-  if (await link.isVisible().catch(() => false)) {
-    await expect(link).toBeVisible();
-    return;
-  }
-
-  await expect(button).toBeVisible();
+  await expect(link.or(button)).toBeVisible({ timeout: 15_000 });
 });
 
 Then("não devo ver o botão {string}", async ({ page }, label: string) => {

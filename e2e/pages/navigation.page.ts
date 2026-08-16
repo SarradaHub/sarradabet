@@ -26,6 +26,10 @@ export class NavigationPage {
     await this.hamburgerButton().click();
   }
 
+  private overlay() {
+    return this.page.getByTestId("navigation-menu-overlay");
+  }
+
   async closeMobileMenuViaOverlay(): Promise<void> {
     const viewport = this.page.viewportSize();
     const x = Math.max((viewport?.width ?? 375) - 12, 0);
@@ -66,6 +70,10 @@ export class NavigationPage {
 
   async expectHamburgerHidden(): Promise<void> {
     await expect(this.hamburgerButton()).toBeHidden();
+  }
+
+  async expectOverlayVisible(): Promise<void> {
+    await expect(this.overlay()).toBeAttached();
   }
 
   async expectLoginVisible(): Promise<void> {

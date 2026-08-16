@@ -75,6 +75,7 @@ const MobileDrawer = ({
     >
       <DialogBackdrop
         transition={!prefersReducedMotion}
+        data-testid="navigation-menu-overlay"
         className={cn(
           "fixed inset-0 bg-black/50 backdrop-blur-sm",
           prefersReducedMotion
@@ -96,14 +97,14 @@ const MobileDrawer = ({
             : "duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] data-closed:-translate-x-full nav-drawer-enter",
         )}
       >
-          <UserSection variant="drawer" onNavigate={onClose} />
-          <NavLinks
-            variant="vertical"
-            isAuthenticated={isAuthenticated}
-            isAdmin={isAdmin}
-            onNavigate={onClose}
-            onLogout={onLogout}
-          />
+        <UserSection variant="drawer" onNavigate={onClose} />
+        <NavLinks
+          variant="vertical"
+          isAuthenticated={isAuthenticated}
+          isAdmin={isAdmin}
+          onNavigate={onClose}
+          onLogout={onLogout}
+        />
       </DialogPanel>
     </Dialog>
   );

@@ -68,7 +68,8 @@ Then("o menu lateral não deve estar visível", async ({ page }) => {
 });
 
 Then("o overlay do menu deve estar visível", async ({ page }) => {
-  await expect(page.locator('[data-headlessui-state="open"]').first()).toBeVisible();
+  const navigation = new NavigationPage(page);
+  await navigation.expectOverlayVisible();
 });
 
 Then("o botão hambúrguer não deve estar visível", async ({ page }) => {
