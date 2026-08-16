@@ -24,7 +24,7 @@ Funcionalidade: Navegação e rotas protegidas
     Quando navego para "/"
     E clico em "Moedas"
     Então devo ver a URL contendo "/coins"
-    Quando clico em "user"
+    Quando clico em "Perfil"
     Então devo ver a URL contendo "/profile"
 
   @regression
