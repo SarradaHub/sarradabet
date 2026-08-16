@@ -22,7 +22,11 @@ const Navigation = ({ mobileCategoryTrigger }: NavigationProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 sb-surface border-b sb-border shrink-0">
+    <header
+      className={`sticky top-0 sb-surface border-b sb-border shrink-0 ${
+        isOpen ? "z-[70]" : "z-50"
+      }`}
+    >
       <div className="flex items-center justify-between h-12 px-4 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {mobileCategoryTrigger}
