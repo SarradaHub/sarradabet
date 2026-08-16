@@ -156,6 +156,27 @@
     }
   }
 
+  .nav-drawer-enter {
+    animation: nav-drawer-enter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes nav-drawer-enter {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-drawer-enter {
+      animation: none;
+    }
+  }
+
   @keyframes odds-pulse {
     0%,
     100% {
