@@ -15,7 +15,6 @@ interface NavLinksProps {
   isAdmin: boolean;
   onNavigate?: () => void;
   onLogout?: () => void;
-  autoFocusFirst?: boolean;
 }
 
 function isPathActive(currentPath: string, targetPath: string): boolean {
@@ -33,13 +32,11 @@ function NavLinkItem({
   variant,
   isActive,
   onNavigate,
-  autoFocus,
 }: {
   item: Extract<NavItem, { type: "link" }>;
   variant: "horizontal" | "vertical";
   isActive: boolean;
   onNavigate?: () => void;
-  autoFocus?: boolean;
 }) {
   const isHorizontal = variant === "horizontal";
 
@@ -47,7 +44,6 @@ function NavLinkItem({
     <Link
       to={item.to}
       onClick={onNavigate}
-      autoFocus={autoFocus}
       aria-current={isActive ? "page" : undefined}
       className={cn(
         "font-medium transition-colors motion-reduce:transition-none",
@@ -111,7 +107,6 @@ const NavLinks = ({
   isAdmin,
   onNavigate,
   onLogout,
-  autoFocusFirst = false,
 }: NavLinksProps) => {
   const location = useLocation();
 
@@ -126,7 +121,6 @@ const NavLinks = ({
   );
 
   const isHorizontal = variant === "horizontal";
-  let firstLinkFocused = false;
 
   if (isHorizontal) {
     return (
@@ -189,11 +183,6 @@ const NavLinks = ({
                   );
                 }
 
-                const shouldAutoFocus = autoFocusFirst && !firstLinkFocused;
-                if (shouldAutoFocus) {
-                  firstLinkFocused = true;
-                }
-
                 return (
                   <li key={item.to}>
                     <NavLinkItem
@@ -201,7 +190,6 @@ const NavLinks = ({
                       variant={variant}
                       isActive={isPathActive(location.pathname, item.to)}
                       onNavigate={onNavigate}
-                      autoFocus={shouldAutoFocus}
                     />
                   </li>
                 );

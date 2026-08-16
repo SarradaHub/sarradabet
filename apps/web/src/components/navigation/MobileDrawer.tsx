@@ -26,10 +26,22 @@ const MobileDrawer = ({
 }: MobileDrawerProps) => {
   const location = useLocation();
   const touchStartX = useRef<number | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     onClose();
   }, [location.pathname, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const firstNavLink = panelRef.current?.querySelector<HTMLElement>(
+      'nav[aria-label="Navegação principal"] a',
+    );
+    firstNavLink?.focus();
+  }, [isOpen]);
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     touchStartX.current = event.touches[0]?.clientX ?? null;
@@ -72,6 +84,7 @@ const MobileDrawer = ({
       />
 
       <DialogPanel
+        ref={panelRef}
         id="navigation-menu"
         transition={!prefersReducedMotion}
         onTouchStart={handleTouchStart}
@@ -90,7 +103,6 @@ const MobileDrawer = ({
             isAdmin={isAdmin}
             onNavigate={onClose}
             onLogout={onLogout}
-            autoFocusFirst
           />
       </DialogPanel>
     </Dialog>
