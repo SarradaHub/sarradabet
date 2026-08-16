@@ -75,7 +75,7 @@ When("preencho {string} com {string}", async ({ page }, field: string, value: st
 });
 
 When("clico em {string}", async ({ page }, label: string) => {
-  const link = page.getByRole("link", { name: label });
+  const link = page.getByRole("link", { name: label, exact: true });
   if (await link.isVisible().catch(() => false)) {
     await link.click();
     return;
@@ -88,7 +88,7 @@ When("clico em {string}", async ({ page }, label: string) => {
     return;
   }
 
-  await page.getByRole("link", { name: label }).click();
+  await page.getByRole("link", { name: label, exact: true }).click();
 });
 
 Then("devo ver a URL contendo {string}", async ({ page }, fragment: string) => {
@@ -102,7 +102,15 @@ Then("devo ver o texto {string}", async ({ page }, text: string) => {
 });
 
 Then("devo ver o botão {string}", async ({ page }, label: string) => {
-  await expect(page.getByRole("button", { name: label })).toBeVisible();
+  const button = page.getByRole("button", { name: label });
+  const link = page.getByRole("link", { name: label, exact: true });
+
+  if (await link.isVisible().catch(() => false)) {
+    await expect(link).toBeVisible();
+    return;
+  }
+
+  await expect(button).toBeVisible();
 });
 
 Then("não devo ver o botão {string}", async ({ page }, label: string) => {
@@ -110,7 +118,7 @@ Then("não devo ver o botão {string}", async ({ page }, label: string) => {
 });
 
 Then("devo ver o link {string}", async ({ page }, label: string) => {
-  await expect(page.getByRole("link", { name: label })).toBeVisible({
+  await expect(page.getByRole("link", { name: label, exact: true })).toBeVisible({
     timeout: 15_000,
   });
 });

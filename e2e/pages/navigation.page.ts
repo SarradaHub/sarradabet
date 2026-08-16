@@ -3,8 +3,11 @@ import { expect, type Page } from "@playwright/test";
 export class NavigationPage {
   constructor(private readonly page: Page) {}
 
-  private hamburgerButton() {
-    return this.page.getByRole("button", { name: "Toggle navigation" });
+  private hamburgerButton(includeHidden = false) {
+    return this.page.getByRole("button", {
+      name: "Toggle navigation",
+      includeHidden,
+    });
   }
 
   private drawer() {
@@ -16,7 +19,7 @@ export class NavigationPage {
   }
 
   async clickLink(label: string): Promise<void> {
-    await this.page.getByRole("link", { name: label }).click();
+    await this.page.getByRole("link", { name: label, exact: true }).click();
   }
 
   async openMobileMenu(): Promise<void> {
@@ -44,10 +47,13 @@ export class NavigationPage {
   }
 
   async expectHamburgerExpanded(expanded: boolean): Promise<void> {
-    await expect(this.hamburgerButton()).toHaveAttribute(
-      "aria-expanded",
-      expanded ? "true" : "false",
-    );
+    if (expanded) {
+      await expect(this.drawer()).toBeVisible();
+      await expect(this.hamburgerButton(true)).toHaveAttribute("aria-expanded", "true");
+      return;
+    }
+
+    await expect(this.hamburgerButton()).toHaveAttribute("aria-expanded", "false");
   }
 
   async expectDrawerVisible(): Promise<void> {
