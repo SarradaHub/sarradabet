@@ -21,6 +21,7 @@
     "@sarradabet/types": "*",
     "@sarradahub/design-system": "file:../../../platform/design-system",
     "axios": "^1.18.0",
+    "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "didyoumean": "^1.2.2",

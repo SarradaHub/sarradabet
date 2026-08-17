@@ -5,6 +5,7 @@ import { Button } from "../ui/Button";
 import { ErrorMessage } from "../ui/ErrorMessage";
 import { adminRewardService } from "../../services/rewardService";
 import { getApiErrorMessage } from "../../utils/apiError";
+import { ImageUploadField } from "./ImageUploadField";
 
 interface EditRewardModalProps {
   isOpen: boolean;
@@ -155,11 +156,10 @@ export function EditRewardModal({
             onChange={(e) => setForm({ ...form, stock: e.target.value })}
             required
           />
-          <input
-            className={sportsbookFieldClass}
-            placeholder="URL da imagem (opcional)"
+          <ImageUploadField
             value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+            onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+            disabled={saving}
           />
           <textarea
             className={`${sportsbookFieldClass} md:col-span-2 min-h-24`}

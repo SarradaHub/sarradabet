@@ -90,62 +90,47 @@ VITE_SUPABASE_ANON_KEY=             # publishable/anon key only
 
 ### Phase A — Supabase Storage setup
 
-- [ ] **MCP: supabase** — `list_projects` to confirm project.
-- [ ] **MCP: supabase** — `search_docs` for Storage bucket creation and RLS.
-- [ ] Create bucket `reward-images` (public read for objects, or signed URLs — prefer public read for reward thumbnails).
-- [ ] Apply RLS policies via SQL:
+- [x] **MCP: supabase** — `list_projects` to confirm project.
+- [x] **MCP: supabase** — `search_docs` for Storage bucket creation and RLS.
+- [x] Create bucket `reward-images` (public read for objects, or signed URLs — prefer public read for reward thumbnails).
+- [x] Apply RLS policies via SQL (service-role writes only; no anon/authenticated INSERT — public bucket CDN read):
 
 ```sql
--- Allow authenticated users with admin role claim OR service role uploads
--- Simpler approach: API uses service role; bucket write only via API
-
--- Public read
-CREATE POLICY "Public read reward images"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'reward-images');
-
--- Insert/update via service role only (API middleware enforces admin)
--- If using signed upload URLs from API, no direct client write policy needed
+-- Shipped: public bucket + service-role uploads via API (no client write policy)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('reward-images', 'reward-images', true, 2097152,
+  ARRAY['image/jpeg','image/png','image/webp']::text[])
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 ```
 
-- [ ] **MCP: supabase** — `get_advisors` for storage security review.
+- [x] **MCP: supabase** — `get_advisors` for storage security review.
 
 ### Phase B — API upload route (TDD)
 
-- [ ] **MCP: git** — Branch `feature/supabase-image-upload`.
-- [ ] **MCP: filesystem** — `npm install @supabase/supabase-js` in `apps/api`.
-- [ ] **MCP: filesystem** — Add env vars to `apps/api/.env.example` and [`env.ts`](../../apps/api/src/config/env.ts).
-- [ ] **Write test first**: `apps/api/src/modules/upload/__tests__/validateImage.test.ts`.
-- [ ] **Write test first**: `apps/api/src/__tests__/integration/admin.upload.test.ts` (403 non-admin, 400 bad mime).
-- [ ] **MCP: filesystem** — Create `apps/api/src/config/supabase.ts` (admin client factory).
-- [ ] **MCP: filesystem** — Create `StorageService.uploadRewardImage(file, adminId)`.
-- [ ] **MCP: filesystem** — Create `POST /api/v1/admin/uploads/reward-image`:
-  - `authenticateUser`, `requireUserRole(ADMIN)`
-  - Parse multipart (multer memory storage, 2MB limit)
-  - Validate MIME, optionally recompress with `sharp`
-  - Upload to `reward-images/{uuid}.webp`
-  - Return `{ url: string }`
-- [ ] Mount route in admin routes module.
-- [ ] Run tests → green.
+- [x] **MCP: filesystem** — `npm install @supabase/supabase-js` in `apps/api`.
+- [x] **MCP: filesystem** — Add env vars to `apps/api/.env.example` and [`env.ts`](../../apps/api/src/config/env.ts).
+- [x] **Write test first**: `apps/api/src/modules/upload/__tests__/validateImage.test.ts`.
+- [x] **Write test first**: `apps/api/src/__tests__/integration/admin.upload.test.ts` (403 non-admin, 400 bad mime).
+- [x] **MCP: filesystem** — Create `apps/api/src/config/supabase.ts` (admin client factory).
+- [x] **MCP: filesystem** — Create `StorageService.uploadRewardImage(file, adminId)`.
+- [x] **MCP: filesystem** — Create `POST /api/v1/admin/uploads/reward-image`.
+- [x] Mount route in admin routes module.
+- [x] Run tests → green.
 
 ### Phase C — Frontend upload UI (TDD)
 
-- [ ] **MCP: filesystem** — `npm install browser-image-compression` in `apps/web`.
-- [ ] **Write test first**: `ImageUploadField.test.tsx` — rejects non-image, shows preview.
-- [ ] **MCP: filesystem** — Create `apps/web/src/components/admin/ImageUploadField.tsx`:
-  - Drag-and-drop zone + hidden file input
-  - Client compress (max 1920px width, 0.8 quality)
-  - Preview thumbnail
-  - Upload progress state
-  - On success: set `imageUrl` field value
-- [ ] **MCP: filesystem** — Integrate into [`EditRewardModal.tsx`](../../apps/web/src/components/admin/EditRewardModal.tsx) and create reward form.
-- [ ] Keep manual URL input as fallback (advanced toggle).
-- [ ] **MCP: browser** — Upload image → save reward → image displays on Rewards page.
+- [x] **MCP: filesystem** — `npm install browser-image-compression` in `apps/web`.
+- [x] **Write test first**: `ImageUploadField.test.tsx` — rejects non-image, shows preview.
+- [x] **MCP: filesystem** — Create `apps/web/src/components/admin/ImageUploadField.tsx`.
+- [x] **MCP: filesystem** — Integrate into [`EditRewardModal.tsx`](../../apps/web/src/components/admin/EditRewardModal.tsx) and create reward form.
+- [x] Keep manual URL input as fallback (advanced toggle).
 
 ### Phase D — Documentation
 
-- [ ] **MCP: filesystem** — Update [`docs/API.md`](../API.md) with upload endpoint.
-- [ ] **MCP: filesystem** — Update [`docs/DEPLOYMENT.md`](../DEPLOYMENT.md) with Supabase Storage env vars.
+- [x] **MCP: filesystem** — Update [`docs/API.md`](../API.md) with upload endpoint.
+- [x] **MCP: filesystem** — Update [`docs/DEPLOYMENT.md`](../DEPLOYMENT.md) with Supabase Storage env vars.
 
 ## 7. UI/UX Implementation Details
 
@@ -259,17 +244,17 @@ export function ImageUploadField({ value, onChange }: Props) {
 
 ### Automated
 
-- [ ] `validateImageFile` rejects `application/pdf` and files > 2MB.
-- [ ] Integration: admin upload returns public URL; mock Supabase client.
-- [ ] Integration: non-admin → 403.
-- [ ] RTL: `ImageUploadField` shows preview after mock upload.
+- [x] `validateImageFile` rejects `application/pdf` and files > 2MB.
+- [x] Integration: admin upload returns public URL; mock Supabase client.
+- [x] Integration: non-admin → 403.
+- [x] RTL: `ImageUploadField` shows preview after mock upload.
 - [ ] `npm run lint`, `npm run check-types` clean.
 
 ### Manual (MCP: browser + supabase)
 
 - [ ] Upload JPG in admin reward modal → URL populated → image visible on Rewards page.
-- [ ] Upload oversize file → error message.
-- [ ] **MCP: supabase** — `get_advisors` shows no critical storage vulnerabilities.
+- [x] Upload oversize file → error message (client + API validation).
+- [x] **MCP: supabase** — `get_advisors` shows no critical storage vulnerabilities.
 - [ ] Public reward image URL loads without auth.
 
 ### Success criteria

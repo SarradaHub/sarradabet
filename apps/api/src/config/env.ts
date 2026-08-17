@@ -133,6 +133,10 @@ const envSchema = z.object({
   PUBLIC_WEB_URL: z.string().url().optional(),
   TICKET_IMAGE_CACHE_TTL: z.coerce.number().int().positive().default(3600),
   TICKET_IMAGE_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_STORAGE_BUCKET: z.string().default("reward-images"),
+  UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(2097152),
 });
 
 const parsed = envSchema.parse(process.env);

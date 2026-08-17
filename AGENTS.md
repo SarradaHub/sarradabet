@@ -3,7 +3,7 @@
 Cross-agent memory for [SarradaBet](https://github.com/SarradaHub/sarradabet): a mock betting platform with real-time parimutuel odds, authenticated stake voting, coin purchases via Mercado Pago Pix (online + instore QR), gamification, and shared TypeScript contracts.
 
 > **Purpose:** Primes Cursor Agent/Composer with repo context — what is **shipped**, what is **planned**, coding standards, and gotchas.  
-> **Last updated:** 2026-08-09  
+> **Last updated:** 2026-08-16  
 > **Maintainer:** Update when features ship or architecture changes.
 
 ---
@@ -49,6 +49,7 @@ Cross-agent memory for [SarradaBet](https://github.com/SarradaHub/sarradabet): a
 | `MERCADOPAGO_ACCESS_TOKEN` | Pix online + instore |
 | `MERCADOPAGO_WEBHOOK_SECRET` | Webhook HMAC validation |
 | `MERCADOPAGO_STORE_ID`, `MERCADOPAGO_POS_ID`, `MERCADOPAGO_POS_UUID` | Instore QR |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | Reward image upload (API service role only) |
 | `BET_TAKEOUT_RATE`, `HOUSE_USER_USERNAME` | Parimutuel house takeout |
 | `MERCADOPAGO_MOCK_PIX` | Local Pix without real MP |
 
@@ -121,6 +122,7 @@ npm run dev              # api + web via Turbo
 | Gamification & rewards | Shipped | Leaderboard, stats, rewards redeem, ticket verify/PNG |
 | Dashboard & analytics | Shipped | User dashboard, admin analytics + CSV export |
 | Mercado Pago QR instore | Shipped | Instore orders, webhook, Coins page tab |
+| Reward image upload (Supabase Storage) | Shipped | `POST /admin/uploads/reward-image`, admin drag-drop UI |
 | Mobile & advanced admin | **Planned** | See [Feature 06](docs/features/06-mobile-app-and-admin-panel.md) |
 
 **Planned initiatives:** [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/action-plans/](docs/action-plans/) (social login, Supabase upload).
@@ -142,6 +144,7 @@ Base: `http://localhost:8000/api/v1`. Full reference: [`docs/API.md`](docs/API.m
 | POST | `/rewards/:id/redeem` | Required | Generates ticket |
 | GET/POST | `/admin/rewards`, `/admin/analytics/*` | Admin | CRUD + analytics |
 | POST | `/admin/users/:id/coins/adjust` | Admin | Credit/debit + audit log |
+| POST | `/admin/uploads/reward-image` | Admin | Multipart reward image → Supabase Storage URL |
 | POST | `/webhooks/mercadopago` | MP HMAC | No JWT |
 
 **Not shipped (Planned — Feature 06):** `PATCH /admin/users/:id/ban`, `GET /admin/payments/pix`.
@@ -287,6 +290,7 @@ Shipped behavior lives in living docs — not in deleted feature guides 01–05/
 
 | Date | Change |
 |------|--------|
+| 2026-08-16 | Shipped Supabase Storage reward image upload (API upload route, admin drag-drop UI, bucket `reward-images`) |
 | 2026-08-16 | Shipped UX breadcrumbs, catch-all 404, nav dead-end fixes (login logos, ticket verify back link) |
 | 2026-08-13 | Shipped financial disclaimers (PT/EN banner + footer, Coins acknowledge gate) |
 | 2026-08-13 | Shipped admin coin adjust API + UI (`ADMIN_ADJUSTMENT`, `AdminAuditLog`) |
