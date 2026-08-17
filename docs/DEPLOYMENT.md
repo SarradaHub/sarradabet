@@ -8,7 +8,43 @@ This guide covers deploying the SarradaBet application to production. The stack 
 
 **Default API port:** `8000` (configurable via `PORT`).
 
-> **Production requirements:** set `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `CORS_ORIGINS`, `JWT_SECRET`, and Mercado Pago credentials. See [`apps/api/.env.example`](../apps/api/.env.example).
+> **Production requirements:** set `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `CORS_ORIGINS`, `JWT_SECRET`, Mercado Pago credentials, and (for reward image uploads) Supabase Storage env vars. See [`apps/api/.env.example`](../apps/api/.env.example).
+
+## Supabase Storage (reward images)
+
+Production Postgres already runs on Supabase. Reward images use **Supabase Storage** via the API (service role — never expose the service key to the web app).
+
+### Environment variables (API)
+
+| Variable | Purpose |
+|----------|---------|
+| `SUPABASE_URL` | Project URL, e.g. `https://<ref>.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only; Dashboard → Project Settings → API |
+| `SUPABASE_STORAGE_BUCKET` | Default `reward-images` |
+| `UPLOAD_MAX_BYTES` | Default `2097152` (2 MB) |
+
+Set these on Render/Vercel (API service only). No `VITE_SUPABASE_*` vars on the web app — uploads go through `POST /api/v1/admin/uploads/reward-image`.
+
+### Bucket setup (one-time)
+
+Create a **public** bucket with upload restrictions. Writes use the service role (bypasses RLS); public read serves reward thumbnails without auth.
+
+```sql
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'reward-images',
+  'reward-images',
+  true,
+  2097152,
+  ARRAY['image/jpeg', 'image/png', 'image/webp']::text[]
+)
+ON CONFLICT (id) DO UPDATE SET
+  public = EXCLUDED.public,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+```
+
+No INSERT/UPDATE policies for `anon`/`authenticated` — only the API (service role) uploads. Public bucket URLs are readable without a SELECT policy.
 
 ## Deployment Options
 

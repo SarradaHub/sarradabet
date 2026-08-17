@@ -9,6 +9,7 @@ import { adminRewardService } from "../services/rewardService";
 import { getApiErrorMessage } from "../utils/apiError";
 import { TicketValidationModal } from "../components/admin/TicketValidationModal";
 import { EditRewardModal } from "../components/admin/EditRewardModal";
+import { ImageUploadField } from "../components/admin/ImageUploadField";
 
 const emptyForm = {
   title: "",
@@ -158,11 +159,10 @@ const AdminRewardsPage: React.FC = () => {
             onChange={(e) => setForm({ ...form, stock: e.target.value })}
             required
           />
-          <input
-            className={sportsbookFieldClass}
-            placeholder="URL da imagem (opcional)"
+          <ImageUploadField
             value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+            onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+            disabled={saving}
           />
           <textarea
             className={`${sportsbookFieldClass} md:col-span-2 min-h-24`}

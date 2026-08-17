@@ -181,6 +181,30 @@ export function createApiClient(endpoint: string): AxiosInstance {
   return client;
 }
 
+export async function uploadMultipart(
+  endpoint: string,
+  formData: FormData,
+  timeoutMs = 30000,
+): Promise<unknown> {
+  const token = authHandlers.getAccessToken();
+  const csrf = csrfToken ?? (await fetchCsrfToken());
+
+  const response = await axios.post(
+    `${getApiRootUrl()}/api/v1/${endpoint}`,
+    formData,
+    {
+      withCredentials: true,
+      timeout: timeoutMs,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+      },
+    },
+  );
+
+  return response.data?.data;
+}
+
 export const authApiClient = createApiClient("auth");
 
 export async function refreshAccessTokenRequest(): Promise<{

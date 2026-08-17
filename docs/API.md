@@ -116,6 +116,7 @@ Require `Authorization: Bearer <accessToken>`:
 | `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
 | `POST /api/v1/admin/users/:id/coins/adjust` | Admin only |
 | `GET/POST/PUT/DELETE /api/v1/admin/rewards` | Admin only |
+| `POST /api/v1/admin/uploads/reward-image` | Admin only — multipart image upload |
 | `POST /api/v1/admin/rewards/tickets/:code/validate` | Admin only |
 | `GET /api/v1/admin/analytics/*` | Admin only |
 | `GET /api/v1/admin/house/summary` | Admin only |
@@ -1454,6 +1455,25 @@ Require admin JWT (`role: ADMIN`).
 | DELETE | `/admin/rewards/:id` | Deactivate reward |
 | POST | `/admin/rewards/tickets/:code/validate` | Validate redemption ticket once |
 | GET | `/admin/rewards/tickets/:code/validate-image` | Download validated ticket PNG |
+
+### Upload reward image
+
+**POST** `/admin/uploads/reward-image`
+
+Requires admin JWT. Accepts `multipart/form-data` with field `file` (JPEG, PNG, or WebP; max 2 MB after client compression). Server recompresses to WebP (max 1920×1920) and uploads to Supabase Storage bucket `reward-images`. Returns a public CDN URL for use in `imageUrl` when creating/updating rewards.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "https://<project>.supabase.co/storage/v1/object/public/reward-images/rewards/<uuid>.webp"
+  }
+}
+```
+
+**Errors:** `400` — unsupported MIME or file too large; `401` / `403` — auth; `503` — Supabase Storage not configured (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` missing).
 
 **Create body:**
 

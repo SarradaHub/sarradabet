@@ -14,6 +14,7 @@ import userRoutes from "../modules/user/routes/user.routes";
 import jobsRoutes from "./jobs.routes";
 import leaderboardRoutes from "./leaderboard.routes";
 import rewardRoutes, { adminRewardRoutes } from "./reward.routes";
+import adminUploadRoutes from "../modules/upload/routes/admin.upload.routes";
 import {
   adminTicketRoutes,
   rewardTicketRoutes,
@@ -30,6 +31,7 @@ router.use("/admin/coin-packages", adminCoinPackageRoutes);
 router.use("/admin/users", adminUsersRoutes);
 router.use("/admin/rewards/tickets", adminTicketRoutes);
 router.use("/admin/rewards", adminRewardRoutes);
+router.use("/admin/uploads", adminUploadRoutes);
 router.use("/admin/house", adminHouseRoutes);
 router.use("/admin/analytics", analyticsRoutes);
 router.use("/leaderboard", leaderboardRoutes);
@@ -58,6 +60,7 @@ router.get("/", (req, res) => {
       adminCoinPackages: "/api/v1/admin/coin-packages",
       adminUsers: "/api/v1/admin/users",
       adminRewards: "/api/v1/admin/rewards",
+      adminUploads: "/api/v1/admin/uploads",
       adminHouse: "/api/v1/admin/house",
       leaderboard: "/api/v1/leaderboard",
       rewards: "/api/v1/rewards",
