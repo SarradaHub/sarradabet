@@ -241,8 +241,9 @@ Schema: [`apps/api/prisma/schema.prisma`](apps/api/prisma/schema.prisma).
 ## 8. Planned work
 
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — SSOT for unshipped items
-- **[docs/features/06-mobile-app-and-admin-panel.md](docs/features/06-mobile-app-and-admin-panel.md)** — mobile + ban/coin-adjust/Pix monitor
-- **[docs/action-plans/](docs/action-plans/)** — granular plans
+- **[docs/features/06-mobile-app-and-admin-panel.md](docs/features/06-mobile-app-and-admin-panel.md)** — Feature 06 umbrella spec
+- **[docs/action-plans/07–12](docs/action-plans/README.md)** — remaining Feature 06 work (admin ban/search, Pix monitor, api-client, mobile, push)
+- **[docs/action-plans/](docs/action-plans/)** — all granular plans
 
 Shipped behavior lives in living docs — not in deleted feature guides 01–05/07.
 
