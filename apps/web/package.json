@@ -23,7 +23,7 @@
     "axios": "^1.18.0",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
+    "date-fns": "^4.4.0",
     "didyoumean": "^1.2.2",
     "lucide-react": "^0.525.0",
     "qrcode": "^1.5.4",
