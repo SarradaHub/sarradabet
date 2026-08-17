@@ -8,28 +8,29 @@ Single source of truth for **planned** work. Shipped features are documented in 
 
 Detailed spec: [features/06-mobile-app-and-admin-panel.md](./features/06-mobile-app-and-admin-panel.md)
 
-| Item | Status |
-|------|--------|
-| `apps/mobile` (Expo) | Planned |
-| `@sarradabet/api-client` shared package | Planned |
-| Push notifications (Expo) | Planned |
-| Admin user list with search | Planned |
-| Admin ban/unban | Planned |
-| Admin manual coin adjust (`ADMIN_ADJUSTMENT`) | Shipped |
-| Admin Pix payment monitor UI | Planned |
+| Item | Status | Action plan |
+|------|--------|-------------|
+| Admin user list with search | Planned | [07-admin-user-ban.md](./action-plans/07-admin-user-ban.md) |
+| Admin ban/unban | Planned | [07-admin-user-ban.md](./action-plans/07-admin-user-ban.md) |
+| Admin Pix payment monitor UI | Planned | [08-admin-pix-monitor.md](./action-plans/08-admin-pix-monitor.md) |
+| `@sarradabet/api-client` + native refresh | Planned | [09-api-client-native-refresh.md](./action-plans/09-api-client-native-refresh.md) |
+| `apps/mobile` (Expo) core | Planned | [10-mobile-app-core.md](./action-plans/10-mobile-app-core.md) |
+| Mobile coins (Pix) & dashboard | Planned | [11-mobile-coins-dashboard.md](./action-plans/11-mobile-coins-dashboard.md) |
+| Push notifications (Expo) | Planned | [12-push-notifications.md](./action-plans/12-push-notifications.md) |
 
-**Already shipped (not on this list):** web admin for bets, categories, coin packages, rewards CRUD, analytics dashboards, basic user management pages.
+**Already shipped (not on this list):** admin manual coin adjust (`ADMIN_ADJUSTMENT`), web admin for bets, categories, coin packages, rewards CRUD, analytics dashboards, basic user management pages (list/edit/delete + coin adjust).
 
 ## Action plans
 
-Executable agent/developer plans. All **Planned**.
+Executable agent/developer plans.
 
 | # | Initiative | Guide |
 |---|------------|-------|
-| 01 | Social login (Google + Facebook OAuth) | [action-plans/01-social-login.md](./action-plans/01-social-login.md) |
+| 01 | Social login (Google + Facebook OAuth) | Planned — [01-social-login.md](./action-plans/01-social-login.md) |
 | 04 | Financial disclaimers (PT/EN) | Shipped — [04-disclaimers.md](./action-plans/04-disclaimers.md) |
 | 05 | UX flow, breadcrumbs, 404 page | Shipped — [05-ux-flow-breadcrumbs.md](./action-plans/05-ux-flow-breadcrumbs.md) |
 | 06 | Supabase Storage reward image upload | Shipped — [06-supabase-upload.md](./action-plans/06-supabase-upload.md) |
+| 07–12 | Feature 06 remaining (admin + mobile) | Planned — [action-plans/README.md](./action-plans/README.md) |
 
 ## Documentation backlog
 

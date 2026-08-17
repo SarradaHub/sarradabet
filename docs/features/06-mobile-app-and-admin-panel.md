@@ -1,10 +1,23 @@
 # Feature 06 — Mobile App (React Native) and Advanced Admin Panel
 
-**Status:** Planned
+**Status:** Planned (split into action plans [07–12](../action-plans/README.md))
+
+## Action plans (implementation order)
+
+| Plan | Scope |
+|------|-------|
+| [07](../action-plans/07-admin-user-ban.md) | Admin user search, ban/unban, 403 middleware |
+| [08](../action-plans/08-admin-pix-monitor.md) | Admin Pix payment list/filter/detail + UI |
+| [09](../action-plans/09-api-client-native-refresh.md) | Native refresh token + `@sarradabet/api-client` |
+| [10](../action-plans/10-mobile-app-core.md) | Expo scaffold, auth, bet list, Socket.io |
+| [11](../action-plans/11-mobile-coins-dashboard.md) | Mobile Pix purchase + user dashboard |
+| [12](../action-plans/12-push-notifications.md) | PushToken, Expo push, event hooks |
 
 ## Prompt summary
 
 Build a React Native + Expo mobile app in the monorepo, sharing types and API client packages. Implement auth with local token storage, automatic refresh, and Socket.io for live odds. Add push notifications for important events. In parallel, enhance the web admin panel: user management (ban, adjust coins), rewards CRUD, Pix payment monitoring, and analytics dashboards with charts. Restrict all admin routes to administrators.
+
+Suggested order: **07 → 08** (admin), then **09 → 10 → 11/12** (mobile stack).
 
 ## Current state in SarradaBet
 
@@ -30,9 +43,10 @@ Build a React Native + Expo mobile app in the monorepo, sharing types and API cl
 
 ### Missing admin capabilities
 
-- User ban/unban
-- Manual coin adjustment per user
-- Pix payment monitor (pending/approved/expired)
+- User ban/unban — [plan 07](../action-plans/07-admin-user-ban.md)
+- Pix payment monitor (pending/approved/expired) — [plan 08](../action-plans/08-admin-pix-monitor.md)
+
+**Shipped:** manual coin adjustment per user ([plan 03](../action-plans/03-admin-coin-management.md)), rewards CRUD, analytics dashboards.
 
 ### RBAC
 
@@ -76,13 +90,13 @@ sarradabet/
 
 ### Mobile auth note
 
-HttpOnly cookies do not work the same on React Native. Options:
+HttpOnly cookies do not work the same on React Native. Implemented in [plan 09](../action-plans/09-api-client-native-refresh.md):
 
 1. Store refresh token in `expo-secure-store` and send in request body/header on refresh
-2. Extend API to accept refresh token in `Authorization` header for mobile clients
-3. Use long-lived access token + biometric re-auth (less secure — not recommended)
+2. Extend API to accept refresh token in `Authorization` header or body for mobile clients
+3. Return `refreshToken` in login JSON when `X-Client: mobile`
 
-Document chosen approach in mobile README when implementing.
+Document chosen approach in mobile README when plan 10 ships.
 
 ## Proposed schema / API changes
 
@@ -492,14 +506,16 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 
 ## Implementation checklist
 
-### Monorepo setup
+See action plans for executable steps. Summary:
+
+### Monorepo setup — [plan 09](../action-plans/09-api-client-native-refresh.md), [plan 10](../action-plans/10-mobile-app-core.md)
 
 - [ ] `npx create-expo-app apps/mobile` with TypeScript
 - [ ] Add `packages/api-client` with typed fetch + refresh
 - [ ] Configure Turborepo tasks for mobile (`dev`, `build`)
 - [ ] Share `@sarradabet/types` in mobile/tsconfig paths
 
-### Mobile app
+### Mobile app — [plan 10](../action-plans/10-mobile-app-core.md), [plan 11](../action-plans/11-mobile-coins-dashboard.md), [plan 12](../action-plans/12-push-notifications.md)
 
 - [ ] Auth screens: login, register
 - [ ] Token storage + auto refresh via api-client
@@ -509,18 +525,19 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 - [ ] Push: register token on login, handle notifications
 - [ ] Navigation: React Navigation
 
-### Advanced admin (web)
+### Advanced admin (web) — [plan 07](../action-plans/07-admin-user-ban.md), [plan 08](../action-plans/08-admin-pix-monitor.md)
 
 - [ ] Admin users page: list, search, ban
 - [ ] Admin Pix monitor: filter by status, view details
 - [x] Admin rewards CRUD — shipped
 - [x] Analytics dashboards — shipped
-- [x] Confirm all `/admin/*` routes use `authenticateAdmin`
+- [x] Admin coin adjust — shipped ([plan 03](../action-plans/03-admin-coin-management.md))
+- [x] Confirm all `/admin/*` routes use `authenticateUser` + `requireUserRole(ADMIN)`
 
-### Backend
+### Backend — [plan 07](../action-plans/07-admin-user-ban.md), [plan 12](../action-plans/12-push-notifications.md)
 
 - [ ] Ban middleware on auth routes
-- [ ] Admin user management endpoints
+- [ ] Admin user management endpoints (list, ban)
 - [x] Admin coin adjustment via `CoinService` + audit log
 - [ ] Push token registration endpoint
 - [ ] Notification service triggered from payment/payout events
@@ -532,7 +549,7 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 | `apps/mobile/` | **create** — entire Expo app |
 | `packages/api-client/` | **create** |
 | [`packages/types/src/`](../../packages/types/src/) | **extend** |
-| [`apps/web/src/pages/`](../../apps/web/src/pages/) | **create** — AdminUsersPage, AdminPaymentsPage |
+| [`apps/web/src/pages/`](../../apps/web/src/pages/) | **extend** — AdminUsersPage (search/ban), **create** AdminPaymentsPage |
 | [`AdminLayout.tsx`](../../apps/web/src/components/admin/AdminLayout.tsx) | **extend** — nav links |
 | [`apps/api/src/modules/user/`](../../apps/api/src/modules/user/) | **extend** — ban, admin list |
 | `apps/api/src/modules/notification/` | **create** |
@@ -540,14 +557,14 @@ Funcionalidade: Aplicativo Mobile e Painel Administrativo Avançado
 
 ## Acceptance criteria
 
-- [ ] Mobile app builds with Expo; login and bet list work against API
-- [ ] Access token refreshes automatically without user action
-- [ ] Odds update in real time on mobile via Socket.io
-- [ ] Push notification received on payment confirmation (device registered)
-- [ ] Admin can ban user; banned user receives 403 on all authenticated routes
-- [ ] Admin can adjust coins; `ADMIN_ADJUSTMENT` transaction recorded
-- [ ] Admin can view Pix payments filtered by status
-- [ ] Non-admin cannot access any `/admin/*` API route or page
+- [ ] Mobile app builds with Expo; login and bet list work against API — [plan 10](../action-plans/10-mobile-app-core.md)
+- [ ] Access token refreshes automatically without user action — [plan 09](../action-plans/09-api-client-native-refresh.md)
+- [ ] Odds update in real time on mobile via Socket.io — [plan 10](../action-plans/10-mobile-app-core.md)
+- [ ] Push notification received on payment confirmation (device registered) — [plan 12](../action-plans/12-push-notifications.md)
+- [ ] Admin can ban user; banned user receives 403 on all authenticated routes — [plan 07](../action-plans/07-admin-user-ban.md)
+- [x] Admin can adjust coins; `ADMIN_ADJUSTMENT` transaction recorded — shipped
+- [ ] Admin can view Pix payments filtered by status — [plan 08](../action-plans/08-admin-pix-monitor.md)
+- [ ] Non-admin cannot access any `/admin/*` API route or page — verify across plans 07–08
 
 ## Dependencies
 
