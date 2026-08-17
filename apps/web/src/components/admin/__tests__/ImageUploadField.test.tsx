@@ -60,4 +60,15 @@ describe("ImageUploadField", () => {
     expect(uploadRewardImage).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("does not render preview for unsafe image URLs", () => {
+    render(
+      <ImageUploadField
+        value="javascript:alert(1)"
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
 });

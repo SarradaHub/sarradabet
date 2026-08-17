@@ -3,6 +3,7 @@ import imageCompression from "browser-image-compression";
 import { sportsbookFieldClass } from "../ui/SportsbookModal";
 import { uploadRewardImage } from "../../services/uploadService";
 import { getApiErrorMessage } from "../../utils/apiError";
+import { getSafeImageUrl } from "../../utils/safeImageUrl";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -26,6 +27,7 @@ export function ImageUploadField({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showManualUrl, setShowManualUrl] = useState(false);
+  const previewUrl = getSafeImageUrl(value);
 
   const handleFile = async (file: File | undefined) => {
     if (!file || disabled || uploading) {
@@ -97,9 +99,9 @@ export function ImageUploadField({
             : "cursor-pointer hover:border-sportsbook-accent/60"
         }`}
       >
-        {value ? (
+        {previewUrl ? (
           <img
-            src={value}
+            src={previewUrl}
             alt="Pré-visualização da recompensa"
             className="mx-auto mb-3 max-h-40 rounded-lg object-contain"
           />
