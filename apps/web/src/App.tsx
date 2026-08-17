@@ -14,6 +14,7 @@ import CoinsPage from "./pages/CoinsPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import RewardsPage from "./pages/RewardsPage";
 import TicketVerifyPage from "./pages/TicketVerifyPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import { AuthProvider } from "./context/AuthProvider";
 import { RealtimeProvider } from "./context/RealtimeProvider";
 import { ThemeProvider } from "./context/ThemeProvider";
@@ -141,7 +142,9 @@ function App() {
                     </Suspense>
                   }
                 />
+                <Route path="*" element={<NotFoundPage />} />
               </Route>
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
         </RealtimeProvider>

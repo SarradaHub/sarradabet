@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import type { TicketVerifyResponse } from "@sarradabet/types";
 import Navigation from "../components/Navigation";
 import { AppFooter } from "../components/legal/AppFooter";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { Button } from "../components/ui/Button";
 import axios from "axios";
 import { ticketService } from "../services/ticketService";
 import { getApiErrorMessage } from "../utils/apiError";
@@ -63,11 +64,16 @@ const TicketVerifyPage: React.FC = () => {
     <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
       <Navigation />
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6 flex-1 w-full">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Verificação de ticket</h1>
-          <p className="text-sm text-sportsbook-muted mt-1">
-            Confira a autenticidade de um ticket SarradaBet
-          </p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold">Verificação de ticket</h1>
+            <p className="text-sm text-sportsbook-muted mt-1">
+              Confira a autenticidade de um ticket SarradaBet
+            </p>
+          </div>
+          <Link to="/">
+            <Button variant="secondary">Voltar ao início</Button>
+          </Link>
         </div>
 
         {loading && <LoadingSpinner text="Verificando ticket..." />}

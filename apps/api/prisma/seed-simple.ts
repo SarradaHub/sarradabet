@@ -232,6 +232,7 @@ async function main() {
   await prisma.coinPackage.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.userAction.deleteMany();
+  await prisma.adminAuditLog.deleteMany();
   await prisma.user.deleteMany();
 
   console.log("📂 Creating category...");

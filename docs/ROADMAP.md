@@ -28,7 +28,7 @@ Executable agent/developer plans. All **Planned**.
 |---|------------|-------|
 | 01 | Social login (Google + Facebook OAuth) | [action-plans/01-social-login.md](./action-plans/01-social-login.md) |
 | 04 | Financial disclaimers (PT/EN) | Shipped — [04-disclaimers.md](./action-plans/04-disclaimers.md) |
-| 05 | UX flow, breadcrumbs, 404 page | [action-plans/05-ux-flow-breadcrumbs.md](./action-plans/05-ux-flow-breadcrumbs.md) |
+| 05 | UX flow, breadcrumbs, 404 page | Shipped — [05-ux-flow-breadcrumbs.md](./action-plans/05-ux-flow-breadcrumbs.md) |
 | 06 | Supabase Storage reward image upload | [action-plans/06-supabase-upload.md](./action-plans/06-supabase-upload.md) |
 
 ## Documentation backlog

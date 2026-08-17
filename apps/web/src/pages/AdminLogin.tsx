@@ -68,7 +68,7 @@ const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-sportsbook-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
-          <BrandLogo size="lg" showText={false} />
+          <BrandLogo size="lg" showText={false} linkToHome />
           <h2 className="mt-4 text-center font-display text-3xl font-bold text-sportsbook-fg tracking-wide">
             Admin Login
           </h2>
