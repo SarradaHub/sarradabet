@@ -9,9 +9,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "@me"
+      - "LMafra"
     assignees:
-      - "@me"
+      - "LMafra"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -32,9 +32,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "@me"
+      - "LMafra"
     assignees:
-      - "@me"
+      - "LMafra"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -51,9 +51,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "@me"
+      - "LMafra"
     assignees:
-      - "@me"
+      - "LMafra"
     commit-message:
       prefix: "chore"
       include: "scope"

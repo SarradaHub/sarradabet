@@ -32,9 +32,9 @@
   "devDependencies": {
     "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
-    "turbo": "^2.9.18",
+    "turbo": "^2.10.8",
     "typescript": "5.9.3",
-    "vitest": "^3.2.6",
+    "vitest": "^3.2.7",
     "jest": "^30.2.0"
   },
   "engines": {
@@ -51,7 +51,7 @@
     "@eslint/plugin-kit": ">=0.3.4",
     "esbuild": ">=0.28.1",
     "body-parser": "^1.20.6",
-    "postcss": "^8.5.18",
+    "postcss": "^8.5.26",
     "brace-expansion": "^5.0.9",
     "ip-address": "^10.4.0",
     "js-yaml": "^4.3.1",
