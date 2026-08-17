@@ -7,6 +7,7 @@ import ThemeToggle from "../ThemeToggle";
 import { ErrorMessage } from "../ui/ErrorMessage";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { useAdminAuth } from "../../hooks/useAdminAuth";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 import { cn } from "../../utils/cn";
 
 const navItems = [
@@ -87,6 +88,10 @@ const AdminLayout: React.FC = () => {
           </div>
         </div>
       </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Breadcrumb />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <nav

@@ -1,0 +1,16 @@
+export const ROUTE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  dashboard: "Dashboard",
+  bets: "Apostas",
+  categories: "Categorias",
+  "coin-packages": "Pacotes de moedas",
+  users: "Usuários",
+  rewards: "Recompensas",
+  coins: "Moedas",
+  profile: "Perfil",
+  leaderboard: "Ranking",
+  login: "Entrar",
+  register: "Cadastrar",
+  tickets: "Ingressos",
+  verify: "Verificar",
+};

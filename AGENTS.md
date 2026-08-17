@@ -123,7 +123,7 @@ npm run dev              # api + web via Turbo
 | Mercado Pago QR instore | Shipped | Instore orders, webhook, Coins page tab |
 | Mobile & advanced admin | **Planned** | See [Feature 06](docs/features/06-mobile-app-and-admin-panel.md) |
 
-**Planned initiatives:** [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/action-plans/](docs/action-plans/) (social login, disclaimers, breadcrumbs, Supabase upload).
+**Planned initiatives:** [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/action-plans/](docs/action-plans/) (social login, Supabase upload).
 
 ---
 
@@ -287,6 +287,7 @@ Shipped behavior lives in living docs — not in deleted feature guides 01–05/
 
 | Date | Change |
 |------|--------|
+| 2026-08-16 | Shipped UX breadcrumbs, catch-all 404, nav dead-end fixes (login logos, ticket verify back link) |
 | 2026-08-13 | Shipped financial disclaimers (PT/EN banner + footer, Coins acknowledge gate) |
 | 2026-08-13 | Shipped admin coin adjust API + UI (`ADMIN_ADJUSTMENT`, `AdminAuditLog`) |
 | 2026-08-13 | Shipped dark/light mode toggle (ThemeProvider, ThemeToggle, dual CSS palette) |

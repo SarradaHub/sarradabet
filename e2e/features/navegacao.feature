@@ -34,3 +34,10 @@ Funcionalidade: Navegação e rotas protegidas
     Então devo ver a URL contendo "/admin/users"
     Quando clico em "Pacotes"
     Então devo ver a URL contendo "/admin/coin-packages"
+
+  @regression
+  Cenário: Rota inexistente exibe página 404
+    Dado que não estou autenticado
+    Quando navego para "/pagina-inexistente"
+    Então devo ver o texto "Página não encontrada"
+    E devo ver o link "Voltar ao início"
