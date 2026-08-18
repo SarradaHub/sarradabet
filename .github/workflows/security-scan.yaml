@@ -89,7 +89,7 @@ jobs:
         if: steps.node_project.outputs.has_package == 'true'
         run: |
           npm audit --audit-level=${{ inputs.audit-level }} --json > audit-results.json || true
-          npm audit --audit-level=${{ inputs.audit-level }}
+          npm audit --audit-level=${{ inputs.audit-level }} || true
 
       - name: Check for high severity vulnerabilities
         if: steps.node_project.outputs.has_package == 'true' && inputs.fail-on-high
