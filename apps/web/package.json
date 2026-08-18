@@ -17,7 +17,7 @@
     "test:auto-quit": "node test-with-auto-quit.js"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.0",
+    "@headlessui/react": "^2.2.10",
     "@sarradabet/types": "*",
     "@sarradahub/design-system": "file:../../../platform/design-system",
     "axios": "^1.18.0",
