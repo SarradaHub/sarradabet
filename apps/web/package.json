@@ -25,7 +25,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "didyoumean": "^1.2.2",
-    "lucide-react": "^0.525.0",
+    "lucide-react": "^0.577.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
