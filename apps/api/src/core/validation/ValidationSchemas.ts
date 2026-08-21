@@ -257,6 +257,12 @@ export const CreatePixPurchaseSchema = z.object({
   coinPackageId: IdSchema,
 });
 
+export const AdminPixPaymentsQuerySchema = PaginationSchema.extend({
+  status: z
+    .enum(["PENDING", "APPROVED", "EXPIRED", "CANCELLED", "FAILED"])
+    .optional(),
+});
+
 export const CreateRewardSchema = z.object({
   title: z
     .string()
@@ -347,6 +353,7 @@ export type CreateCoinPackageInput = z.infer<typeof CreateCoinPackageSchema>;
 export type UpdateCoinPackageInput = z.infer<typeof UpdateCoinPackageSchema>;
 export type AdjustCoinsInput = z.infer<typeof AdjustCoinsSchema>;
 export type CreatePixPurchaseInput = z.infer<typeof CreatePixPurchaseSchema>;
+export type AdminPixPaymentsQueryInput = z.infer<typeof AdminPixPaymentsQuerySchema>;
 export type CreateRewardInput = z.infer<typeof CreateRewardSchema>;
 export type UpdateRewardInput = z.infer<typeof UpdateRewardSchema>;
 export type LeaderboardQueryInput = z.infer<typeof LeaderboardQuerySchema>;

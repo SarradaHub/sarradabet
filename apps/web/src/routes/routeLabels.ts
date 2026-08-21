@@ -4,6 +4,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   bets: "Apostas",
   categories: "Categorias",
   "coin-packages": "Pacotes de moedas",
+  payments: "Pagamentos Pix",
   users: "Usuários",
   rewards: "Recompensas",
   coins: "Moedas",

@@ -67,6 +67,7 @@ export function usePixPurchase(onApproved?: (payment: PixPaymentStatusResponse) 
           qrCodeBase64: result.qrCodeBase64,
           copyPaste: result.copyPaste,
           isMock: result.isMock,
+          instructionMessage: result.instructionMessage,
         });
 
         pollingRef.current = window.setInterval(() => {
