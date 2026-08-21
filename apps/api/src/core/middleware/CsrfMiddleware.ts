@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { doubleCsrf } from "csrf-csrf";
+import {
+  getAuthCookieOptions,
+  getCsrfCookieName,
+} from "../../config/cookies";
 import { config } from "../../config/env";
 import { ForbiddenError } from "../errors/AppError";
 
@@ -9,16 +13,6 @@ function getCsrfSecret(): string {
     throw new Error("JWT_SECRET or API_KEY is required for CSRF protection");
   }
   return secret;
-}
-
-function getCookieSecure(): boolean {
-  return config.COOKIE_SECURE ?? config.NODE_ENV === "production";
-}
-
-function getCsrfCookieName(): string {
-  return getCookieSecure()
-    ? "__Host-sarradabet.x-csrf-token"
-    : "x-csrf-token";
 }
 
 function getSessionIdentifier(req: Request): string {
@@ -50,12 +44,7 @@ const {
   getSecret: () => getCsrfSecret(),
   getSessionIdentifier,
   cookieName: getCsrfCookieName(),
-  cookieOptions: {
-    sameSite: "lax",
-    path: "/",
-    secure: getCookieSecure(),
-    httpOnly: true,
-  },
+  cookieOptions: getAuthCookieOptions(),
   getCsrfTokenFromRequest: (req) => {
     const headerToken = req.headers["x-csrf-token"];
     return typeof headerToken === "string" ? headerToken : undefined;
