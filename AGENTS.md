@@ -294,6 +294,7 @@ Shipped behavior lives in living docs — not in deleted feature guides 01–05/
 
 | Date | Change |
 |------|--------|
+| 2026-08-20 | Ticket PNG images: last-4 UUID + WhatsApp contact (no QR), centered layout; verify API returns `shortCode` + `whatsappPhone`; cache bump v4 |
 | 2026-08-20 | Shipped static Pix key + QR + WhatsApp comprovante flow; admin Pix approve page |
 | 2026-08-16 | Shipped Supabase Storage reward image upload (API upload route, admin drag-drop UI, bucket `reward-images`) |
 | 2026-08-16 | Shipped UX breadcrumbs, catch-all 404, nav dead-end fixes (login logos, ticket verify back link) |

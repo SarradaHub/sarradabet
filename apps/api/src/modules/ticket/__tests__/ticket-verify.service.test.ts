@@ -29,6 +29,8 @@ describe("TicketVerifyService", () => {
     expect(result.status).toBe("VALIDATED");
     expect(result.userEmail).toBe("p***@sarradabet.com");
     expect(result.rewardTitle).toBe("Camisa Oficial");
+    expect(result.shortCode).toBe("-123");
+    expect(result.whatsappPhone).toBeDefined();
   });
 
   it("throws when ticket does not exist", async () => {

@@ -1,13 +1,25 @@
-import QRCode from "qrcode";
 import sharp from "sharp";
+import { logger } from "../../../utils/logger";
 import { buildTicketSvg } from "../utils/ticketLayout";
+import { extractTicketShortCode } from "../utils/extractTicketShortCode";
 import { formatTicketSerial } from "../utils/formatTicketSerial";
 import { formatTicketUuid } from "../utils/formatTicketUuid";
 import { maskUserIdentity } from "../utils/maskUserIdentity";
+import {
+  getTicketWhatsappInstructionMessage,
+  getTicketWhatsappPhone,
+} from "../utils/ticketContact";
 import { TicketImageService } from "../services/TicketImageService";
 
-jest.mock("qrcode");
 jest.mock("sharp");
+jest.mock("../../../utils/logger", () => ({
+  logger: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 describe("ticket utils", () => {
   it("masks email identities", () => {
@@ -29,34 +41,69 @@ describe("ticket utils", () => {
   });
 });
 
+describe("extractTicketShortCode", () => {
+  it("returns last 4 characters uppercase", () => {
+    expect(extractTicketShortCode("abc-123-def-456-7890")).toBe("7890");
+    expect(extractTicketShortCode("550e8400-e29b-41d4-a716-446655440000")).toBe(
+      "0000",
+    );
+  });
+
+  it("uppercases mixed-case suffix", () => {
+    expect(extractTicketShortCode("abc-123-def-456-ab12")).toBe("AB12");
+  });
+
+  it("returns full code and logs when shorter than 4 characters", () => {
+    expect(extractTicketShortCode("abc")).toBe("ABC");
+    expect(logger.warn).toHaveBeenCalledWith(
+      "UUID muito curto para extração",
+      { ticketCode: "abc" },
+    );
+  });
+});
+
+describe("ticketContact", () => {
+  it("builds instruction message from configured phone", () => {
+    expect(getTicketWhatsappInstructionMessage()).toBe(
+      `Envie este ticket para o seguinte número ${getTicketWhatsappPhone()}`,
+    );
+  });
+});
+
 describe("ticketLayout", () => {
-  it("includes redeemed watermark text", () => {
+  const baseInput = {
+    ticketCode: "abc-123-def-456-7890",
+    formattedUuid: "ABCD-EFGH-IJKL-MNOP",
+    serial: "SARR-2026-00001",
+    rewardTitle: "Camisa",
+    userLabel: "p***@sarradabet.com",
+    redeemedAtLabel: "23/07/2026 14:30",
+    shortCode: "7890",
+    whatsappPhone: "(61) 999272342",
+  };
+
+  it("includes redeemed watermark text and last-4 block", () => {
     const svg = buildTicketSvg({
-      ticketCode: "abc",
-      formattedUuid: "ABCD-EFGH-IJKL-MNOP",
-      serial: "SARR-2026-00001",
-      rewardTitle: "Camisa",
-      userLabel: "p***@sarradabet.com",
-      redeemedAtLabel: "23/07/2026 14:30",
+      ...baseInput,
       variant: "redeemed",
-      qrAvailable: true,
     });
 
     expect(svg).toContain("APENAS RETIRADA");
     expect(svg).toContain("RESGATADO");
+    expect(svg).toContain("Código do Ticket:");
+    expect(svg).toContain("7890");
+    expect(svg).toContain("Envie este ticket para o seguinte número:");
+    expect(svg).toContain("(61) 999272342");
+    expect(svg).toContain("#FFD700");
+    expect(svg).toContain("UUID: abc-123-def-456-7890");
+    expect(svg).not.toContain("QR Code");
   });
 
   it("includes validated watermark and stamp", () => {
     const svg = buildTicketSvg({
-      ticketCode: "abc",
-      formattedUuid: "ABCD-EFGH-IJKL-MNOP",
-      serial: "SARR-2026-00001",
-      rewardTitle: "Camisa",
-      userLabel: "p***@sarradabet.com",
-      redeemedAtLabel: "23/07/2026 14:30",
+      ...baseInput,
       validatedAtLabel: "24/07/2026 10:00",
       variant: "validated",
-      qrAvailable: true,
     });
 
     expect(svg).toContain("VALIDADO PELA ADMINISTRAÇÃO");
@@ -64,19 +111,13 @@ describe("ticketLayout", () => {
     expect(svg).not.toContain("APENAS RETIRADA");
   });
 
-  it("renders qr fallback text when qr is unavailable", () => {
+  it("does not render qr placeholder", () => {
     const svg = buildTicketSvg({
-      ticketCode: "abc",
-      formattedUuid: "ABCD-EFGH-IJKL-MNOP",
-      serial: "SARR-2026-00001",
-      rewardTitle: "Camisa",
-      userLabel: "p***@sarradabet.com",
-      redeemedAtLabel: "23/07/2026 14:30",
+      ...baseInput,
       variant: "redeemed",
-      qrAvailable: false,
     });
 
-    expect(svg).toContain("QR Code indisponível");
+    expect(svg).not.toContain("QR Code indisponível");
   });
 });
 
@@ -94,7 +135,6 @@ describe("TicketImageService", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (QRCode.toBuffer as jest.Mock).mockResolvedValue(Buffer.from("qr"));
     const pngBuffer = Buffer.from("png");
     const sharpInstance = {
       png: jest.fn().mockReturnThis(),
@@ -103,18 +143,6 @@ describe("TicketImageService", () => {
       toBuffer: jest.fn().mockResolvedValue(pngBuffer),
     };
     (sharp as unknown as jest.Mock).mockReturnValue(sharpInstance);
-  });
-
-  it("generates qr code buffer", async () => {
-    const result = await service.generateQrCode(payload.ticketCode);
-    expect(result).toEqual(Buffer.from("qr"));
-    expect(QRCode.toBuffer).toHaveBeenCalled();
-  });
-
-  it("returns null when qr generation fails", async () => {
-    (QRCode.toBuffer as jest.Mock).mockRejectedValue(new Error("fail"));
-    const result = await service.generateQrCode(payload.ticketCode);
-    expect(result).toBeNull();
   });
 
   it("generates redemption png without throwing", async () => {
