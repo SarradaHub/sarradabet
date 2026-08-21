@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router";
 import CoinsPage from "../CoinsPage";
 import { DISCLAIMERS } from "../../constants/disclaimers";
 
+const STATIC_PIX_KEY = "33a26506-c657-44ca-a331-ae7dcb256201";
+const COMPROVANTE_MESSAGE =
+  "Envie o comprovante para o seguinte número (61) 999272342";
+
 vi.mock("../../hooks/useCoinBalance", () => ({
   useCoinBalance: () => ({
     balance: 100,
@@ -22,26 +26,27 @@ vi.mock("../../hooks/useCoinTransactions", () => ({
   }),
 }));
 
+const mockStartPurchase = vi.fn();
+const mockResetPurchase = vi.fn();
+
 vi.mock("../../hooks/usePixPurchase", () => ({
   usePixPurchase: () => ({
-    purchase: null,
-    status: null,
+    purchase: {
+      paymentId: 1,
+      copyPaste: STATIC_PIX_KEY,
+      instructionMessage: COMPROVANTE_MESSAGE,
+    },
+    status: {
+      id: 1,
+      status: "PENDING",
+      copyPaste: STATIC_PIX_KEY,
+      instructionMessage: COMPROVANTE_MESSAGE,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    },
     loading: false,
     error: null,
-    startPurchase: vi.fn(),
-    resetPurchase: vi.fn(),
-    setStatus: vi.fn(),
-  }),
-}));
-
-vi.mock("../../hooks/useInstorePurchase", () => ({
-  useInstorePurchase: () => ({
-    purchase: null,
-    status: null,
-    loading: false,
-    error: null,
-    startPurchase: vi.fn(),
-    resetPurchase: vi.fn(),
+    startPurchase: mockStartPurchase,
+    resetPurchase: mockResetPurchase,
     setStatus: vi.fn(),
   }),
 }));
@@ -64,7 +69,6 @@ vi.mock("../../services/CoinPaymentService", () => ({
       },
     ]),
   },
-  paymentService: {},
 }));
 
 vi.mock("../../components/Navigation", () => ({
@@ -111,5 +115,29 @@ describe("CoinsPage disclaimers", () => {
     fireEvent.click(screen.getByRole("checkbox"));
 
     expect(purchaseButton).not.toBeDisabled();
+  });
+
+  it("does not render instore tab or mock simulate button", async () => {
+    renderCoinsPage();
+
+    await screen.findByRole("button", { name: "Comprar com Pix" });
+
+    expect(
+      screen.queryByRole("button", { name: "QR presencial" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Simular pagamento aprovado" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows comprovante message before QR and static pix key", async () => {
+    renderCoinsPage();
+
+    expect(await screen.findByText(COMPROVANTE_MESSAGE)).toBeInTheDocument();
+    expect(screen.getByAltText("QR Code Pix")).toHaveAttribute(
+      "src",
+      "/pix-static-qr.png",
+    );
+    expect(screen.getByDisplayValue(STATIC_PIX_KEY)).toBeInTheDocument();
   });
 });

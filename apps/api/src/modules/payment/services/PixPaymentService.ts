@@ -6,6 +6,7 @@ import {
 import { prisma } from "../../../config/db";
 import { config } from "../../../config/env";
 import {
+  ConflictError,
   ForbiddenError,
   NotFoundError,
   BadRequestError,
@@ -15,6 +16,8 @@ import { CoinService } from "../../coin/services/CoinService";
 import { CoinPackageService } from "../../coin-package/services/CoinPackageService";
 import { PixPaymentRepository } from "../repositories/PixPaymentRepository";
 import { isMockPixPaymentId } from "./MockMercadoPagoClient";
+import { isStaticPixPaymentId } from "./StaticPixGateway";
+import { getStaticPixInstructionMessage } from "../staticPixConfig";
 import type { PixGateway } from "./PixGateway";
 
 export class PixPaymentService {
@@ -38,7 +41,7 @@ export class PixPaymentService {
 
     const idempotencyKey = randomUUID();
     const expiresAt = new Date(
-      Date.now() + config.PIX_EXPIRATION_MINUTES * 60 * 1000,
+      Date.now() + config.STATIC_PIX_EXPIRATION_MINUTES * 60 * 1000,
     );
 
     const mpPayment = await this.pixGateway.createPixPayment({
@@ -63,6 +66,8 @@ export class PixPaymentService {
       idempotencyKey,
     });
 
+    const instructionMessage = getStaticPixInstructionMessage();
+
     return {
       paymentId: pixPayment.id,
       externalId: pixPayment.externalId,
@@ -76,6 +81,7 @@ export class PixPaymentService {
       packageName: coinPackage.name,
       status: pixPayment.status,
       isMock: isMockPixPaymentId(pixPayment.externalId),
+      instructionMessage,
     };
   }
 
@@ -92,23 +98,65 @@ export class PixPaymentService {
 
     await this.expireIfNeeded(payment.id, payment.status, payment.expiresAt);
 
-    let current = await this.pixPaymentRepository.findById(paymentId);
+    const current = await this.pixPaymentRepository.findById(paymentId);
     if (!current) {
       throw new NotFoundError("Pix payment", paymentId);
     }
 
-    if (
-      current.status === PixPaymentStatus.PENDING &&
-      !isMockPixPaymentId(current.externalId)
-    ) {
-      await this.confirmPayment(current.externalId);
-      current = await this.pixPaymentRepository.findById(paymentId);
-      if (!current) {
-        throw new NotFoundError("Pix payment", paymentId);
-      }
+    return this.toStatusResponse(current);
+  }
+
+  async approvePaymentById(paymentId: number, adminId: number) {
+    const payment = await this.pixPaymentRepository.findById(paymentId);
+
+    if (!payment) {
+      throw new NotFoundError("Pix payment", paymentId);
     }
 
-    return this.toStatusResponse(current);
+    if (payment.status === PixPaymentStatus.APPROVED) {
+      const balance = await prisma.user.findUnique({
+        where: { id: payment.userId },
+        select: { coinBalance: true },
+      });
+
+      return {
+        id: payment.id,
+        status: payment.status,
+        paidAt: payment.paidAt?.toISOString() ?? new Date().toISOString(),
+        coinsAmount: payment.coinsAmount,
+        newBalance: balance?.coinBalance ?? 0,
+      };
+    }
+
+    if (
+      payment.status !== PixPaymentStatus.PENDING ||
+      payment.expiresAt <= new Date()
+    ) {
+      throw new ConflictError(
+        "Only pending, non-expired Pix payments can be approved",
+      );
+    }
+
+    const approved = await this.finalizeApproval(
+      payment.id,
+      payment.externalId,
+      payment.userId,
+      payment.coinsAmount,
+      `admin_pix_approve_${adminId}_${payment.id}`,
+    );
+
+    const balance = await prisma.user.findUnique({
+      where: { id: payment.userId },
+      select: { coinBalance: true },
+    });
+
+    return {
+      id: approved.id,
+      status: approved.status,
+      paidAt: approved.paidAt?.toISOString() ?? new Date().toISOString(),
+      coinsAmount: approved.coinsAmount,
+      newBalance: balance?.coinBalance ?? 0,
+    };
   }
 
   async confirmPayment(externalId: string) {
@@ -116,6 +164,10 @@ export class PixPaymentService {
 
     if (!payment) {
       throw new NotFoundError("Pix payment");
+    }
+
+    if (isStaticPixPaymentId(externalId)) {
+      return payment;
     }
 
     if (
@@ -155,57 +207,13 @@ export class PixPaymentService {
       return payment;
     }
 
-    const externalTransactionId = `mp_payment_${externalId}`;
-
-    return prisma.$transaction(async (tx) => {
-      const lockedPayment = await tx.pixPayment.findUnique({
-        where: { externalId },
-        include: { coinPackage: true },
-      });
-
-      if (!lockedPayment) {
-        throw new NotFoundError("Pix payment");
-      }
-
-      if (lockedPayment.status === PixPaymentStatus.APPROVED) {
-        return lockedPayment;
-      }
-
-      const paidAt = new Date();
-
-      await this.coinService.creditCoins(
-        lockedPayment.userId,
-        lockedPayment.coinsAmount,
-        {
-          source: CoinTransactionSource.PIX_PURCHASE,
-          referenceId: lockedPayment.id,
-          externalId: externalTransactionId,
-          description: `Pix purchase ${lockedPayment.externalId}`,
-        },
-        tx,
-      );
-
-      const approvedPayment = await this.pixPaymentRepository.updateStatus(
-        lockedPayment.id,
-        PixPaymentStatus.APPROVED,
-        paidAt,
-        tx,
-      );
-
-      const balance = await tx.user.findUnique({
-        where: { id: lockedPayment.userId },
-        select: { coinBalance: true },
-      });
-
-      emitPaymentConfirmed(lockedPayment.userId, {
-        paymentId: approvedPayment.id,
-        coinsAmount: approvedPayment.coinsAmount,
-        newBalance: balance?.coinBalance ?? 0,
-        paidAt: paidAt.toISOString(),
-      });
-
-      return approvedPayment;
-    });
+    return this.finalizeApproval(
+      payment.id,
+      externalId,
+      payment.userId,
+      payment.coinsAmount,
+      `mp_payment_${externalId}`,
+    );
   }
 
   async simulateMockApproval(userId: number, paymentId: number) {
@@ -251,6 +259,64 @@ export class PixPaymentService {
     await this.pixPaymentRepository.expirePendingPayments(new Date());
   }
 
+  private async finalizeApproval(
+    paymentId: number,
+    externalId: string,
+    userId: number,
+    coinsAmount: number,
+    coinExternalId: string,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const lockedPayment = await tx.pixPayment.findUnique({
+        where: { id: paymentId },
+        include: { coinPackage: true },
+      });
+
+      if (!lockedPayment) {
+        throw new NotFoundError("Pix payment", paymentId);
+      }
+
+      if (lockedPayment.status === PixPaymentStatus.APPROVED) {
+        return lockedPayment;
+      }
+
+      const paidAt = new Date();
+
+      await this.coinService.creditCoins(
+        userId,
+        coinsAmount,
+        {
+          source: CoinTransactionSource.PIX_PURCHASE,
+          referenceId: lockedPayment.id,
+          externalId: coinExternalId,
+          description: `Pix purchase ${externalId}`,
+        },
+        tx,
+      );
+
+      const approvedPayment = await this.pixPaymentRepository.updateStatus(
+        lockedPayment.id,
+        PixPaymentStatus.APPROVED,
+        paidAt,
+        tx,
+      );
+
+      const balance = await tx.user.findUnique({
+        where: { id: userId },
+        select: { coinBalance: true },
+      });
+
+      emitPaymentConfirmed(userId, {
+        paymentId: approvedPayment.id,
+        coinsAmount: approvedPayment.coinsAmount,
+        newBalance: balance?.coinBalance ?? 0,
+        paidAt: paidAt.toISOString(),
+      });
+
+      return approvedPayment;
+    });
+  }
+
   private async expireIfNeeded(
     paymentId: number,
     status: PixPaymentStatus,
@@ -282,6 +348,7 @@ export class PixPaymentService {
       qrCodeBase64: payment.qrCodeBase64,
       copyPaste: payment.qrCode,
       isMock: isMockPixPaymentId(payment.externalId),
+      instructionMessage: getStaticPixInstructionMessage(),
     };
   }
 }

@@ -33,6 +33,9 @@ const AdminCoinPackagesPage = lazy(
   () => import("./pages/AdminCoinPackagesPage"),
 );
 const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
+const AdminPixPaymentsPage = lazy(
+  () => import("./pages/AdminPixPaymentsPage"),
+);
 const AdminRewardsPage = lazy(() => import("./pages/AdminRewardsPage"));
 
 function App() {
@@ -131,6 +134,14 @@ function App() {
                   element={
                     <Suspense fallback={<PageSkeleton />}>
                       <AdminUsersPage />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="payments"
+                  element={
+                    <Suspense fallback={<PageSkeleton />}>
+                      <AdminPixPaymentsPage />
                     </Suspense>
                   }
                 />

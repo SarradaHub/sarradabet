@@ -68,4 +68,38 @@ export class PixPaymentRepository {
       },
     });
   }
+
+  async listAdminPayments(options: {
+    status?: PixPaymentStatus;
+    page: number;
+    limit: number;
+  }) {
+    const where = options.status ? { status: options.status } : {};
+
+    const [items, total] = await Promise.all([
+      prisma.pixPayment.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+          coinPackage: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (options.page - 1) * options.limit,
+        take: options.limit,
+      }),
+      prisma.pixPayment.count({ where }),
+    ]);
+
+    return { items, total };
+  }
 }

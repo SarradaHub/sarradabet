@@ -115,6 +115,7 @@ Require `Authorization: Bearer <accessToken>`:
 | `GET /api/v1/rewards/tickets/:uuid/image` | Ticket owner |
 | `GET/POST/PUT/DELETE /api/v1/admin/coin-packages` | Admin only |
 | `POST /api/v1/admin/users/:id/coins/adjust` | Admin only |
+| `GET /api/v1/admin/payments/pix`, `POST /api/v1/admin/payments/pix/:id/approve` | Admin only |
 | `GET/POST/PUT/DELETE /api/v1/admin/rewards` | Admin only |
 | `POST /api/v1/admin/uploads/reward-image` | Admin only — multipart image upload |
 | `POST /api/v1/admin/rewards/tickets/:code/validate` | Admin only |
@@ -925,7 +926,11 @@ Requires user JWT. Paginated ledger of credits and debits.
 
 ## Payment Endpoints
 
-Pix purchases via Mercado Pago. Requires user JWT.
+Static Pix purchases with manual admin approval after WhatsApp comprovante. Requires user JWT.
+
+User flow: create payment → pay fixed Pix key / scan static QR → send comprovante to WhatsApp → admin approves → coins credited + Socket.io `payment:confirmed`.
+
+Environment: `STATIC_PIX_KEY`, `STATIC_PIX_COMPROVANTE_PHONE`, optional `STATIC_PIX_COMPROVANTE_MESSAGE`, `STATIC_PIX_EXPIRATION_MINUTES` (default 1440).
 
 ### Create Pix Purchase
 
@@ -946,27 +951,28 @@ Pix purchases via Mercado Pago. Requires user JWT.
   "success": true,
   "data": {
     "paymentId": 1,
-    "externalId": "123456789",
-    "qrCode": "00020126...",
-    "qrCodeBase64": "iVBORw0KGgo...",
-    "copyPaste": "00020126...",
-    "ticketUrl": "https://www.mercadopago.com.br/...",
-    "expiresAt": "2024-01-01T00:30:00.000Z",
+    "externalId": "static_abc123",
+    "qrCode": "33a26506-c657-44ca-a331-ae7dcb256201",
+    "qrCodeBase64": null,
+    "copyPaste": "33a26506-c657-44ca-a331-ae7dcb256201",
+    "ticketUrl": null,
+    "expiresAt": "2024-01-02T00:00:00.000Z",
     "coinsAmount": 100,
     "amountCents": 500,
     "packageName": "Pacote Básico",
-    "status": "PENDING"
+    "status": "PENDING",
+    "instructionMessage": "Envie o comprovante para o seguinte número (61) 999272342"
   }
 }
 ```
 
-Display `qrCodeBase64` as a PNG data URL or use `copyPaste` for Pix copia-e-cola. Poll status or listen for Socket.io `payment:confirmed`.
+Display static QR image from web `/pix-static-qr.png` and `copyPaste` as the Pix key. Poll status or listen for Socket.io `payment:confirmed` after admin approval.
 
 ### Get Pix Payment Status
 
 **GET** `/payments/pix/:id`
 
-Returns the current status for the authenticated user's payment. Pending payments past `expiresAt` are marked `EXPIRED` on read.
+Returns the current status for the authenticated user's payment. Pending payments past `expiresAt` are marked `EXPIRED` on read. Does not auto-approve via Mercado Pago polling.
 
 **Response (200):**
 
@@ -975,21 +981,82 @@ Returns the current status for the authenticated user's payment. Pending payment
   "success": true,
   "data": {
     "id": 1,
-    "externalId": "123456789",
+    "externalId": "static_abc123",
     "status": "PENDING",
     "coinsAmount": 100,
     "amountCents": 500,
     "packageName": "Pacote Básico",
-    "expiresAt": "2024-01-01T00:30:00.000Z",
+    "expiresAt": "2024-01-02T00:00:00.000Z",
     "paidAt": null,
-    "qrCode": "00020126...",
-    "qrCodeBase64": "iVBORw0KGgo...",
-    "copyPaste": "00020126..."
+    "qrCode": "33a26506-c657-44ca-a331-ae7dcb256201",
+    "qrCodeBase64": null,
+    "copyPaste": "33a26506-c657-44ca-a331-ae7dcb256201",
+    "instructionMessage": "Envie o comprovante para o seguinte número (61) 999272342"
   }
 }
 ```
 
 **Status values:** `PENDING`, `APPROVED`, `EXPIRED`, `CANCELLED`, `FAILED`.
+
+### List Admin Pix Payments
+
+**GET** `/admin/payments/pix`
+
+Admin only. Filter by `status` (`PENDING`, `APPROVED`, etc.) and paginate with `page`, `limit`.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "status": "PENDING",
+        "amountCents": 500,
+        "coinsAmount": 100,
+        "packageName": "Pacote Básico",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "expiresAt": "2024-01-02T00:00:00.000Z",
+        "paidAt": null,
+        "user": {
+          "id": 10,
+          "username": "player1",
+          "email": "player1@example.com"
+        }
+      }
+    ],
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+### Approve Admin Pix Payment
+
+**POST** `/admin/payments/pix/:id/approve`
+
+Admin only. Credits coins for a pending payment, emits `payment:confirmed`, writes `AdminAuditLog` action `PIX_APPROVE`. Idempotent if already approved.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "status": "APPROVED",
+    "paidAt": "2024-01-01T00:15:00.000Z",
+    "coinsAmount": 100,
+    "newBalance": 250
+  }
+}
+```
+
+Returns **409** if payment is not pending or already expired.
 
 ### Create Instore QR Purchase
 

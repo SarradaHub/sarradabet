@@ -115,6 +115,21 @@ const envSchema = z.object({
     .min(30, "Pix expiration must be at least 30 minutes (Mercado Pago limit)")
     .max(43200, "Pix expiration cannot exceed 30 days")
     .default(30),
+  STATIC_PIX_KEY: z
+    .string()
+    .uuid("STATIC_PIX_KEY must be a valid UUID")
+    .default("33a26506-c657-44ca-a331-ae7dcb256201"),
+  STATIC_PIX_COMPROVANTE_PHONE: z
+    .string()
+    .min(8)
+    .default("(61) 999272342"),
+  STATIC_PIX_COMPROVANTE_MESSAGE: z.string().default(""),
+  STATIC_PIX_EXPIRATION_MINUTES: z.coerce
+    .number()
+    .int()
+    .min(30)
+    .max(43200)
+    .default(1440),
   MERCADOPAGO_MOCK_PIX: z.coerce.boolean().default(false),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   BET_TAKEOUT_RATE: z.coerce

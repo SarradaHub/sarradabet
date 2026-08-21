@@ -14,10 +14,12 @@ import { useSocketEvent } from "../core/hooks/useSocket";
 import { useCoinBalance } from "../hooks/useCoinBalance";
 import { useCoinTransactions } from "../hooks/useCoinTransactions";
 import { usePixPurchase } from "../hooks/usePixPurchase";
-import { useInstorePurchase } from "../hooks/useInstorePurchase";
-import { coinService, paymentService } from "../services/CoinPaymentService";
-import { getApiErrorMessage } from "../utils/apiError";
+import { coinService } from "../services/CoinPaymentService";
 import { DISCLAIMERS } from "../constants/disclaimers";
+
+const STATIC_PIX_QR_SRC = "/pix-static-qr.png";
+const DEFAULT_COMPROVANTE_MESSAGE =
+  "Envie o comprovante para o seguinte número (61) 999272342";
 
 function formatCurrency(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", {
@@ -47,7 +49,7 @@ const SOURCE_LABELS: Record<CoinTransactionSource, string> = {
 };
 
 const STATUS_LABELS: Record<PixPaymentStatus, string> = {
-  PENDING: "Aguardando pagamento",
+  PENDING: "Aguardando confirmação do comprovante",
   APPROVED: "Pago",
   EXPIRED: "Expirado",
   CANCELLED: "Cancelado",
@@ -55,16 +57,11 @@ const STATUS_LABELS: Record<PixPaymentStatus, string> = {
 };
 
 const CoinsPage: React.FC = () => {
-  const [paymentChannel, setPaymentChannel] = useState<"online" | "instore">(
-    "online",
-  );
   const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
   const [packagesError, setPackagesError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [simulating, setSimulating] = useState(false);
-  const [simulateError, setSimulateError] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
   const { balance, loading: balanceLoading, refetch, setBalance } =
@@ -84,35 +81,13 @@ const CoinsPage: React.FC = () => {
   };
 
   const {
-    purchase: onlinePurchase,
-    status: onlineStatus,
-    loading: onlineLoading,
-    error: onlineError,
-    startPurchase: startOnlinePurchase,
-    resetPurchase: resetOnlinePurchase,
-    setStatus: setOnlineStatus,
+    purchase,
+    status,
+    loading,
+    error,
+    startPurchase,
+    resetPurchase,
   } = usePixPurchase(onPaymentApproved);
-
-  const {
-    purchase: instorePurchase,
-    status: instoreStatus,
-    loading: instoreLoading,
-    error: instoreError,
-    startPurchase: startInstorePurchase,
-    resetPurchase: resetInstorePurchase,
-    setStatus: setInstoreStatus,
-  } = useInstorePurchase(onPaymentApproved);
-
-  const purchase = paymentChannel === "online" ? onlinePurchase : instorePurchase;
-  const status = paymentChannel === "online" ? onlineStatus : instoreStatus;
-  const loading = paymentChannel === "online" ? onlineLoading : instoreLoading;
-  const error = paymentChannel === "online" ? onlineError : instoreError;
-  const startPurchase =
-    paymentChannel === "online" ? startOnlinePurchase : startInstorePurchase;
-  const resetPurchase =
-    paymentChannel === "online" ? resetOnlinePurchase : resetInstorePurchase;
-  const setStatus =
-    paymentChannel === "online" ? setOnlineStatus : setInstoreStatus;
 
   useSocketEvent<{ newBalance: number }>(
     RealtimeEvents.PAYMENT_CONFIRMED,
@@ -149,11 +124,18 @@ const CoinsPage: React.FC = () => {
     );
   }, [status?.expiresAt]);
 
+  const instructionMessage =
+    status?.instructionMessage ??
+    purchase?.instructionMessage ??
+    DEFAULT_COMPROVANTE_MESSAGE;
+
+  const pixKey = status?.copyPaste ?? purchase?.copyPaste ?? null;
+
   const handleCopyPix = async () => {
-    if (!status?.copyPaste) return;
+    if (!pixKey) return;
 
     try {
-      await navigator.clipboard.writeText(status.copyPaste);
+      await navigator.clipboard.writeText(pixKey);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -165,28 +147,6 @@ const CoinsPage: React.FC = () => {
     resetPurchase();
     setSuccessMessage(null);
     setCopied(false);
-  };
-
-  const handleSimulatePayment = async () => {
-    if (!status?.id) return;
-
-    try {
-      setSimulating(true);
-      setSimulateError(null);
-      const approved =
-        paymentChannel === "online"
-          ? await paymentService.simulateMockApproval(status.id)
-          : await paymentService.simulateMockInstoreApproval(status.id);
-      setStatus(approved);
-      setSuccessMessage("Pagamento confirmado! Suas moedas foram creditadas.");
-      void refetch();
-      void refetchTransactions();
-    } catch (err) {
-      setSuccessMessage(null);
-      setSimulateError(getApiErrorMessage(err, "Erro ao simular pagamento"));
-    } finally {
-      setSimulating(false);
-    }
   };
 
   const isPending = status?.status === "PENDING";
@@ -218,41 +178,8 @@ const CoinsPage: React.FC = () => {
           </div>
         )}
 
-        {(error || packagesError || simulateError) && (
-          <ErrorMessage error={error || packagesError || simulateError || "Erro"} />
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={paymentChannel === "online" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => {
-              resetOnlinePurchase();
-              resetInstorePurchase();
-              setPaymentChannel("online");
-              setSuccessMessage(null);
-            }}
-          >
-            Pix online
-          </Button>
-          <Button
-            variant={paymentChannel === "instore" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => {
-              resetOnlinePurchase();
-              resetInstorePurchase();
-              setPaymentChannel("instore");
-              setSuccessMessage(null);
-            }}
-          >
-            QR presencial
-          </Button>
-        </div>
-
-        {paymentChannel === "instore" && (
-          <p className="text-sm text-sportsbook-muted">
-            Pagamento presencial via QR dinâmico do Mercado Pago (caixa/loja).
-          </p>
+        {(error || packagesError) && (
+          <ErrorMessage error={error || packagesError || "Erro"} />
         )}
 
         <FinancialDisclaimer />
@@ -292,9 +219,7 @@ const CoinsPage: React.FC = () => {
                   disabled={loading || !acknowledged}
                   onClick={() => void startPurchase(coinPackage.id)}
                 >
-                  {paymentChannel === "online"
-                    ? "Comprar com Pix"
-                    : "Comprar com QR presencial"}
+                  Comprar com Pix
                 </Button>
               </div>
             ))}
@@ -305,11 +230,7 @@ const CoinsPage: React.FC = () => {
           <div className="sb-surface border sb-border rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="font-display text-xl font-bold">
-                  {paymentChannel === "online"
-                    ? "Pagamento Pix"
-                    : "Pagamento QR presencial"}
-                </h2>
+                <h2 className="font-display text-xl font-bold">Pagamento Pix</h2>
                 <p
                   className={`text-sm ${
                     status.status === "APPROVED"
@@ -330,57 +251,36 @@ const CoinsPage: React.FC = () => {
               )}
             </div>
 
-            {isPending && (status.qrCodeBase64 || status.copyPaste) && (
-              <PixQrCode
-                qrCodeBase64={status.qrCodeBase64}
-                copyPaste={status.copyPaste}
-                isMock={status.isMock ?? purchase?.isMock}
-              />
+            {isPending && (
+              <p className="text-sm text-sportsbook-fg leading-relaxed">
+                {instructionMessage}
+              </p>
             )}
 
-            {isPending && status.copyPaste && (
+            {isPending && (
+              <PixQrCode imageSrc={STATIC_PIX_QR_SRC} />
+            )}
+
+            {isPending && pixKey && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm text-sportsbook-muted">
-                    Copia e cola Pix
-                  </p>
+                  <p className="text-sm text-sportsbook-muted">Chave Pix</p>
                   <Button variant="secondary" onClick={() => void handleCopyPix()}>
-                    {copied ? "Copiado!" : "Copiar código"}
+                    {copied ? "Copiado!" : "Copiar chave"}
                   </Button>
                 </div>
                 <textarea
                   readOnly
-                  value={status.copyPaste}
+                  value={pixKey}
                   className={`w-full min-h-24 rounded-lg px-3 py-2 text-sm ${sportsbookFieldClass}`}
                 />
               </div>
             )}
 
-            {isPending && purchase.isMock && (
-              <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 space-y-3">
-                <p className="text-sm text-yellow-200">
-                  Modo mock local — Mercado Pago desativado. Use o botão abaixo
-                  para simular aprovação do Pix.
-                </p>
-                <Button
-                  disabled={simulating}
-                  onClick={() => void handleSimulatePayment()}
-                >
-                  {simulating ? "Simulando..." : "Simular pagamento aprovado"}
-                </Button>
-              </div>
-            )}
-
-            {isPending && purchase.ticketUrl && (
-              <p className="text-sm">
-                <a
-                  href={purchase.ticketUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
-                  Abrir pagamento no Mercado Pago
-                </a>
+            {isPending && (
+              <p className="text-sm text-sportsbook-muted">
+                Após pagar, envie o comprovante pelo WhatsApp. Suas moedas serão
+                creditadas após a confirmação manual.
               </p>
             )}
 
@@ -388,7 +288,7 @@ const CoinsPage: React.FC = () => {
               <div className="space-y-3">
                 <p className="text-sm text-sportsbook-muted">
                   {status.status === "EXPIRED"
-                    ? "Este Pix expirou. Gere um novo pagamento para continuar."
+                    ? "Este pedido expirou. Gere um novo pagamento para continuar."
                     : "Não foi possível concluir o pagamento. Tente novamente."}
                 </p>
                 <Button variant="secondary" onClick={handleResetPurchase}>

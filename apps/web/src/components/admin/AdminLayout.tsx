@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
-import { LayoutDashboard, Ticket, FolderOpen, Coins, Users, Gift } from "lucide-react";
+import { LayoutDashboard, Ticket, FolderOpen, Coins, Users, Gift, CreditCard } from "lucide-react";
 import BrandLogo from "../BrandLogo";
 import { Button } from "../ui/Button";
 import ThemeToggle from "../ThemeToggle";
@@ -15,6 +15,7 @@ const navItems = [
   { to: "/admin/bets", label: "Apostas", icon: Ticket },
   { to: "/admin/categories", label: "Categorias", icon: FolderOpen },
   { to: "/admin/coin-packages", label: "Pacotes", icon: Coins },
+  { to: "/admin/payments", label: "Pix", icon: CreditCard },
   { to: "/admin/rewards", label: "Recompensas", icon: Gift },
   { to: "/admin/users", label: "Usuários", icon: Users },
 ];

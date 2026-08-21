@@ -46,7 +46,8 @@ Cross-agent memory for [SarradaBet](https://github.com/SarradaHub/sarradabet): a
 | `JWT_SECRET` | JWT signing |
 | `REDIS_URL` | Token blacklist, leaderboard, dashboard cache, Bull |
 | `CORS_ORIGINS` | Must include web origin for Socket.io |
-| `MERCADOPAGO_ACCESS_TOKEN` | Pix online + instore |
+| `STATIC_PIX_KEY`, `STATIC_PIX_COMPROVANTE_PHONE`, `STATIC_PIX_EXPIRATION_MINUTES` | Static Pix key + WhatsApp comprovante |
+| `MERCADOPAGO_ACCESS_TOKEN` | Legacy MP clients / webhooks |
 | `MERCADOPAGO_WEBHOOK_SECRET` | Webhook HMAC validation |
 | `MERCADOPAGO_STORE_ID`, `MERCADOPAGO_POS_ID`, `MERCADOPAGO_POS_UUID` | Instore QR |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | Reward image upload (API service role only) |
@@ -117,11 +118,12 @@ npm run dev              # api + web via Turbo
 | Domain | Status | Key areas |
 |--------|--------|-----------|
 | User auth & CRUD | Shipped | `modules/auth/`, `modules/user/`, JWT + refresh rotation, Redis blacklist |
-| Coins & Pix (online) | Shipped | `modules/coin/`, `modules/payment/` — Pix create/status, webhook |
+| Coins & Pix (static key) | Shipped | `modules/coin/`, `modules/payment/` — static Pix key + admin approve |
 | Bet closure & payout | Shipped | Parimutuel odds, authenticated stake votes, Bull bet-status job |
 | Gamification & rewards | Shipped | Leaderboard, stats, rewards redeem, ticket verify/PNG |
 | Dashboard & analytics | Shipped | User dashboard, admin analytics + CSV export |
-| Mercado Pago QR instore | Shipped | Instore orders, webhook, Coins page tab |
+| Admin Pix approve | Shipped | `GET/POST /admin/payments/pix`, `AdminPixPaymentsPage` |
+| Mercado Pago QR instore | Legacy API only | Instore routes remain; Coins page uses static Pix only |
 | Reward image upload (Supabase Storage) | Shipped | `POST /admin/uploads/reward-image`, admin drag-drop UI |
 | Mobile & advanced admin | **Planned** | See [Feature 06](docs/features/06-mobile-app-and-admin-panel.md) |
 
@@ -139,7 +141,8 @@ Base: `http://localhost:8000/api/v1`. Full reference: [`docs/API.md`](docs/API.m
 | GET | `/bets`, `/categories`, `/leaderboard`, `/rewards` | Public | Filters on bets |
 | POST | `/votes` | **Required** | Body `{ oddId, amount }` — debits coins |
 | POST | `/bets` | Required | Odds titles only at create (parimutuel) |
-| POST | `/payments/pix`, `/payments/instore` | Required | Online + instore QR |
+| POST | `/payments/pix` | Required | Static Pix key + comprovante message |
+| GET/POST | `/admin/payments/pix`, `/admin/payments/pix/:id/approve` | Admin | List pending + approve after comprovante |
 | GET | `/users/me/dashboard` | Required | User dashboard |
 | POST | `/rewards/:id/redeem` | Required | Generates ticket |
 | GET/POST | `/admin/rewards`, `/admin/analytics/*` | Admin | CRUD + analytics |
@@ -291,6 +294,7 @@ Shipped behavior lives in living docs — not in deleted feature guides 01–05/
 
 | Date | Change |
 |------|--------|
+| 2026-08-20 | Shipped static Pix key + QR + WhatsApp comprovante flow; admin Pix approve page |
 | 2026-08-16 | Shipped Supabase Storage reward image upload (API upload route, admin drag-drop UI, bucket `reward-images`) |
 | 2026-08-16 | Shipped UX breadcrumbs, catch-all 404, nav dead-end fixes (login logos, ticket verify back link) |
 | 2026-08-13 | Shipped financial disclaimers (PT/EN banner + footer, Coins acknowledge gate) |

@@ -7,6 +7,7 @@ import coinRoutes from "./coin.routes";
 import paymentRoutes from "./payment.routes";
 import adminCoinPackageRoutes from "./admin.coin-package.routes";
 import adminUsersRoutes from "../modules/admin/routes/admin.users.routes";
+import adminPixPaymentsRoutes from "../modules/admin/routes/admin.payments.routes";
 import adminHouseRoutes from "./admin.house.routes";
 import analyticsRoutes from "../modules/analytics/routes/analytics.routes";
 import authRoutes from "../modules/auth/routes/auth.routes";
@@ -29,6 +30,7 @@ router.use("/coins", coinRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/admin/coin-packages", adminCoinPackageRoutes);
 router.use("/admin/users", adminUsersRoutes);
+router.use("/admin/payments/pix", adminPixPaymentsRoutes);
 router.use("/admin/rewards/tickets", adminTicketRoutes);
 router.use("/admin/rewards", adminRewardRoutes);
 router.use("/admin/uploads", adminUploadRoutes);
@@ -59,6 +61,7 @@ router.get("/", (req, res) => {
       payments: "/api/v1/payments",
       adminCoinPackages: "/api/v1/admin/coin-packages",
       adminUsers: "/api/v1/admin/users",
+      adminPixPayments: "/api/v1/admin/payments/pix",
       adminRewards: "/api/v1/admin/rewards",
       adminUploads: "/api/v1/admin/uploads",
       adminHouse: "/api/v1/admin/house",
