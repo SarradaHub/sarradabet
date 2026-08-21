@@ -3,6 +3,7 @@ import { AuthService } from "../services/AuthService";
 import { UserService } from "../../user/services/UserService";
 import { ApiResponse } from "../../../utils/api/response";
 import { UnauthorizedError, AppError } from "../../../core/errors/AppError";
+import { getAuthCookieOptions } from "../../../config/cookies";
 import { config } from "../../../config/env";
 import {
   getRefreshTokenMaxAgeMs,
@@ -49,28 +50,14 @@ export class AuthController {
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {
-    const cookieSecure =
-      config.COOKIE_SECURE ?? config.NODE_ENV === "production";
-
     res.cookie(config.REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      secure: cookieSecure,
-      sameSite: "lax",
-      path: "/",
+      ...getAuthCookieOptions(),
       maxAge: getRefreshTokenMaxAgeMs(),
     });
   }
 
   private clearRefreshCookie(res: Response): void {
-    const cookieSecure =
-      config.COOKIE_SECURE ?? config.NODE_ENV === "production";
-
-    res.clearCookie(config.REFRESH_TOKEN_COOKIE_NAME, {
-      httpOnly: true,
-      secure: cookieSecure,
-      sameSite: "lax",
-      path: "/",
-    });
+    res.clearCookie(config.REFRESH_TOKEN_COOKIE_NAME, getAuthCookieOptions());
   }
 
   register = async (req: Request, res: Response): Promise<void> => {

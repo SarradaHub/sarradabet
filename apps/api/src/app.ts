@@ -20,6 +20,10 @@ import { logger } from "./utils/logger";
 
 export const app = express();
 
+if (config.NODE_ENV === "production" || process.env.VERCEL) {
+  app.set("trust proxy", 1);
+}
+
 app.use(compression({ threshold: 1024 }));
 
 app.use(securityHeaders);

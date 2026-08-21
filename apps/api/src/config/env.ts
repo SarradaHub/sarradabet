@@ -89,7 +89,9 @@ const envSchema = z.object({
   COOKIE_SECURE: z
     .enum(["true", "false"])
     .optional()
-    .transform((value) => value === "true"),
+    .transform((value): boolean | undefined =>
+      value === undefined ? undefined : value === "true",
+    ),
   MERCADOPAGO_ACCESS_TOKEN: z.string().optional(),
   MERCADOPAGO_WEBHOOK_SECRET: z.string().optional(),
   MERCADOPAGO_NOTIFICATION_URL: z.string().url().optional(),
