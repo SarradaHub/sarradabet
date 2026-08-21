@@ -11,8 +11,8 @@ import {
   type TicketImagePayload,
 } from "./TicketImageService";
 
-const REDEEMED_CACHE_PREFIX = "ticket:image:v2:redeemed:";
-const VALIDATED_CACHE_PREFIX = "ticket:image:v2:validated:";
+const REDEEMED_CACHE_PREFIX = "ticket:image:v4:redeemed:";
+const VALIDATED_CACHE_PREFIX = "ticket:image:v4:validated:";
 
 export class TicketImageCacheService {
   constructor(

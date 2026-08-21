@@ -1,10 +1,10 @@
 # language: pt
 
 @ticket
-Funcionalidade: Geração de imagens de ticket para resgate e validação
+Funcionalidade: Geração de imagens de ticket com código resumido e contato WhatsApp
   Como usuário e administrador
-  Eu quero gerar e baixar imagens de ticket com QR Code
-  Para ter um comprovante visual do resgate e da validação
+  Eu quero gerar imagens de ticket que exibam os 4 últimos dígitos do UUID
+  Para enviar facilmente o código via WhatsApp para validação ou retirada
 
   @smoke @ticket @public
   Cenário: Qualquer pessoa pode abrir a página pública de verificação

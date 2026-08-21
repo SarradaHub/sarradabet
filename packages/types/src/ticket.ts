@@ -9,4 +9,8 @@ export interface TicketVerifyResponse {
   userEmail?: string;
   redeemedAt?: string;
   validatedAt?: string | null;
+  /** Last 4 characters of the ticket UUID (uppercase). */
+  shortCode?: string;
+  /** WhatsApp contact for ticket validation/collection. */
+  whatsappPhone?: string;
 }

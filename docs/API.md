@@ -1459,7 +1459,7 @@ Requires user JWT. Atomically debits coins (`REWARD_REDEMPTION`), decrements sto
 
 **GET** `/rewards/tickets/:code/image`
 
-Requires user JWT. Owner only. Returns PNG (480×800, mobile-first portrait) with QR code, PT-BR watermark `APENAS RETIRADA`, reward details, and masked user identity.
+Requires user JWT. Owner only. Returns PNG (480×800, mobile-first portrait) with prominent last-4 ticket code, WhatsApp contact line (`STATIC_PIX_COMPROVANTE_PHONE`), PT-BR watermark `APENAS RETIRADA`, reward details, masked user identity, and full UUID in the footer.
 
 **Headers:** `Content-Type: image/png`, `Content-Disposition: attachment; filename="ticket_{uuid}.png"`
 
@@ -1487,7 +1487,7 @@ Requires user JWT. Ticket owner only; ticket must be validated. Same PNG as the 
 
 **GET** `/tickets/verify/:code`
 
-Public. Returns ticket status and masked owner email.
+Public. Returns ticket status, masked owner email, last-4 `shortCode`, and `whatsappPhone` for collection/validation contact.
 
 **Response (200):**
 
@@ -1501,14 +1501,16 @@ Public. Returns ticket status and masked owner email.
     "rewardTitle": "Camisa Oficial",
     "userEmail": "p***@sarradabet.com",
     "redeemedAt": "2026-07-15T18:00:00.000Z",
-    "validatedAt": "2026-07-26T21:00:00.000Z"
+    "validatedAt": "2026-07-26T21:00:00.000Z",
+    "shortCode": "0000",
+    "whatsappPhone": "(61) 999272342"
   }
 }
 ```
 
 **Errors:** `404` — ticket not found.
 
-QR codes on ticket images encode `{PUBLIC_WEB_URL}/tickets/verify/{uuid}`.
+Ticket PNG images display the last 4 characters of the UUID prominently and include the WhatsApp contact from `STATIC_PIX_COMPROVANTE_PHONE`. The full UUID appears in the image footer for reference.
 
 ## Admin Rewards
 

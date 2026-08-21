@@ -1,7 +1,9 @@
 import type { TicketVerifyResponse } from "@sarradabet/types";
 import { NotFoundError } from "../../../core/errors/AppError";
 import { RewardRepository } from "../../reward/repositories/RewardRepository";
+import { extractTicketShortCode } from "../utils/extractTicketShortCode";
 import { maskUserIdentity } from "../utils/maskUserIdentity";
+import { getTicketWhatsappPhone } from "../utils/ticketContact";
 
 export class TicketVerifyService {
   constructor(
@@ -29,6 +31,8 @@ export class TicketVerifyService {
       ),
       redeemedAt: redemption.redeemedAt.toISOString(),
       validatedAt: redemption.validatedAt?.toISOString() ?? null,
+      shortCode: extractTicketShortCode(redemption.ticketCode),
+      whatsappPhone: getTicketWhatsappPhone(),
     };
   }
 }

@@ -1,8 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import QRCode from "qrcode";
 import sharp, { type OverlayOptions } from "sharp";
-import { config } from "../../../config/env";
 import {
   buildTicketSvg,
   type TicketImageVariant,
@@ -11,13 +9,12 @@ import {
   TICKET_LOGO_LEFT,
   TICKET_LOGO_SIZE,
   TICKET_LOGO_TOP,
-  TICKET_QR_LEFT,
-  TICKET_QR_SIZE,
-  TICKET_QR_TOP,
 } from "../utils/ticketLayout";
+import { extractTicketShortCode } from "../utils/extractTicketShortCode";
 import { formatTicketSerial } from "../utils/formatTicketSerial";
 import { formatTicketUuid } from "../utils/formatTicketUuid";
 import { maskUserIdentity } from "../utils/maskUserIdentity";
+import { getTicketWhatsappPhone } from "../utils/ticketContact";
 
 function resolveLogoPath(): string {
   const candidates = [
@@ -68,21 +65,6 @@ function formatDateLabel(date: Date): string {
 }
 
 export class TicketImageService {
-  async generateQrCode(ticketCode: string): Promise<Buffer | null> {
-    const url = `${config.PUBLIC_WEB_URL}/tickets/verify/${ticketCode}`;
-
-    try {
-      return await QRCode.toBuffer(url, {
-        errorCorrectionLevel: "H",
-        width: TICKET_QR_SIZE,
-        margin: 1,
-        type: "png",
-      });
-    } catch {
-      return null;
-    }
-  }
-
   async generateRedemptionImage(payload: TicketImagePayload): Promise<Buffer> {
     return this.generateImage(payload, "redeemed");
   }
@@ -95,7 +77,6 @@ export class TicketImageService {
     payload: TicketImagePayload,
     variant: TicketImageVariant,
   ): Promise<Buffer> {
-    const qrBuffer = await this.generateQrCode(payload.ticketCode);
     const svg = buildTicketSvg({
       ticketCode: payload.ticketCode,
       formattedUuid: formatTicketUuid(payload.ticketCode),
@@ -107,22 +88,15 @@ export class TicketImageService {
         ? formatDateLabel(payload.validatedAt)
         : undefined,
       variant,
-      qrAvailable: qrBuffer !== null,
+      shortCode: extractTicketShortCode(payload.ticketCode),
+      whatsappPhone: getTicketWhatsappPhone(),
     });
 
     const base = sharp(Buffer.from(svg)).png();
     const composites: OverlayOptions[] = [];
 
-    if (qrBuffer) {
-      composites.push({
-        input: qrBuffer,
-        top: TICKET_QR_TOP,
-        left: TICKET_QR_LEFT,
-      });
-    }
-
     try {
-      composites.unshift({
+      composites.push({
         input: await sharp(LOGO_PATH)
           .resize(TICKET_LOGO_SIZE, TICKET_LOGO_SIZE)
           .png()

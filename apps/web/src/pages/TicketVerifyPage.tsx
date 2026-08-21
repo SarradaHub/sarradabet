@@ -9,6 +9,12 @@ import { Button } from "../components/ui/Button";
 import axios from "axios";
 import { ticketService } from "../services/ticketService";
 import { getApiErrorMessage } from "../utils/apiError";
+import {
+  DEFAULT_TICKET_WHATSAPP_PHONE,
+  extractTicketShortCode,
+  TICKET_WHATSAPP_INSTRUCTION_PREFIX,
+  toWhatsAppWaMeUrl,
+} from "../utils/ticketContact";
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleString("pt-BR", {
@@ -59,6 +65,12 @@ const TicketVerifyPage: React.FC = () => {
   }, [code]);
 
   const isValidated = result?.status === "VALIDATED";
+  const shortCode =
+    result?.shortCode ??
+    (result?.ticketCode ? extractTicketShortCode(result.ticketCode) : null);
+  const whatsappPhone =
+    result?.whatsappPhone ?? DEFAULT_TICKET_WHATSAPP_PHONE;
+  const whatsappUrl = toWhatsAppWaMeUrl(whatsappPhone);
 
   return (
     <div className="min-h-screen bg-sportsbook-bg text-sportsbook-fg flex flex-col">
@@ -109,9 +121,32 @@ const TicketVerifyPage: React.FC = () => {
             </div>
 
             <dl className="grid gap-3 text-sm">
+              {shortCode && (
+                <div className="rounded-xl border sb-border bg-black/20 px-4 py-4 text-center space-y-2">
+                  <dt className="text-sportsbook-muted text-xs uppercase tracking-wide">
+                    Código do Ticket
+                  </dt>
+                  <dd className="font-mono text-4xl font-bold tracking-widest text-sportsbook-fg">
+                    {shortCode}
+                  </dd>
+                  <dd className="text-sportsbook-muted text-sm pt-1">
+                    {TICKET_WHATSAPP_INSTRUCTION_PREFIX}{" "}
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-[#FFD700] hover:underline"
+                    >
+                      {whatsappPhone}
+                    </a>
+                  </dd>
+                </div>
+              )}
               <div>
-                <dt className="text-sportsbook-muted">Ticket</dt>
-                <dd className="font-mono break-all">{result.ticketCode}</dd>
+                <dt className="text-sportsbook-muted">Ticket (UUID completo)</dt>
+                <dd className="font-mono break-all text-xs text-sportsbook-muted">
+                  {result.ticketCode}
+                </dd>
               </div>
               {result.userEmail && (
                 <div>
