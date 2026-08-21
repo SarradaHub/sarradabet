@@ -31,8 +31,8 @@ export function useCategories(params?: {
     () => categoryService.getCategoriesWithPagination(params),
     {
       staleTime: 5 * 60 * 1000, // 5 minutes - longer cache for categories
-      refetchOnMount: false, // Don't refetch on mount if data exists
-      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
     },
   );
 }

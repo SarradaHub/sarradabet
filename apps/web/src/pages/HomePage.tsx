@@ -89,11 +89,24 @@ const HomePage: React.FC = () => {
     }
 
     bets.forEach((bet: Bet) => {
-      if (bet.categoryId && groups.has(bet.categoryId)) {
-        groups.get(bet.categoryId)!.bets.push(bet);
-      } else {
+      const categoryId = bet.categoryId;
+      if (!categoryId) {
         groups.get("uncategorized")!.bets.push(bet);
+        return;
       }
+
+      if (!groups.has(categoryId)) {
+        const fromList = categories.find((c) => c.id === categoryId);
+        groups.set(categoryId, {
+          category:
+            bet.category ??
+            fromList ??
+            ({ id: categoryId, title: `Categoria ${categoryId}` } as Category),
+          bets: [],
+        });
+      }
+
+      groups.get(categoryId)!.bets.push(bet);
     });
 
     return Array.from(groups.entries())
