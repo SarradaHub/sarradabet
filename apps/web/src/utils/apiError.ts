@@ -1,4 +1,4 @@
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
 
 export const GENERIC_API_ERROR_MESSAGE =
   "Ocorreu um erro genérico. Tente novamente.";

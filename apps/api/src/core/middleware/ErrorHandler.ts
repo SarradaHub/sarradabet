@@ -16,7 +16,7 @@ export const errorHandler = (
   _next: NextFunction,
 ): void => {
   let statusCode = 500;
-  let message = "Ocorreu um erro genérico. Tente novamente.";
+  let message: string;
   let errors:
     | Array<{ field?: string; message: string; code?: string; stack?: string }>
     | undefined;
