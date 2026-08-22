@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Plus } from "@sarradahub/design-system";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getApiErrorMessage } from "../utils/apiError";
 import { Button } from "../components/ui/Button";
 import CreateBetModal from "../components/CreateBetModal";
 import CreateCategoryModal from "../components/CreateCategoryModal";
@@ -78,7 +79,7 @@ const AdminDashboard: React.FC = () => {
       .then(setHouseSummary)
       .catch((err: unknown) => {
         setHouseError(
-          err instanceof Error ? err.message : "Erro ao carregar receita da casa",
+          getApiErrorMessage(err, "Erro ao carregar receita da casa"),
         );
       });
   }, []);
@@ -179,9 +180,7 @@ const AdminDashboard: React.FC = () => {
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setHouseError(
-        err instanceof Error ? err.message : "Erro ao exportar CSV",
-      );
+      setHouseError(getApiErrorMessage(err, "Erro ao exportar CSV"));
     } finally {
       setExporting(false);
     }

@@ -6,6 +6,7 @@ import EditCoinPackageModal from "../components/admin/EditCoinPackageModal";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
+import { getApiErrorMessage } from "../utils/apiError";
 import { adminCoinPackageService } from "../services/CoinPaymentService";
 
 function formatCurrency(cents: number): string {
@@ -38,7 +39,7 @@ const AdminCoinPackagesPage: React.FC = () => {
       const result = await adminCoinPackageService.listAll();
       setPackages(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar pacotes");
+      setError(getApiErrorMessage(err, "Erro ao carregar pacotes"));
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ const AdminCoinPackagesPage: React.FC = () => {
       setForm(emptyForm);
       await loadPackages();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar pacote");
+      setError(getApiErrorMessage(err, "Erro ao criar pacote"));
     } finally {
       setSaving(false);
     }
@@ -81,7 +82,7 @@ const AdminCoinPackagesPage: React.FC = () => {
       }
       await loadPackages();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao atualizar pacote");
+      setError(getApiErrorMessage(err, "Erro ao atualizar pacote"));
     }
   };
 

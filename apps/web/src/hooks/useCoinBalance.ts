@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getApiErrorMessage } from "../utils/apiError";
 import { coinService } from "../services/CoinPaymentService";
 import { useAuth } from "./useAuth";
 
@@ -21,7 +22,7 @@ export function useCoinBalance() {
       const result = await coinService.getBalance();
       setBalance(result.balance);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load balance");
+      setError(getApiErrorMessage(err, "Erro ao carregar saldo"));
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LeaderboardEntry } from "@sarradabet/types";
+import { getApiErrorMessage } from "../utils/apiError";
 import { statsService } from "../services/statsService";
 
 export function useLeaderboard(limit = 100) {
@@ -15,7 +16,7 @@ export function useLeaderboard(limit = 100) {
       setEntries(result);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Erro ao carregar ranking",
+        getApiErrorMessage(err, "Erro ao carregar ranking"),
       );
     } finally {
       setLoading(false);

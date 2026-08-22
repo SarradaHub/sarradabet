@@ -6,10 +6,10 @@ import {
 
 export const BrazilianPhoneSchema = z
   .string()
-  .min(8, "Phone is required")
-  .max(20, "Phone cannot exceed 20 characters")
+  .min(8, "Telefone é obrigatório")
+  .max(20, "Telefone não pode exceder 20 caracteres")
   .trim()
-  .refine(isValidBrazilianPhone, "Invalid Brazilian phone number")
+  .refine(isValidBrazilianPhone, "Telefone brasileiro inválido")
   .transform(normalizeBrazilianPhone);
 
 export const IdSchema = z
@@ -61,53 +61,53 @@ export const UpdateBetOddsSchema = z.object({
 export const RegisterUserSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(50, "Username cannot exceed 50 characters")
+    .min(3, "Usuário deve ter pelo menos 3 caracteres")
+    .max(50, "Usuário não pode exceder 50 caracteres")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores",
+      "Usuário só pode conter letras, números e sublinhados",
     )
     .trim(),
   email: z
     .string()
-    .email("Invalid email format")
-    .max(255, "Email cannot exceed 255 characters")
+    .email("Formato de e-mail inválido")
+    .max(255, "E-mail não pode exceder 255 caracteres")
     .toLowerCase()
     .trim(),
   password: z
     .string()
-    .min(6, "Password must be at least 6 characters")
-    .max(100, "Password cannot exceed 100 characters"),
+    .min(6, "Senha deve ter pelo menos 6 caracteres")
+    .max(100, "Senha não pode exceder 100 caracteres"),
   phone: BrazilianPhoneSchema,
 });
 
 export const UserLoginSchema = z.object({
-  username: z.string().min(1, "Username or email is required").trim(),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(1, "Usuário ou e-mail é obrigatório").trim(),
+  password: z.string().min(1, "Senha é obrigatória"),
 });
 
 export const UpdateUserSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(50, "Username cannot exceed 50 characters")
+    .min(3, "Usuário deve ter pelo menos 3 caracteres")
+    .max(50, "Usuário não pode exceder 50 caracteres")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores",
+      "Usuário só pode conter letras, números e sublinhados",
     )
     .trim()
     .optional(),
   email: z
     .string()
-    .email("Invalid email format")
-    .max(255, "Email cannot exceed 255 characters")
+    .email("Formato de e-mail inválido")
+    .max(255, "E-mail não pode exceder 255 caracteres")
     .toLowerCase()
     .trim()
     .optional(),
   password: z
     .string()
-    .min(6, "Password must be at least 6 characters")
-    .max(100, "Password cannot exceed 100 characters")
+    .min(6, "Senha deve ter pelo menos 6 caracteres")
+    .max(100, "Senha não pode exceder 100 caracteres")
     .optional(),
   role: z.enum(["USER", "ADMIN"]).optional(),
   phone: BrazilianPhoneSchema.optional(),

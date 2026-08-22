@@ -3,6 +3,10 @@ import axios, {
   AxiosInstance,
   InternalAxiosRequestConfig,
 } from "axios";
+import {
+  GENERIC_API_ERROR_MESSAGE,
+  normalizeAxiosErrorMessage,
+} from "../utils/apiError";
 
 type AuthHandlers = {
   getAccessToken: () => string | null;
@@ -93,6 +97,10 @@ function isAuthEndpoint(url: string | undefined): boolean {
     url.includes("/auth/logout");
 }
 
+function rejectNormalized(error: AxiosError): Promise<never> {
+  return Promise.reject(normalizeAxiosErrorMessage(error, GENERIC_API_ERROR_MESSAGE));
+}
+
 function attachAuthInterceptors(client: AxiosInstance): void {
   client.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     const token = authHandlers.getAccessToken();
@@ -143,7 +151,7 @@ function attachAuthInterceptors(client: AxiosInstance): void {
         originalRequest._retry ||
         isAuthEndpoint(originalRequest.url)
       ) {
-        return Promise.reject(error);
+        return rejectNormalized(error);
       }
 
       originalRequest._retry = true;
@@ -160,7 +168,7 @@ function attachAuthInterceptors(client: AxiosInstance): void {
 
       if (!newToken) {
         authHandlers.onUnauthorized();
-        return Promise.reject(error);
+        return rejectNormalized(error);
       }
 
       originalRequest.headers.Authorization = `Bearer ${newToken}`;

@@ -16,7 +16,7 @@ export const errorHandler = (
   _next: NextFunction,
 ): void => {
   let statusCode = 500;
-  let message = "Internal server error";
+  let message: string;
   let errors:
     | Array<{ field?: string; message: string; code?: string; stack?: string }>
     | undefined;
@@ -43,16 +43,22 @@ export const errorHandler = (
 
   if (error === invalidCsrfTokenError) {
     statusCode = 403;
-    message = "Invalid CSRF token";
+    message = "Token de segurança inválido. Recarregue a página.";
   } else if (error instanceof AppError) {
     statusCode = error.statusCode;
     message = error.message;
-    errors = error.context
-      ? [{ message: String((error.context as any).message ?? message) }]
-      : undefined;
+    const contextErrors = error.context?.errors;
+    if (Array.isArray(contextErrors) && contextErrors.length > 0) {
+      errors = contextErrors as Array<{
+        field?: string;
+        message: string;
+        code?: string;
+        stack?: string;
+      }>;
+    }
   } else if (error instanceof ZodError) {
     statusCode = 400;
-    message = "Validation failed";
+    message = "Falha na validação";
     errors = error.errors.map((err) => ({
       field: err.path.join("."),
       message: err.message,
@@ -65,14 +71,14 @@ export const errorHandler = (
     errors = prismaError.errors;
   } else if (error instanceof PrismaClientValidationError) {
     statusCode = 400;
-    message = "Invalid data provided";
+    message = "Dados inválidos fornecidos";
     errors = [{ message: error.message }];
   } else if (error.name === "ValidationError") {
     statusCode = 400;
     message = error.message;
   } else if (process.env.NODE_ENV === "production") {
     statusCode = 500;
-    message = "Something went wrong";
+    message = "Ocorreu um erro genérico. Tente novamente.";
     errors = undefined;
   } else {
     statusCode = 500;
@@ -126,31 +132,31 @@ const handlePrismaError = (error: PrismaClientKnownRequestError) => {
     case "P2002":
       return {
         statusCode: 409,
-        message: "A record with this data already exists",
+        message: "Já existe um registro com estes dados.",
         errors: [{ field: "unique_constraint", message: error.message }],
       };
     case "P2025":
       return {
         statusCode: 404,
-        message: "Record not found",
+        message: "Registro não encontrado",
         errors: [{ message: error.message }],
       };
     case "P2003":
       return {
         statusCode: 400,
-        message: "Invalid reference to related record",
+        message: "Referência inválida a outro registro",
         errors: [{ message: error.message }],
       };
     case "P2014":
       return {
         statusCode: 400,
-        message: "Invalid data for relation",
+        message: "Dados inválidos para a relação",
         errors: [{ message: error.message }],
       };
     default:
       return {
         statusCode: 500,
-        message: "Database operation failed",
+        message: "Falha na operação do banco de dados",
         errors: [{ message: error.message }],
       };
   }

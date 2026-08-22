@@ -71,7 +71,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError("Usuário ou senha inválidos.");
     }
 
     const isPasswordValid = await comparePassword(
@@ -79,7 +79,7 @@ export class AuthService {
       user.passwordHash,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError("Usuário ou senha inválidos.");
     }
 
     return this.issueTokens(user);
@@ -94,16 +94,16 @@ export class AuthService {
     });
 
     if (!existingToken) {
-      throw new UnauthorizedError("Invalid refresh token");
+      throw new UnauthorizedError("Sessão expirada. Faça login novamente.");
     }
 
     if (existingToken.revokedAt) {
       await this.revokeAllUserRefreshTokens(existingToken.userId);
-      throw new UnauthorizedError("Refresh token reuse detected");
+      throw new UnauthorizedError("Sessão inválida. Faça login novamente.");
     }
 
     if (existingToken.expiresAt <= new Date()) {
-      throw new UnauthorizedError("Refresh token expired");
+      throw new UnauthorizedError("Sessão expirada. Faça login novamente.");
     }
 
     const { user } = existingToken;
@@ -213,13 +213,13 @@ export class AuthService {
 
     if (existingUser) {
       if (existingUser.username === username) {
-        throw new ValidationError("Username already exists");
+        throw new ValidationError("Este usuário já está cadastrado.");
       }
       if (existingUser.email === email) {
-        throw new ValidationError("Email already exists");
+        throw new ValidationError("Este e-mail já está cadastrado.");
       }
       if (existingUser.phone === phone) {
-        throw new ValidationError("Phone already exists");
+        throw new ValidationError("Este telefone já está cadastrado.");
       }
     }
   }

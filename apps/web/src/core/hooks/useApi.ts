@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ApiResponse, ApiError } from "../interfaces/IService";
+import {
+  GENERIC_API_ERROR_MESSAGE,
+  getApiErrorMessage,
+} from "../../utils/apiError";
 
 export interface UseApiState<T> {
   data: T | null;
@@ -54,7 +58,10 @@ export function useApi<T>(
           onSuccess?.(response.data);
           return response.data;
         } else {
-          const errorMessage = response.message || "Request failed";
+          const errorMessage = getApiErrorMessage(
+            { message: response.message },
+            "Falha na requisição",
+          );
 
           setState((prev) => ({
             ...prev,
@@ -65,13 +72,19 @@ export function useApi<T>(
           return null;
         }
       } catch (error: unknown) {
+        const message = getApiErrorMessage(
+          error,
+          GENERIC_API_ERROR_MESSAGE,
+        );
         const e = error as ApiError & {
-          message?: string;
           errors?: ApiError["errors"];
+          url?: string;
+          method?: string;
+          requestId?: string;
         };
         const apiError: ApiError = {
           success: false,
-          message: e?.message || "An unexpected error occurred",
+          message,
           errors: e?.errors,
           url: e?.url,
           method: e?.method,

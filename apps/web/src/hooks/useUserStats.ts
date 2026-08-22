@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { UserStats } from "@sarradabet/types";
+import { getApiErrorMessage } from "../utils/apiError";
 import { statsService } from "../services/statsService";
 import { useAuth } from "./useAuth";
 
@@ -22,9 +23,7 @@ export function useUserStats() {
       const result = await statsService.getMyStats();
       setStats(result);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar estatísticas",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar estatísticas"));
     } finally {
       setLoading(false);
     }

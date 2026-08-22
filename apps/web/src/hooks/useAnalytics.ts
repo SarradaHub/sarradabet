@@ -5,6 +5,7 @@ import type {
   PeakHourEntry,
   PixRevenuePoint,
 } from "@sarradabet/types";
+import { getApiErrorMessage } from "../utils/apiError";
 import {
   analyticsService,
   type AnalyticsFilters,
@@ -34,9 +35,7 @@ export function useAnalytics(filters: AnalyticsFilters) {
       setPixRevenue(revenueData);
       setPeakHours(hoursData);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar análises",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar análises"));
     } finally {
       setLoading(false);
     }

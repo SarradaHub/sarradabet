@@ -6,6 +6,13 @@ import { Button } from "../ui/Button";
 import { ErrorMessage } from "../ui/ErrorMessage";
 import { userService } from "../../services/UserService";
 import { getApiErrorMessage } from "../../utils/apiError";
+import { formatPhoneFromApi, formatPhoneMask } from "../../utils/phoneMask";
+
+function FieldHint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs text-sportsbook-muted -mt-2">{children}</p>
+  );
+}
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -40,7 +47,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       setFormData({
         username: user.username,
         email: user.email,
-        phone: user.phone,
+        phone: formatPhoneFromApi(user.phone),
         role: user.role,
         password: "",
       });
@@ -141,6 +148,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
           id="edit-user-email"
           type="email"
           label="E-mail"
+          placeholder="seu@email.com"
+          autoComplete="email"
+          inputMode="email"
           value={formData.email ?? ""}
           onChange={(event) =>
             setFormData((current) => ({
@@ -151,20 +161,25 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
           className={sportsbookFieldClass}
           required
         />
+        <FieldHint>Use um e-mail válido (ex.: nome@gmail.com)</FieldHint>
         <Input
           id="edit-user-phone"
           type="tel"
           label="Telefone"
+          inputMode="numeric"
+          autoComplete="tel"
+          placeholder="(11) 99999-9999"
           value={formData.phone ?? ""}
           onChange={(event) =>
             setFormData((current) => ({
               ...current,
-              phone: event.target.value,
+              phone: formatPhoneMask(event.target.value),
             }))
           }
           className={sportsbookFieldClass}
           required
         />
+        <FieldHint>DDD + número (celular com 9)</FieldHint>
         <Select
           id="edit-user-role"
           label="Função"

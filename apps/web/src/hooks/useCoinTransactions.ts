@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { CoinTransaction } from "@sarradabet/types";
+import { getApiErrorMessage } from "../utils/apiError";
 import { coinService } from "../services/CoinPaymentService";
 import { useAuth } from "./useAuth";
 
@@ -25,9 +26,7 @@ export function useCoinTransactions(limit = 10) {
       setTransactions(result.data.items);
       setTotal(result.data.total);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load transactions",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar transações"));
     } finally {
       setLoading(false);
     }

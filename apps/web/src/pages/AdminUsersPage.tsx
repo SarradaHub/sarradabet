@@ -9,6 +9,7 @@ import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { Modal } from "../components/ui/Modal";
 import { useAuth } from "../hooks/useAuth";
 import { userService } from "../services/UserService";
+import { getApiErrorMessage } from "../utils/apiError";
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleString("pt-BR");
@@ -31,7 +32,7 @@ const AdminUsersPage: React.FC = () => {
       const result = await userService.listUsers();
       setUsers(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar usuários");
+      setError(getApiErrorMessage(err, "Erro ao carregar usuários"));
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ const AdminUsersPage: React.FC = () => {
       setConfirmUser(null);
       await loadUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao excluir usuário");
+      setError(getApiErrorMessage(err, "Erro ao excluir usuário"));
     } finally {
       setDeletingId(null);
     }

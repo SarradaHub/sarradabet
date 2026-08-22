@@ -1,5 +1,6 @@
 import type { UserRewardRedemption } from "@sarradabet/types";
 import { useCallback, useEffect, useState } from "react";
+import { getApiErrorMessage } from "../utils/apiError";
 import { rewardService } from "../services/rewardService";
 import { useAuth } from "./useAuth";
 
@@ -22,9 +23,7 @@ export function useMyValidatedRedemptions() {
       const result = await rewardService.getMyValidatedRedemptions();
       setRedemptions(result);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar histórico",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar histórico"));
     } finally {
       setLoading(false);
     }

@@ -13,6 +13,7 @@ import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useSocketEvent } from "../core/hooks/useSocket";
 import { useCoinBalance } from "../hooks/useCoinBalance";
 import { useCoinTransactions } from "../hooks/useCoinTransactions";
+import { getApiErrorMessage } from "../utils/apiError";
 import { usePixPurchase } from "../hooks/usePixPurchase";
 import { coinService } from "../services/CoinPaymentService";
 import { DISCLAIMERS } from "../constants/disclaimers";
@@ -106,7 +107,7 @@ const CoinsPage: React.FC = () => {
         setPackages(result);
       } catch (err) {
         setPackagesError(
-          err instanceof Error ? err.message : "Erro ao carregar pacotes",
+          getApiErrorMessage(err, "Erro ao carregar pacotes"),
         );
       } finally {
         setPackagesLoading(false);

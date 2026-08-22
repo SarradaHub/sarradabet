@@ -36,7 +36,7 @@ export class AuthController {
     err: unknown,
     fallbackStatusCode: number = 400,
   ): void {
-    let message = "An error occurred";
+    let message = "Ocorreu um erro genérico. Tente novamente.";
     let statusCode = fallbackStatusCode;
 
     if (err instanceof AppError) {
