@@ -25,7 +25,7 @@ export const validateRequest = (
           `Validation failed for ${property}. Errors: ${errors.length}. Fields: ${fields}`,
         );
 
-        throw new ValidationError("Validation failed", { errors });
+        throw new ValidationError("Falha na validação", { errors });
       }
 
       logger.debug(`Validation passed for ${property}`);
@@ -55,5 +55,5 @@ export const validateZodError = (error: ZodError): ValidationError => {
     code: err.code,
   }));
 
-  return new ValidationError("Validation failed", { errors });
+  return new ValidationError("Falha na validação", { errors });
 };

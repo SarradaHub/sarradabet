@@ -7,6 +7,14 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useAuth } from "../hooks/useAuth";
+import { getApiErrorMessage } from "../utils/apiError";
+import { formatPhoneMask } from "../utils/phoneMask";
+
+function FieldHint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs text-sportsbook-muted -mt-2">{children}</p>
+  );
+}
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -31,7 +39,7 @@ const RegisterPage: React.FC = () => {
       const redirect = searchParams.get("redirect") || "/coins";
       navigate(redirect, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao cadastrar");
+      setError(getApiErrorMessage(err, "Erro ao cadastrar"));
     } finally {
       setLoading(false);
     }
@@ -72,6 +80,9 @@ const RegisterPage: React.FC = () => {
           <Input
             label="E-mail"
             type="email"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            inputMode="email"
             value={formData.email}
             onChange={(event) =>
               setFormData((current) => ({
@@ -82,19 +93,24 @@ const RegisterPage: React.FC = () => {
             required
             className={sportsbookFieldClass}
           />
+          <FieldHint>Use um e-mail válido (ex.: nome@gmail.com)</FieldHint>
           <Input
             label="Telefone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
             placeholder="(11) 99999-9999"
             value={formData.phone}
             onChange={(event) =>
               setFormData((current) => ({
                 ...current,
-                phone: event.target.value,
+                phone: formatPhoneMask(event.target.value),
               }))
             }
             required
             className={sportsbookFieldClass}
           />
+          <FieldHint>DDD + número (celular com 9)</FieldHint>
           <PasswordInput
             id="register-password"
             name="password"

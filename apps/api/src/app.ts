@@ -41,7 +41,7 @@ app.use(
         : config.NODE_ENV === "development"
           ? 1000
           : 100,
-    message: "Too many requests from this IP, please try again later",
+    message: "Muitas requisições deste IP. Tente mais tarde.",
     skipSuccessfulRequests:
       config.NODE_ENV === "development" || config.NODE_ENV === "test",
   }),

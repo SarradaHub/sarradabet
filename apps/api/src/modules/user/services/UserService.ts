@@ -70,13 +70,13 @@ export class UserService {
 
       if (existingUser) {
         if (data.username && existingUser.username === data.username) {
-          throw new ValidationError("Username already exists");
+          throw new ValidationError("Este usuário já está cadastrado.");
         }
         if (data.email && existingUser.email === data.email) {
-          throw new ValidationError("Email already exists");
+          throw new ValidationError("Este e-mail já está cadastrado.");
         }
         if (data.phone && existingUser.phone === data.phone) {
-          throw new ValidationError("Phone already exists");
+          throw new ValidationError("Este telefone já está cadastrado.");
         }
       }
     }
@@ -116,7 +116,7 @@ export class UserService {
     await this.findById(id);
 
     if (id === requesterId) {
-      throw new ForbiddenError("Cannot delete your own account");
+      throw new ForbiddenError("Você não pode excluir sua própria conta.");
     }
 
     await prisma.user.delete({

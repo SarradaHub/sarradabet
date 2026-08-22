@@ -7,6 +7,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { Input } from "@sarradahub/design-system";
 import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useAuth } from "../hooks/useAuth";
+import { getApiErrorMessage } from "../utils/apiError";
 
 interface LoginForm {
   username: string;
@@ -49,9 +50,7 @@ const AdminLogin: React.FC = () => {
 
       navigate("/admin/dashboard");
     } catch (loginError) {
-      setError(
-        loginError instanceof Error ? loginError.message : "Erro desconhecido",
-      );
+      setError(getApiErrorMessage(loginError, "Erro ao entrar"));
     } finally {
       setLoading(false);
     }

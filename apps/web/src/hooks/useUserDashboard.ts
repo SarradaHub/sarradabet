@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { UserDashboardResponse } from "@sarradabet/types";
+import { getApiErrorMessage } from "../utils/apiError";
 import { dashboardService } from "../services/dashboardService";
 import { useAuth } from "./useAuth";
 
@@ -24,9 +25,7 @@ export function useUserDashboard(page = 1, limit = 10) {
       const result = await dashboardService.getDashboard({ page, limit });
       setDashboard(result);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar dashboard",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar dashboard"));
     } finally {
       setLoading(false);
     }

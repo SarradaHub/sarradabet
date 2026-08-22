@@ -1,5 +1,9 @@
 import { useState, useCallback } from "react";
 import { ApiResponse, ApiError } from "../interfaces/IService";
+import {
+  GENERIC_API_ERROR_MESSAGE,
+  getApiErrorMessage,
+} from "../../utils/apiError";
 
 export interface UseMutationOptions<TData, TVariables, TContext = unknown> {
   onMutate?: (variables: TVariables) => TContext | void | Promise<TContext | void>;
@@ -61,7 +65,10 @@ export function useMutation<TData, TVariables, TContext = unknown>(
           return response.data;
         }
 
-        const errorMessage = response.message || "Mutation failed";
+        const errorMessage = getApiErrorMessage(
+          { message: response.message },
+          "Falha na operação",
+        );
         const mutationError: ApiError = {
           success: false,
           message: errorMessage,
@@ -77,10 +84,11 @@ export function useMutation<TData, TVariables, TContext = unknown>(
         onSettled?.(null, mutationError, variables);
         return null;
       } catch (err: unknown) {
-        const e = err as { message?: string; errors?: ApiError["errors"] };
+        const message = getApiErrorMessage(err, GENERIC_API_ERROR_MESSAGE);
+        const e = err as { errors?: ApiError["errors"] };
         const mutationError: ApiError = {
           success: false,
-          message: e?.message || "An unexpected error occurred",
+          message,
           errors: e?.errors,
         };
 

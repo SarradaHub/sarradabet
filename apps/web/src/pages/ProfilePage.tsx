@@ -13,6 +13,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useMyPendingRedemptions } from "../hooks/useMyPendingRedemptions";
 import { useMyValidatedRedemptions } from "../hooks/useMyValidatedRedemptions";
 import { useUserStats } from "../hooks/useUserStats";
+import { getApiErrorMessage } from "../utils/apiError";
 import { userService } from "../services/UserService";
 import type { UserPublic } from "@sarradabet/types";
 
@@ -53,9 +54,7 @@ const ProfilePage: React.FC = () => {
       const result = await userService.getById(user.id);
       setProfile(result);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar perfil",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar perfil"));
     } finally {
       setLoading(false);
     }

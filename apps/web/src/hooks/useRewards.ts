@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Reward } from "@sarradabet/types";
+import { getApiErrorMessage } from "../utils/apiError";
 import { rewardService } from "../services/rewardService";
 
 export function useRewards() {
@@ -14,9 +15,7 @@ export function useRewards() {
       const result = await rewardService.listActive();
       setRewards(result);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao carregar recompensas",
-      );
+      setError(getApiErrorMessage(err, "Erro ao carregar recompensas"));
     } finally {
       setLoading(false);
     }

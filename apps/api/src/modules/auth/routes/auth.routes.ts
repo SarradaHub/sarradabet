@@ -18,14 +18,14 @@ const isTestEnv = config.NODE_ENV === "test";
 const loginRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000,
   max: isTestEnv ? 10_000 : config.AUTH_LOGIN_RATE_LIMIT_MAX,
-  message: "Too many login attempts, please try again later",
+  message: "Muitas tentativas de login. Tente mais tarde.",
   skipSuccessfulRequests: false,
 });
 
 const registerRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000,
   max: isTestEnv ? 10_000 : config.AUTH_REGISTER_RATE_LIMIT_MAX,
-  message: "Too many registration attempts, please try again later",
+  message: "Muitas tentativas de cadastro. Tente mais tarde.",
   skipSuccessfulRequests: false,
 });
 

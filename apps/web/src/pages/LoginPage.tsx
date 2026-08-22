@@ -7,6 +7,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
 import { useAuth } from "../hooks/useAuth";
+import { getApiErrorMessage } from "../utils/apiError";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const LoginPage: React.FC = () => {
       const redirect = searchParams.get("redirect") || "/";
       navigate(redirect, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao entrar");
+      setError(getApiErrorMessage(err, "Erro ao entrar"));
     } finally {
       setLoading(false);
     }
