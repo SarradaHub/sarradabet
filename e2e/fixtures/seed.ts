@@ -304,6 +304,25 @@ export async function closeBetViaApi(
   });
 }
 
+export async function createClosedTestBetViaApi(): Promise<{
+  id: number;
+  title: string;
+  odds: Array<{ id: number; title: string }>;
+  categoryId: number;
+}> {
+  const adminToken = await loginViaApi("admin");
+  const categoryId = await getCategoryIdByTitle("Futebol");
+  const suffix = Date.now();
+  const bet = await createBetViaApi(adminToken, {
+    title: `E2EClosedBet${suffix}`,
+    description: "Aposta fechada para testes E2E",
+    categoryId,
+    odds: [{ title: "Opcao A" }, { title: "Opcao B" }],
+  });
+  await closeBetViaApi(adminToken, bet.id);
+  return { ...bet, categoryId };
+}
+
 export async function resolveBetViaApi(
   adminToken: string,
   betId: number,

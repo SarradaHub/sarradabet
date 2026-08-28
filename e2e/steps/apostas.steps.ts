@@ -2,10 +2,7 @@ import { expect } from "@playwright/test";
 import { Given, When, Then } from "../fixtures/fixtures";
 import { HomePage } from "../pages/home.page";
 import {
-  closeBetViaApi,
-  createBetViaApi,
-  getCategoryIdByTitle,
-  loginViaApi,
+  createClosedTestBetViaApi,
 } from "../fixtures/seed";
 import { setClosedBet, getClosedBet } from "../fixtures/test-data-state";
 
@@ -15,19 +12,12 @@ Given("que estou na página inicial", async ({ page }) => {
   await home.expectMarketsVisible();
 });
 
-Given("que existe uma aposta fechada de teste via API", async () => {
-  const adminToken = await loginViaApi("admin");
-  const categoryId = await getCategoryIdByTitle("Futebol");
-  const suffix = Date.now();
-  const bet = await createBetViaApi(adminToken, {
-    title: `E2EClosedBet${suffix}`,
-    description: "Aposta fechada para testes E2E",
-    categoryId,
-    odds: [{ title: "Opcao A" }, { title: "Opcao B" }],
-  });
-  await closeBetViaApi(adminToken, bet.id);
-  setClosedBet({ ...bet, categoryId });
-});
+async function seedClosedTestBet(): Promise<void> {
+  setClosedBet(await createClosedTestBetViaApi());
+}
+
+Given("que existe uma aposta fechada de teste via API", seedClosedTestBet);
+Given("existe uma aposta fechada de teste via API", seedClosedTestBet);
 
 Then("devo ver o mercado {string}", async ({ page }, title: string) => {
   await expect(page.getByText(title)).toBeVisible({ timeout: 15_000 });
