@@ -78,7 +78,7 @@
     "esm": "^3.2.25",
     "express": "^4.21.2",
     "express-rate-limit": "^8.6.2",
-    "helmet": "^8.1.0",
+    "helmet": "^8.3.0",
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "mercadopago": "^3.2.0",
