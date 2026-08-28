@@ -28,16 +28,8 @@ export class BetController extends BaseController<
     next: NextFunction,
   ): Promise<void> {
     try {
-      const query = req.query as BetQueryInput;
-      const params = {
-        ...this.parsePaginationParams(req),
-        status: query.status,
-        categoryId: query.categoryId,
-        search: query.search,
-        excludeExpired: query.excludeExpired,
-        queue: query.queue,
-      };
-      const result = await this.betService.findAll(params);
+      const query = req.query as unknown as BetQueryInput;
+      const result = await this.betService.findAll(query);
       this.sendSuccess(
         res,
         { ...result, data: toBetListItems(result.data) },

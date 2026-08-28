@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { HOME_BETS_PARAMS, useBets, useCategories, CATEGORIES_LIST_PARAMS } from "../hooks";
-import { Bet } from "../types/bet";
 import { Category } from "../types/category";
 import Navigation from "../components/Navigation";
 import { AppFooter } from "../components/legal/AppFooter";

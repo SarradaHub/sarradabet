@@ -15,6 +15,7 @@ import {
 } from "../hooks";
 import { useBetResolutionQueue } from "../hooks/useBetResolutionQueue";
 import { Bet } from "../types/bet";
+import { Category } from "../types/category";
 import { unwrapList } from "../utils/apiData";
 import { formatScheduleDate } from "../utils/formatSchedule";
 
@@ -30,7 +31,7 @@ const AdminClosedBetsPage: React.FC = () => {
 
   const bets = useMemo(() => unwrapList<Bet>(betsResponse), [betsResponse]);
   const categories = useMemo(
-    () => unwrapList(categoriesResponse),
+    () => unwrapList<Category>(categoriesResponse),
     [categoriesResponse],
   );
 

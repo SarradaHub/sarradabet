@@ -20,7 +20,7 @@ export class BetRepository extends BaseRepository<
   BetWithOdds,
   CreateBetInput,
   UpdateBetInput,
-  { id: number }
+  Prisma.BetWhereInput
 > {
   constructor(prisma: PrismaClient) {
     super(prisma);
