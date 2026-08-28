@@ -8,6 +8,8 @@ import {
   PaginationParams,
   PaginatedResult,
 } from "../../../core/interfaces/IRepository";
+import type { BetQueryInput } from "../../../core/validation/ValidationSchemas";
+import { buildBetListWhere } from "../betListQuery";
 import {
   NotFoundError,
   ConflictError,
@@ -36,16 +38,24 @@ export class BetService extends BaseService<
   }
 
   async findAll(
-    params?: PaginationParams,
+    params?: PaginationParams & BetQueryInput,
   ): Promise<PaginatedResult<BetWithOdds>> {
-    return this.betRepository.findManyWithPagination(
-      params || {
-        page: 1,
-        limit: 10,
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      },
-    );
+    const pagination: PaginationParams = {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 10,
+      sortBy: params?.sortBy ?? "createdAt",
+      sortOrder: params?.sortOrder ?? "desc",
+    };
+
+    const where = buildBetListWhere({
+      status: params?.status,
+      categoryId: params?.categoryId,
+      search: params?.search,
+      excludeExpired: params?.excludeExpired,
+      queue: params?.queue,
+    });
+
+    return this.betRepository.findManyWithPagination(pagination, { where });
   }
 
   async findById(id: number): Promise<BetWithOdds> {
@@ -226,7 +236,13 @@ export class BetService extends BaseService<
       throw new ConflictError("Aposta já foi resolvida");
     }
 
-    if (bet.status !== "closed") {
+    const now = new Date();
+    const isExpiredOpen =
+      bet.status === "open" &&
+      bet.closesAt != null &&
+      bet.closesAt <= now;
+
+    if (bet.status !== "closed" && !isExpiredOpen) {
       throw new ConflictError("Only closed bets can be resolved");
     }
 
@@ -236,6 +252,13 @@ export class BetService extends BaseService<
     }
 
     await this.betRepository.executeTransaction(async (tx) => {
+      if (isExpiredOpen) {
+        await tx.bet.update({
+          where: { id },
+          data: { status: "closed" },
+        });
+      }
+
       await tx.odd.update({
         where: { id: winningOddId },
         data: { result: "won" },
@@ -261,7 +284,7 @@ export class BetService extends BaseService<
         where: { id },
         data: {
           status: "resolved",
-          resolvedAt: new Date(),
+          resolvedAt: now,
         },
       });
 

@@ -47,6 +47,9 @@ export function startJobWorkers(): void {
     {},
     { repeat: { every: BET_STATUS_REPEAT_MS } },
   );
+  void betStatusQueue.add("boot-tick", {}).catch((error: unknown) => {
+    logger.error("Failed to enqueue initial bet status tick", { error });
+  });
 
   workers.push(
     new Worker(

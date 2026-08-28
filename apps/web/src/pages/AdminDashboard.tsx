@@ -346,7 +346,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm text-sportsbook-fg font-medium">{bet.title}</p>
-                    <BetStatusBadge status={bet.status} />
+                    <BetStatusBadge bet={bet} />
                   </div>
                   <p className="text-xs text-sportsbook-muted truncate">
                     {bet.category?.title || "Sem categoria"} ·{" "}

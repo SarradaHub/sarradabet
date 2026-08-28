@@ -197,14 +197,42 @@ export const ResolveBetSchema = z.object({
   winningOddId: IdSchema,
 });
 
+const BetStatusFilterSchema = z.enum([
+  "scheduled",
+  "open",
+  "closed",
+  "resolved",
+]);
+
 export const BetQuerySchema = PaginationSchema.extend({
-  status: z.enum(["scheduled", "open", "closed", "resolved"]).optional(),
+  status: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim() || undefined)
+    .refine(
+      (value) => {
+        if (!value) {
+          return true;
+        }
+        return value
+          .split(",")
+          .every((part) =>
+            BetStatusFilterSchema.safeParse(part.trim()).success,
+          );
+      },
+      "Invalid status filter",
+    ),
   categoryId: z.coerce
     .number()
     .int()
     .positive("Category ID must be a positive integer")
     .optional(),
   search: z.string().optional(),
+  excludeExpired: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => value === "true"),
+  queue: z.enum(["resolution"]).optional(),
 });
 
 export const CategoryQuerySchema = PaginationSchema.extend({

@@ -47,3 +47,25 @@ export function isBetScheduledForFuture(
   const start = toTimestamp(bet.startTime);
   return start != null && start > now;
 }
+
+export function getDisplayBetStatus(
+  bet: BetSchedule,
+  now = Date.now(),
+): BetStatus {
+  if (bet.status === "open") {
+    const closes = toTimestamp(bet.closesAt);
+    if (closes != null && closes <= now) {
+      return "closed";
+    }
+  }
+
+  return bet.status;
+}
+
+export function isBetInResolutionQueue(
+  bet: BetSchedule,
+  now = Date.now(),
+): boolean {
+  const displayStatus = getDisplayBetStatus(bet, now);
+  return displayStatus === "closed";
+}

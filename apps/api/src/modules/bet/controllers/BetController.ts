@@ -4,6 +4,7 @@ import { BetService } from "../services/BetService";
 import {
   CreateBetInput,
   UpdateBetInput,
+  BetQueryInput,
 } from "../../../core/validation/ValidationSchemas";
 import { BetWithOdds } from "../repositories/BetRepository";
 import {
@@ -27,7 +28,15 @@ export class BetController extends BaseController<
     next: NextFunction,
   ): Promise<void> {
     try {
-      const params = this.parsePaginationParams(req);
+      const query = req.query as BetQueryInput;
+      const params = {
+        ...this.parsePaginationParams(req),
+        status: query.status,
+        categoryId: query.categoryId,
+        search: query.search,
+        excludeExpired: query.excludeExpired,
+        queue: query.queue,
+      };
       const result = await this.betService.findAll(params);
       this.sendSuccess(
         res,
@@ -164,12 +173,7 @@ export class BetController extends BaseController<
   ): Promise<void> {
     try {
       const id = this.parseId(req);
-      const { winningOddId } = req.body;
-
-      if (!winningOddId || typeof winningOddId !== "number") {
-        this.sendError(res, "Winning odd ID is required", 400);
-        return;
-      }
+      const { winningOddId } = req.body as { winningOddId: number };
 
       const resolvedBet = await this.betService.resolveBet(id, winningOddId);
 

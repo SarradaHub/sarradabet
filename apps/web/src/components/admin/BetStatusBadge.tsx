@@ -1,6 +1,7 @@
 import React from "react";
 import { BetStatus } from "../../types/bet";
 import { cn } from "../../utils/cn";
+import { getDisplayBetStatus } from "../../utils/betSchedule";
 
 const STATUS_STYLES: Record<BetStatus, string> = {
   scheduled: "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -16,19 +17,28 @@ const STATUS_LABELS: Record<BetStatus, string> = {
   resolved: "Resolvida",
 };
 
-interface BetStatusBadgeProps {
-  status: BetStatus;
-}
+type BetStatusBadgeProps = {
+  status?: BetStatus;
+  bet?: {
+    status: BetStatus;
+    startTime?: string | Date | null;
+    closesAt?: string | Date | null;
+  };
+};
 
-const BetStatusBadge: React.FC<BetStatusBadgeProps> = ({ status }) => (
-  <span
-    className={cn(
-      "inline-flex px-2 py-0.5 rounded text-xs font-display font-semibold uppercase tracking-wide border",
-      STATUS_STYLES[status],
-    )}
-  >
-    {STATUS_LABELS[status]}
-  </span>
-);
+const BetStatusBadge: React.FC<BetStatusBadgeProps> = ({ status, bet }) => {
+  const displayStatus = bet ? getDisplayBetStatus(bet) : status ?? "open";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex px-2 py-0.5 rounded text-xs font-display font-semibold uppercase tracking-wide border",
+        STATUS_STYLES[displayStatus],
+      )}
+    >
+      {STATUS_LABELS[displayStatus]}
+    </span>
+  );
+};
 
 export default BetStatusBadge;

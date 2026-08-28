@@ -42,6 +42,9 @@ export class BetService extends BaseService<Bet, CreateBetDto, UpdateBetDto> {
       sortOrder?: "asc" | "desc";
       status?: string;
       categoryId?: number;
+      search?: string;
+      excludeExpired?: boolean | "true" | "false";
+      queue?: "resolution";
     } = {},
   ): Promise<ApiResponse<Bet[]>> {
     const response = await this.getWithParams(params);

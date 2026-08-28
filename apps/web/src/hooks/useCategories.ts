@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "../core/hooks";
 import { queryCache } from "../core/hooks/useQueryCache";
 import { categoryService } from "../services/CategoryService";
 import { CreateCategoryDto, UpdateCategoryDto } from "../types/category";
+import { retryApiCall } from "../utils/retryApiCall";
 
 export const CATEGORIES_LIST_PARAMS = { limit: 100 } as const;
 
@@ -28,11 +29,12 @@ export function useCategories(params?: {
 }) {
   return useQuery(
     getCategoriesQueryKey(params),
-    () => categoryService.getCategoriesWithPagination(params),
+    () =>
+      retryApiCall(() => categoryService.getCategoriesWithPagination(params)),
     {
-      staleTime: 5 * 60 * 1000, // 5 minutes - longer cache for categories
-      refetchOnMount: false, // Don't refetch on mount if data exists
-      refetchOnWindowFocus: false, // Don't refetch on window focus
+      staleTime: 5 * 60 * 1000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
     },
   );
 }

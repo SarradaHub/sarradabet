@@ -14,6 +14,7 @@ import {
   CreateBetSchema,
   UpdateBetSchema,
   BetQuerySchema,
+  ResolveBetSchema,
 } from "../core/validation/ValidationSchemas";
 import {
   ParamIdSchema,
@@ -81,6 +82,7 @@ router.patch(
   authenticateUser,
   requireUserRole(UserRole.ADMIN),
   validateParams(ParamIdSchema),
+  validateBody(ResolveBetSchema),
   betController.resolveBet.bind(betController),
 );
 

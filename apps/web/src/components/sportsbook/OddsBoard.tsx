@@ -9,9 +9,14 @@ interface OddsBoardProps {
     bets: Bet[];
   }>;
   loading?: boolean;
+  emptyMessage?: string;
 }
 
-const OddsBoard = ({ groupedBets, loading }: OddsBoardProps) => {
+const OddsBoard = ({
+  groupedBets,
+  loading,
+  emptyMessage = "Nenhum mercado disponível no momento. Volte em breve para novas apostas.",
+}: OddsBoardProps) => {
   if (loading) {
     return (
       <div className="p-4 space-y-3">
@@ -29,7 +34,7 @@ const OddsBoard = ({ groupedBets, loading }: OddsBoardProps) => {
           Nenhum mercado encontrado
         </p>
         <p className="text-sportsbook-muted text-sm max-w-sm">
-          Nenhum mercado disponível no momento. Volte em breve para novas apostas.
+          {emptyMessage}
         </p>
       </div>
     );

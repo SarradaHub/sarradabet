@@ -5,6 +5,7 @@ import OddsList from "./OddsList";
 import { useSocketEvent } from "../core/hooks/useSocket";
 import { mergeOddFromVoteUpdate } from "../utils/odds";
 import { Bet } from "../types/bet";
+import { getDisplayBetStatus } from "../utils/betSchedule";
 
 interface BetCardProps {
   bet: Bet;
@@ -34,21 +35,23 @@ const BetCard = ({ bet }: BetCardProps) => {
     );
   });
 
+  const displayStatus = getDisplayBetStatus(bet);
+
   const statusLabel =
-    bet.status === "open"
+    displayStatus === "open"
       ? "Ativa"
-      : bet.status === "scheduled"
+      : displayStatus === "scheduled"
         ? "Agendada"
-        : bet.status === "closed"
+        : displayStatus === "closed"
           ? "Fechada"
-          : bet.status === "resolved"
+          : displayStatus === "resolved"
             ? "Resolvida"
             : "Inativa";
 
   const statusColor =
-    bet.status === "open"
+    displayStatus === "open"
       ? "text-sportsbook-odds"
-      : bet.status === "resolved"
+      : displayStatus === "resolved"
         ? "text-blue-400"
         : "text-sportsbook-muted";
 

@@ -73,7 +73,7 @@ export class AdminBetsPage {
       .getByRole("button")
       .filter({ has: this.page.getByText(winningOdd, { exact: true }) })
       .click();
-    await this.page.getByRole("button", { name: "Resolver" }).click();
+    await this.page.getByRole("button", { name: "Confirmar Resolução" }).click();
     await expect(row.getByText("Resolvida")).toBeVisible({ timeout: 10_000 });
   }
 

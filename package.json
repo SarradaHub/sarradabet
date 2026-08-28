@@ -15,6 +15,7 @@
     "prisma:check": "npm run -w apps/api prisma:check",
     "db:seed": "npm run -w apps/api db:seed",
     "db:seed:simple": "npm run -w apps/api db:seed:simple",
+    "db:seed:test-bets": "npm run -w apps/api db:seed:test-bets",
     "db:reset": "npm run -w apps/api db:reset",
     "test": "turbo run test --filter=!e2e",
     "test:all": "turbo run test",

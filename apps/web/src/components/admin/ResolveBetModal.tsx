@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Alert } from "@sarradahub/design-system";
 import { useResolveBet, invalidateBetsQueries } from "../../hooks";
 import { Bet } from "../../types/bet";
 import SportsbookModal from "../ui/SportsbookModal";
@@ -12,6 +13,7 @@ interface ResolveBetModalProps {
   onClose: () => void;
   bet: Bet | null;
   onBetResolved: (bet: Bet) => void;
+  progressLabel?: string;
 }
 
 const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
@@ -19,6 +21,7 @@ const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
   onClose,
   bet,
   onBetResolved,
+  progressLabel,
 }) => {
   const [winningOddId, setWinningOddId] = useState<number | null>(null);
   const resolveBetMutation = useResolveBet();
@@ -45,7 +48,6 @@ const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
       if (resolved) {
         invalidateBetsQueries();
         onBetResolved(resolved);
-        onClose();
       }
     } catch (error) {
       console.error("Failed to resolve bet:", error);
@@ -54,15 +56,27 @@ const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
 
   if (!bet) return null;
 
+  const hasNoVotes = (bet.totalVotes ?? 0) === 0;
+
   return (
     <SportsbookModal
       isOpen={isOpen}
       onClose={onClose}
       title="Resolver aposta"
-      description={`Selecione a opção vencedora para "${bet.title}"`}
+      description={
+        progressLabel ??
+        `Selecione a opção vencedora para "${bet.title}"`
+      }
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {hasNoVotes && (
+          <Alert variant="warning" title="Sem votos">
+            Esta aposta não possui votos. A resolução pode ser concluída, mas
+            nenhum pagamento será processado.
+          </Alert>
+        )}
+
         <div className="space-y-2">
           {bet.odds.map((odd) => (
             <button
@@ -78,7 +92,8 @@ const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
             >
               <span className="font-medium">{odd.title}</span>
               <span className="text-xs text-sportsbook-muted ml-2">
-                {odd.totalVotes} votos · {odd.value.toFixed(2)}x
+                {odd.totalVotes} votos · {odd.totalStake ?? 0} moedas ·{" "}
+                {odd.value.toFixed(2)}x
               </span>
             </button>
           ))}
@@ -106,7 +121,7 @@ const ResolveBetModal: React.FC<ResolveBetModalProps> = ({
             disabled={resolveBetMutation.loading || !winningOddId}
             className="sb-brand-gradient text-black font-display font-semibold"
           >
-            Resolver
+            Confirmar Resolução
           </Button>
         </div>
       </form>
