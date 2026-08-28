@@ -11,6 +11,10 @@ import {
 import type { BetQueryInput } from "../../../core/validation/ValidationSchemas";
 import { buildBetListWhere } from "../betListQuery";
 import {
+  BET_SORT_FIELDS,
+  resolveSortField,
+} from "../../../utils/sortField";
+import {
   NotFoundError,
   ConflictError,
   BadRequestError,
@@ -43,7 +47,7 @@ export class BetService extends BaseService<
     const pagination: PaginationParams = {
       page: params?.page ?? 1,
       limit: params?.limit ?? 10,
-      sortBy: params?.sortBy ?? "createdAt",
+      sortBy: resolveSortField(params?.sortBy, BET_SORT_FIELDS, "createdAt"),
       sortOrder: params?.sortOrder ?? "desc",
     };
 
@@ -55,7 +59,10 @@ export class BetService extends BaseService<
       queue: params?.queue,
     });
 
-    return this.betRepository.findManyWithPagination(pagination, { where });
+    return this.betRepository.findManyWithPagination(pagination, {
+      where,
+      allowedSortFields: BET_SORT_FIELDS,
+    });
   }
 
   async findById(id: number): Promise<BetWithOdds> {

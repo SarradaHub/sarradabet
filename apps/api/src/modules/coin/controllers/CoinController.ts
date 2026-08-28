@@ -3,6 +3,10 @@ import { CoinService } from "../services/CoinService";
 import { CoinPackageService } from "../../coin-package/services/CoinPackageService";
 import { RequestUser } from "../../../core/middleware/AuthMiddleware";
 import { ApiResponse } from "../../../utils/api/response";
+import {
+  COIN_TRANSACTION_SORT_FIELDS,
+  resolveSortField,
+} from "../../../utils/sortField";
 
 export class CoinController {
   constructor(
@@ -33,8 +37,12 @@ export class CoinController {
       const user = req.user as Extract<RequestUser, { type: "user" }>;
       const page = Number.parseInt(String(req.query.page ?? "1"), 10);
       const limit = Number.parseInt(String(req.query.limit ?? "10"), 10);
-      const sortBy = String(req.query.sortBy ?? "createdAt");
-      const sortOrder = (req.query.sortOrder as "asc" | "desc") ?? "desc";
+      const sortBy = resolveSortField(
+        typeof req.query.sortBy === "string" ? req.query.sortBy : undefined,
+        COIN_TRANSACTION_SORT_FIELDS,
+        "createdAt",
+      );
+      const sortOrder = req.query.sortOrder === "asc" ? "asc" : "desc";
 
       const result = await this.coinService.listTransactions(user.userId, {
         page,

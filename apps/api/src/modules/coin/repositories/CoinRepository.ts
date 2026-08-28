@@ -6,6 +6,10 @@ import {
 } from "@prisma/client";
 import { prisma } from "../../../config/db";
 import { PaginationParams } from "../../../core/interfaces/IRepository";
+import {
+  COIN_TRANSACTION_SORT_FIELDS,
+  resolveSortField,
+} from "../../../utils/sortField";
 
 export interface CreditDebitMetadata {
   source: CoinTransactionSource;
@@ -33,11 +37,17 @@ export class CoinRepository {
 
   async listTransactions(userId: number, params: PaginationParams) {
     const skip = (params.page - 1) * params.limit;
+    const sortField = resolveSortField(
+      params.sortBy,
+      COIN_TRANSACTION_SORT_FIELDS,
+      "createdAt",
+    );
+    const sortOrder = params.sortOrder === "asc" ? "asc" : "desc";
 
     const [items, total] = await Promise.all([
       prisma.coinTransaction.findMany({
         where: { userId },
-        orderBy: { [params.sortBy ?? "createdAt"]: params.sortOrder ?? "desc" },
+        orderBy: { [sortField]: sortOrder },
         skip,
         take: params.limit,
       }),

@@ -5,6 +5,15 @@ import {
   PaginationParams,
   PaginatedResult,
 } from "../interfaces/IRepository";
+import { DEFAULT_SORT_FIELDS, resolveSortField } from "../../utils/sortField";
+
+export type PaginatedFindManyParams<WhereInput> = Omit<
+  FindManyParams,
+  "skip" | "take" | "where"
+> & {
+  where?: WhereInput;
+  allowedSortFields?: readonly string[];
+};
 
 export abstract class BaseRepository<
   T,
@@ -24,11 +33,16 @@ export abstract class BaseRepository<
 
   public async findManyWithPagination(
     params: PaginationParams,
-    findManyParams?: Omit<FindManyParams, "skip" | "take" | "where"> & {
-      where?: WhereInput;
-    },
+    findManyParams?: PaginatedFindManyParams<WhereInput>,
   ): Promise<PaginatedResult<T>> {
-    const { page, limit, sortBy = "createdAt", sortOrder = "desc" } = params;
+    const { page, limit, sortOrder = "desc" } = params;
+    const allowedSortFields =
+      findManyParams?.allowedSortFields ?? DEFAULT_SORT_FIELDS;
+    const sortField = resolveSortField(
+      params.sortBy,
+      allowedSortFields,
+      allowedSortFields.includes("createdAt") ? "createdAt" : allowedSortFields[0],
+    );
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -36,7 +50,7 @@ export abstract class BaseRepository<
         ...findManyParams,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortField]: sortOrder },
       }),
       this.count(findManyParams?.where),
     ]);

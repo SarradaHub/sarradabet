@@ -4,6 +4,10 @@ import { ApiResponse } from "../../utils/api/response";
 import { IService } from "../interfaces/IService";
 import { PaginationParams } from "../interfaces/IRepository";
 import { AppError, BadRequestError } from "../errors/AppError";
+import {
+  DEFAULT_SORT_FIELDS,
+  resolveSortField,
+} from "../../utils/sortField";
 
 export abstract class BaseController<T, CreateInput, UpdateInput>
   implements IController
@@ -38,7 +42,10 @@ export abstract class BaseController<T, CreateInput, UpdateInput>
     next: NextFunction,
   ): Promise<void>;
 
-  protected parsePaginationParams(req: Request): PaginationParams {
+  protected parsePaginationParams(
+    req: Request,
+    allowedSortFields: readonly string[] = DEFAULT_SORT_FIELDS,
+  ): PaginationParams {
     const {
       page = "1",
       limit = "10",
@@ -46,11 +53,15 @@ export abstract class BaseController<T, CreateInput, UpdateInput>
       sortOrder = "desc",
     } = req.query;
 
+    const fallback = allowedSortFields.includes("createdAt")
+      ? "createdAt"
+      : allowedSortFields[0];
+
     return {
       page: parseInt(page as string, 10),
       limit: parseInt(limit as string, 10),
-      sortBy: sortBy as string,
-      sortOrder: sortOrder as "asc" | "desc",
+      sortBy: resolveSortField(sortBy as string | undefined, allowedSortFields, fallback),
+      sortOrder: sortOrder === "asc" ? "asc" : "desc",
     };
   }
 

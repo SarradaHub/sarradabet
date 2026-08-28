@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  BET_SORT_FIELDS,
+  CATEGORY_SORT_FIELDS,
+  DEFAULT_SORT_FIELDS,
+} from "../../utils/sortField";
+import {
   isValidBrazilianPhone,
   normalizeBrazilianPhone,
 } from "../../utils/phone";
@@ -25,7 +30,7 @@ export const PaginationSchema = z.object({
     .min(1, "Limit must be at least 1")
     .max(100, "Limit cannot exceed 100")
     .default(10),
-  sortBy: z.string().optional(),
+  sortBy: z.enum(DEFAULT_SORT_FIELDS).optional(),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -205,6 +210,7 @@ const BetStatusFilterSchema = z.enum([
 ]);
 
 export const BetQuerySchema = PaginationSchema.extend({
+  sortBy: z.enum(BET_SORT_FIELDS).optional(),
   status: z
     .string()
     .optional()
@@ -236,6 +242,7 @@ export const BetQuerySchema = PaginationSchema.extend({
 });
 
 export const CategoryQuerySchema = PaginationSchema.extend({
+  sortBy: z.enum(CATEGORY_SORT_FIELDS).optional(),
   search: z.string().optional(),
 });
 

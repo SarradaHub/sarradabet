@@ -8,6 +8,7 @@ import { CategoryService } from "../services/CategoryService";
 import {
   CreateCategoryInput,
   UpdateCategoryInput,
+  CategoryQueryInput,
 } from "../../../core/validation/ValidationSchemas";
 import { CategoryWithStats } from "../repositories/CategoryRepository";
 
@@ -26,7 +27,7 @@ export class CategoryController extends BaseController<
     next: NextFunction,
   ): Promise<void> {
     try {
-      const params = this.parsePaginationParams(req);
+      const params = req.query as unknown as CategoryQueryInput;
       const result = await this.categoryService.findAll(params);
 
       if (result.data.length === 0) {

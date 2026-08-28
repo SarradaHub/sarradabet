@@ -146,6 +146,25 @@ describe("BaseRepository", () => {
         hasPrev: false,
       });
     });
+
+    it("should ignore unsafe sort fields", async () => {
+      const mockData = [{ id: 1 }];
+      (mockPrisma as any).test.findMany.mockResolvedValueOnce(mockData);
+      (mockPrisma as any).test.count.mockResolvedValueOnce(1);
+
+      await repository.findManyWithPagination(
+        {
+          page: 1,
+          limit: 10,
+          sortBy: "__proto__",
+          sortOrder: "desc",
+        },
+        {} as any,
+      );
+
+      const callArgs = (mockPrisma as any).test.findMany.mock.calls[0][0];
+      expect(callArgs.orderBy).toEqual({ createdAt: "desc" });
+    });
   });
 
   describe("executeTransaction", () => {
