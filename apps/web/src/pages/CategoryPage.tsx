@@ -27,6 +27,7 @@ import {
   groupBetsByCategory,
   unwrapBetsResponse,
 } from "../utils/betGrouping";
+import { unwrapList } from "../utils/apiData";
 import { cn } from "../utils/cn";
 
 type StatusTab = "all" | BetStatus;
@@ -69,21 +70,10 @@ const CategoryPage: React.FC = () => {
     refetch: refetchCategories,
   } = useCategories(CATEGORIES_LIST_PARAMS);
 
-  const categories = useMemo((): Category[] => {
-    if (!categoriesResponse) return [];
-    if (Array.isArray(categoriesResponse)) {
-      return categoriesResponse as Category[];
-    }
-    if (
-      categoriesResponse &&
-      typeof categoriesResponse === "object" &&
-      "data" in categoriesResponse
-    ) {
-      const nestedData = (categoriesResponse as { data?: Category[] }).data;
-      return Array.isArray(nestedData) ? nestedData : [];
-    }
-    return [];
-  }, [categoriesResponse]);
+  const categories = useMemo(
+    () => unwrapList<Category>(categoriesResponse),
+    [categoriesResponse],
+  );
 
   const currentCategory = useMemo(
     () => categories.find((category) => category.id === categoryId),

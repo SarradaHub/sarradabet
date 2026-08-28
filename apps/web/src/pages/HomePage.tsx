@@ -19,6 +19,7 @@ import {
   groupBetsByCategory,
   unwrapBetsResponse,
 } from "../utils/betGrouping";
+import { unwrapList } from "../utils/apiData";
 
 const HomePage: React.FC = () => {
   const {
@@ -39,21 +40,10 @@ const HomePage: React.FC = () => {
 
   const bets = useMemo(() => unwrapBetsResponse(betsResponse), [betsResponse]);
 
-  const categories = useMemo((): Category[] => {
-    if (!categoriesResponse) return [];
-    if (Array.isArray(categoriesResponse)) {
-      return categoriesResponse as Category[];
-    }
-    if (
-      categoriesResponse &&
-      typeof categoriesResponse === "object" &&
-      "data" in categoriesResponse
-    ) {
-      const nestedData = (categoriesResponse as { data?: Category[] }).data;
-      return Array.isArray(nestedData) ? nestedData : [];
-    }
-    return [];
-  }, [categoriesResponse]);
+  const categories = useMemo(
+    () => unwrapList<Category>(categoriesResponse),
+    [categoriesResponse],
+  );
 
   const groupedBets = useMemo(
     () => groupBetsByCategory(bets, categories),
