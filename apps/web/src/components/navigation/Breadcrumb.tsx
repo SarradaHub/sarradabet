@@ -80,7 +80,7 @@ export function Breadcrumb() {
                 …
               </span>
             </li>
-            <li className="hidden sm:contents">
+            <span className="hidden sm:contents">
               {middle.map((item, index) => (
                 <span key={`${item.label}-${index}`} className="contents">
                   <BreadcrumbListItem
@@ -91,7 +91,7 @@ export function Breadcrumb() {
                   <Separator />
                 </span>
               ))}
-            </li>
+            </span>
             {showEllipsis && (
               <span className="sm:hidden">
                 <Separator />

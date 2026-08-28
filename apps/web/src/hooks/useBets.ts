@@ -5,28 +5,63 @@ import { CreateBetDto, UpdateBetDto } from "../types/bet";
 
 export const BETS_LIST_PARAMS = { limit: 100 } as const;
 
+export const HOME_BETS_PARAMS = {
+  status: "open,scheduled",
+  excludeExpired: "true" as const,
+  limit: 50,
+  sortBy: "closesAt",
+  sortOrder: "asc" as const,
+};
+
+export const RESOLUTION_QUEUE_PARAMS = {
+  queue: "resolution" as const,
+  limit: 50,
+  sortBy: "closesAt",
+  sortOrder: "asc" as const,
+};
+
 export function invalidateBetsQueries(): void {
   queryCache.clearByPrefix("bets-");
   queryCache.clearByPrefix("bet-");
 }
 
-export function useBets(params?: {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-  status?: string;
-  categoryId?: number;
-}) {
+export function useBets(
+  params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+    status?: string;
+    categoryId?: number;
+    search?: string;
+    excludeExpired?: boolean | "true" | "false";
+    queue?: "resolution";
+  },
+  options?: {
+    staleTime?: number;
+    refetchOnMount?: boolean;
+    refetchOnWindowFocus?: boolean;
+    enabled?: boolean;
+  },
+) {
   return useQuery(
     `bets-${JSON.stringify(params || {})}`,
     () => betService.getBetsWithPagination(params),
     {
-      staleTime: 2 * 60 * 1000, // 2 minutes - longer cache
-      refetchOnMount: false, // Don't refetch on mount if data exists
-      refetchOnWindowFocus: false, // Don't refetch on window focus
+      staleTime: options?.staleTime ?? 2 * 60 * 1000,
+      refetchOnMount: options?.refetchOnMount ?? false,
+      refetchOnWindowFocus: options?.refetchOnWindowFocus ?? false,
+      enabled: options?.enabled ?? true,
     },
   );
+}
+
+export function useAdminBets(params?: Parameters<typeof useBets>[0]) {
+  return useBets(params, {
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
 }
 
 export function useBet(id: number) {
@@ -77,6 +112,12 @@ export function useDeleteBet() {
 
 export function useCloseBet() {
   return useMutation((id: number) => betService.closeBet(id), {
+    onSuccess: () => invalidateBetsQueries(),
+  });
+}
+
+export function useCloseBetsBatch() {
+  return useMutation((ids: number[]) => betService.closeBetsBatch(ids), {
     onSuccess: () => invalidateBetsQueries(),
   });
 }

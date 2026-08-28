@@ -13,43 +13,52 @@ export async function runBetStatusTransitions(): Promise<{
 }> {
   const now = new Date();
 
-  const scheduledToOpen = await prisma.bet.updateMany({
+  const scheduledCandidates = await prisma.bet.findMany({
     where: {
       status: "scheduled",
       startTime: { lte: now },
     },
-    data: { status: "open" },
+    select: { id: true },
   });
 
-  const openToClosed = await prisma.bet.updateMany({
+  const openCandidates = await prisma.bet.findMany({
     where: {
       status: "open",
       closesAt: { lte: now },
     },
-    data: { status: "closed" },
+    select: { id: true },
   });
+
+  const scheduledToOpen =
+    scheduledCandidates.length > 0
+      ? await prisma.bet.updateMany({
+          where: {
+            id: { in: scheduledCandidates.map((bet) => bet.id) },
+          },
+          data: { status: "open" },
+        })
+      : { count: 0 };
+
+  const openToClosed =
+    openCandidates.length > 0
+      ? await prisma.bet.updateMany({
+          where: {
+            id: { in: openCandidates.map((bet) => bet.id) },
+          },
+          data: { status: "closed" },
+        })
+      : { count: 0 };
 
   if (scheduledToOpen.count > 0 || openToClosed.count > 0) {
     cacheService.invalidatePattern("bets:");
 
-    const updatedBets = await prisma.bet.findMany({
-      where: {
-        OR: [
-          {
-            status: "open",
-            startTime: { lte: now },
-          },
-          {
-            status: "closed",
-            closesAt: { lte: now },
-          },
-        ],
-      },
-      select: { id: true },
-    });
+    const updatedIds = [
+      ...scheduledCandidates.map((bet) => bet.id),
+      ...openCandidates.map((bet) => bet.id),
+    ];
 
-    for (const betRef of updatedBets) {
-      const bet = await betRepository.findUnique({ id: betRef.id });
+    for (const betId of updatedIds) {
+      const bet = await betRepository.findUnique({ id: betId });
       if (bet) {
         emitBetUpdated(toBetListItem(bet));
       }

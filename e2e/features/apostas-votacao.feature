@@ -31,4 +31,6 @@ Funcionalidade: Apostas e votação
   Cenário: Visitante não vota em aposta fechada
     Dado que existe uma aposta fechada de teste via API
     E que estou na página inicial
+    Então não devo ver o mercado da aposta fechada de teste
+    Quando navego para a categoria "Futebol" da aposta fechada de teste
     Então a odd "Opcao A" da aposta fechada deve estar desabilitada

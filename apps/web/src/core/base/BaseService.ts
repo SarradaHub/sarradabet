@@ -101,6 +101,7 @@ export abstract class BaseService<T, CreateInput, UpdateInput, CreateResult = T>
         const apiError: ApiError = {
           success: false,
           message: errorMessage,
+          statusCode: error.response?.status,
           errors: error.response?.data?.errors,
           url: requestUrl || error.response?.data?.url,
           method: requestMethod || error.response?.data?.method,

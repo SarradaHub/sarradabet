@@ -24,6 +24,21 @@ export class BetService extends BaseService<Bet, CreateBetDto, UpdateBetDto> {
     return response.data;
   }
 
+  async closeBetsBatch(ids: number[]): Promise<
+    ApiResponse<{
+      closed: Bet[];
+      skipped: { id: number; message: string }[];
+    }>
+  > {
+    const response = await this.api.post<
+      ApiResponse<{
+        closed: Bet[];
+        skipped: { id: number; message: string }[];
+      }>
+    >("/close-batch", { ids });
+    return response.data;
+  }
+
   async resolveBet(
     id: number,
     winningOddId: number,
@@ -42,6 +57,9 @@ export class BetService extends BaseService<Bet, CreateBetDto, UpdateBetDto> {
       sortOrder?: "asc" | "desc";
       status?: string;
       categoryId?: number;
+      search?: string;
+      excludeExpired?: boolean | "true" | "false";
+      queue?: "resolution";
     } = {},
   ): Promise<ApiResponse<Bet[]>> {
     const response = await this.getWithParams(params);

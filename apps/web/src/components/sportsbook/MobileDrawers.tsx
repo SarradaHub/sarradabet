@@ -7,16 +7,12 @@ import { useVoteSlip } from "../../context/VoteSlipContext";
 
 interface MobileDrawersProps {
   categories: Category[];
-  selectedCategory: number | null;
-  onSelectCategory: (id: number | null) => void;
   categoryCounts: Map<number | "all" | "uncategorized", number>;
   categoriesLoading?: boolean;
 }
 
 export function MobileCategoryDrawer({
   categories,
-  selectedCategory,
-  onSelectCategory,
   categoryCounts,
   categoriesLoading,
 }: MobileDrawersProps) {
@@ -45,13 +41,9 @@ export function MobileCategoryDrawer({
           <div className="relative w-[260px] max-w-[80vw] h-full sb-surface border-r sb-border overflow-y-auto animate-[slip-enter_0.2s_ease-out]">
             <CategorySidebar
               categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={(id) => {
-                onSelectCategory(id);
-                setOpen(false);
-              }}
               categoryCounts={categoryCounts}
               loading={categoriesLoading}
+              onNavigate={() => setOpen(false)}
             />
           </div>
         </div>

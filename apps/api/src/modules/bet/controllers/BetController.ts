@@ -4,6 +4,7 @@ import { BetService } from "../services/BetService";
 import {
   CreateBetInput,
   UpdateBetInput,
+  BetQueryInput,
 } from "../../../core/validation/ValidationSchemas";
 import { BetWithOdds } from "../repositories/BetRepository";
 import {
@@ -27,8 +28,8 @@ export class BetController extends BaseController<
     next: NextFunction,
   ): Promise<void> {
     try {
-      const params = this.parsePaginationParams(req);
-      const result = await this.betService.findAll(params);
+      const query = req.query as unknown as BetQueryInput;
+      const result = await this.betService.findAll(query);
       this.sendSuccess(
         res,
         { ...result, data: toBetListItems(result.data) },
@@ -157,6 +158,29 @@ export class BetController extends BaseController<
     }
   }
 
+  async closeBetsBatch(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { ids } = req.body as { ids: number[] };
+      const result = await this.betService.closeBetsBatch(ids);
+
+      this.sendSuccess(
+        res,
+        {
+          closed: toBetListItems(result.closed),
+          skipped: result.skipped,
+        },
+        200,
+        "Batch close completed",
+      );
+    } catch (error) {
+      this.handleError(error as Error, res, next);
+    }
+  }
+
   async resolveBet(
     req: Request,
     res: Response,
@@ -164,12 +188,7 @@ export class BetController extends BaseController<
   ): Promise<void> {
     try {
       const id = this.parseId(req);
-      const { winningOddId } = req.body;
-
-      if (!winningOddId || typeof winningOddId !== "number") {
-        this.sendError(res, "Winning odd ID is required", 400);
-        return;
-      }
+      const { winningOddId } = req.body as { winningOddId: number };
 
       const resolvedBet = await this.betService.resolveBet(id, winningOddId);
 

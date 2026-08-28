@@ -23,6 +23,7 @@ export interface ApiResponse<T> {
 export interface ApiError {
   success: false;
   message: string;
+  statusCode?: number;
   errors?: Array<{
     field?: string;
     message: string;

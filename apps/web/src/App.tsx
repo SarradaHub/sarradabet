@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router";
 import HomePage from "./pages/HomePage";
+import CategoryPage from "./pages/CategoryPage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -36,6 +37,9 @@ const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 const AdminPixPaymentsPage = lazy(
   () => import("./pages/AdminPixPaymentsPage"),
 );
+const AdminClosedBetsPage = lazy(
+  () => import("./pages/AdminClosedBetsPage"),
+);
 const AdminRewardsPage = lazy(() => import("./pages/AdminRewardsPage"));
 
 function App() {
@@ -49,6 +53,7 @@ function App() {
           <main>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/category/:id" element={<CategoryPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route
@@ -102,6 +107,14 @@ function App() {
                   element={
                     <Suspense fallback={<PageSkeleton />}>
                       <AdminDashboard />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="bets/closed"
+                  element={
+                    <Suspense fallback={<PageSkeleton />}>
+                      <AdminClosedBetsPage />
                     </Suspense>
                   }
                 />

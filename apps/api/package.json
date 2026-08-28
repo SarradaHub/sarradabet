@@ -22,6 +22,7 @@
     "prisma:check": "prisma migrate status",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:seed:simple": "npx tsx prisma/seed-simple.ts",
+    "db:seed:test-bets": "npx tsx scripts/add-test-bets.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed:simple",
     "mp:setup-store": "tsx scripts/setupMercadoPagoStore.ts",
     "webhook:configure": "tsx scripts/configureWebhookTunnel.ts",

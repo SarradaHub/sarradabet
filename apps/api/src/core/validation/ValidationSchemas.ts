@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  BET_SORT_FIELDS,
+  CATEGORY_SORT_FIELDS,
+  DEFAULT_SORT_FIELDS,
+} from "../../utils/sortField";
+import {
   isValidBrazilianPhone,
   normalizeBrazilianPhone,
 } from "../../utils/phone";
@@ -25,7 +30,7 @@ export const PaginationSchema = z.object({
     .min(1, "Limit must be at least 1")
     .max(100, "Limit cannot exceed 100")
     .default(10),
-  sortBy: z.string().optional(),
+  sortBy: z.enum(DEFAULT_SORT_FIELDS).optional(),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -197,17 +202,51 @@ export const ResolveBetSchema = z.object({
   winningOddId: IdSchema,
 });
 
+export const CloseBetsBatchSchema = z.object({
+  ids: z.array(IdSchema).min(1).max(100),
+});
+
+const BetStatusFilterSchema = z.enum([
+  "scheduled",
+  "open",
+  "closed",
+  "resolved",
+]);
+
 export const BetQuerySchema = PaginationSchema.extend({
-  status: z.enum(["scheduled", "open", "closed", "resolved"]).optional(),
+  sortBy: z.enum(BET_SORT_FIELDS).optional(),
+  status: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim() || undefined)
+    .refine(
+      (value) => {
+        if (!value) {
+          return true;
+        }
+        return value
+          .split(",")
+          .every((part) =>
+            BetStatusFilterSchema.safeParse(part.trim()).success,
+          );
+      },
+      "Invalid status filter",
+    ),
   categoryId: z.coerce
     .number()
     .int()
     .positive("Category ID must be a positive integer")
     .optional(),
   search: z.string().optional(),
+  excludeExpired: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => value === "true"),
+  queue: z.enum(["resolution"]).optional(),
 });
 
 export const CategoryQuerySchema = PaginationSchema.extend({
+  sortBy: z.enum(CATEGORY_SORT_FIELDS).optional(),
   search: z.string().optional(),
 });
 

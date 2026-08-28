@@ -330,9 +330,11 @@ Retrieve all bets with optional filtering and pagination.
 
 - `page` (number, optional): Page number (default: 1)
 - `limit` (number, optional): Items per page (default: 10, max: 100)
-- `status` (string, optional): Filter by status (`open`, `closed`, `resolved`)
+- `status` (string, optional): Filter by status. Supports comma-separated values (e.g. `open,scheduled`)
 - `categoryId` (number, optional): Filter by category ID
-- `search` (string, optional): Search in title and description
+- `search` (string, optional): Search in title and description (case-insensitive)
+- `excludeExpired` (boolean string, optional): When `true`, excludes `open` bets whose `closesAt` is in the past (useful for home feed)
+- `queue` (string, optional): `resolution` returns bets awaiting admin resolution (`closed` or expired `open`)
 - `sortBy` (string, optional): Sort field (default: `createdAt`)
 - `sortOrder` (string, optional): Sort order (`asc` or `desc`, default: `desc`)
 

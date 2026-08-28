@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import {
+  PrismaClientInitializationError,
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
 } from "@prisma/client/runtime/library";
@@ -64,6 +65,10 @@ export const errorHandler = (
       message: err.message,
       code: err.code,
     }));
+  } else if (error instanceof PrismaClientInitializationError) {
+    statusCode = 503;
+    message = "Banco de dados indisponível. Tente novamente em instantes.";
+    errors = [{ message: error.message }];
   } else if (error instanceof PrismaClientKnownRequestError) {
     const prismaError = handlePrismaError(error);
     statusCode = prismaError.statusCode;
@@ -127,7 +132,17 @@ export const errorHandler = (
   }
 };
 
+const PRISMA_CONNECTION_ERROR_CODES = new Set(["P1001", "P1008", "P1017"]);
+
 const handlePrismaError = (error: PrismaClientKnownRequestError) => {
+  if (PRISMA_CONNECTION_ERROR_CODES.has(error.code)) {
+    return {
+      statusCode: 503,
+      message: "Banco de dados indisponível. Tente novamente em instantes.",
+      errors: [{ message: error.message }],
+    };
+  }
+
   switch (error.code) {
     case "P2002":
       return {

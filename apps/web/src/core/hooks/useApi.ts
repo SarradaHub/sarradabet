@@ -77,6 +77,7 @@ export function useApi<T>(
           GENERIC_API_ERROR_MESSAGE,
         );
         const e = error as ApiError & {
+          statusCode?: number;
           errors?: ApiError["errors"];
           url?: string;
           method?: string;
@@ -85,6 +86,7 @@ export function useApi<T>(
         const apiError: ApiError = {
           success: false,
           message,
+          statusCode: e?.statusCode,
           errors: e?.errors,
           url: e?.url,
           method: e?.method,

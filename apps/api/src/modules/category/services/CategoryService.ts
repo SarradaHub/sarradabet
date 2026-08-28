@@ -13,6 +13,10 @@ import {
 } from "../../../core/interfaces/IRepository";
 import { NotFoundError, ConflictError } from "../../../core/errors/AppError";
 import { cacheService } from "../../../core/cache/CacheService";
+import {
+  CATEGORY_SORT_FIELDS,
+  resolveSortField,
+} from "../../../utils/sortField";
 
 export class CategoryService extends BaseService<
   CategoryWithStats,
@@ -26,11 +30,15 @@ export class CategoryService extends BaseService<
   async findAll(
     params?: PaginationParams,
   ): Promise<PaginatedResult<CategoryWithStats>> {
-    const resolvedParams = params || {
-      page: 1,
-      limit: 10,
-      sortBy: "createdAt",
-      sortOrder: "desc" as const,
+    const resolvedParams: PaginationParams = {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 10,
+      sortBy: resolveSortField(params?.sortBy, CATEGORY_SORT_FIELDS, "createdAt"),
+      sortOrder: params?.sortOrder ?? "desc",
+    };
+
+    const repositoryParams = {
+      allowedSortFields: CATEGORY_SORT_FIELDS,
     };
 
     if (process.env.NODE_ENV !== "test") {
@@ -41,13 +49,18 @@ export class CategoryService extends BaseService<
         return cached;
       }
 
-      const result =
-        await this.categoryRepository.findManyWithPagination(resolvedParams);
+      const result = await this.categoryRepository.findManyWithPagination(
+        resolvedParams,
+        repositoryParams,
+      );
       cacheService.set(cacheKey, result, 300);
       return result;
     }
 
-    return this.categoryRepository.findManyWithPagination(resolvedParams);
+    return this.categoryRepository.findManyWithPagination(
+      resolvedParams,
+      repositoryParams,
+    );
   }
 
   async findById(id: number): Promise<CategoryWithStats> {

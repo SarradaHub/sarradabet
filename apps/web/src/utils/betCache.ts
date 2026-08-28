@@ -2,11 +2,81 @@ import type { BetListItem, VoteCreatedPayload } from "@sarradabet/types";
 import { queryCache } from "../core/hooks/useQueryCache";
 import { mergeOddFromVoteUpdate } from "./odds";
 import { Bet } from "../types/bet";
+import { getDisplayBetStatus, isBetInResolutionQueue } from "./betSchedule";
 
 type PaginatedBetsResponse = {
   data?: Bet[];
   meta?: unknown;
 };
+
+type BetsQueryParams = {
+  status?: string;
+  excludeExpired?: boolean;
+  queue?: string;
+};
+
+function parseBetsCacheKey(key: string): BetsQueryParams {
+  if (!key.startsWith("bets-")) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(key.slice("bets-".length)) as BetsQueryParams;
+  } catch {
+    return {};
+  }
+}
+
+function shouldIncludeBetInCache(bet: Bet, params: BetsQueryParams): boolean {
+  if (params.queue === "resolution") {
+    return isBetInResolutionQueue(bet);
+  }
+
+  if (params.status) {
+    const allowed = params.status.split(",").map((value) => value.trim());
+    const displayStatus = getDisplayBetStatus(bet);
+    if (!allowed.includes(displayStatus) && !allowed.includes(bet.status)) {
+      return false;
+    }
+  }
+
+  if (params.excludeExpired) {
+    const displayStatus = getDisplayBetStatus(bet);
+    if (displayStatus === "closed" || displayStatus === "resolved") {
+      return false;
+    }
+  }
+
+  if (params.status === "closed" && bet.status === "resolved") {
+    return false;
+  }
+
+  return true;
+}
+
+function applyBetUpsertToList(
+  bets: Bet[],
+  bet: Bet,
+  params: BetsQueryParams,
+): Bet[] {
+  const existingIndex = bets.findIndex((item) => item.id === bet.id);
+  const include = shouldIncludeBetInCache(bet, params);
+
+  if (!include) {
+    if (existingIndex >= 0) {
+      return bets.filter((item) => item.id !== bet.id);
+    }
+    return bets;
+  }
+
+  if (existingIndex >= 0) {
+    const next = [...bets];
+    next[existingIndex] = { ...next[existingIndex], ...bet };
+    return next;
+  }
+
+  return [bet, ...bets];
+}
 
 export function patchBetsCache(
   updater: (bets: Bet[]) => Bet[] | null,
@@ -101,16 +171,22 @@ export function patchBetsFromVote(payload: VoteCreatedPayload): void {
 }
 
 export function patchBetsFromBetUpsert(payload: BetListItem): void {
-  patchBetsCache((bets) => {
-    const existingIndex = bets.findIndex((bet) => bet.id === payload.id);
-    const bet = payload as Bet;
+  const bet = payload as Bet;
 
-    if (existingIndex >= 0) {
-      const next = [...bets];
-      next[existingIndex] = { ...next[existingIndex], ...bet };
-      return next;
+  queryCache.updateByPrefix<PaginatedBetsResponse | Bet[]>("bets-", (key, data) => {
+    const params = parseBetsCacheKey(key);
+
+    if (Array.isArray(data)) {
+      return applyBetUpsertToList(data, bet, params);
     }
 
-    return [bet, ...bets];
+    if (data && typeof data === "object" && "data" in data && Array.isArray(data.data)) {
+      return {
+        ...data,
+        data: applyBetUpsertToList(data.data, bet, params),
+      };
+    }
+
+    return data;
   });
 }

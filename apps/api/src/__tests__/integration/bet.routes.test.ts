@@ -150,6 +150,81 @@ describe("Bet Routes Integration Tests", () => {
 
         expect(response.body.success).toBe(true);
         expect(response.body.data).toBeInstanceOf(Array);
+        for (const bet of response.body.data) {
+          expect(bet.status).toBe("open");
+        }
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should filter bets by comma-separated statuses",
+      async () => {
+        const response = await request(app)
+          .get("/api/v1/bets")
+          .query({ status: "open,scheduled" })
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        for (const bet of response.body.data) {
+          expect(["open", "scheduled"]).toContain(bet.status);
+        }
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should exclude expired open bets when excludeExpired=true",
+      async () => {
+        const past = new Date(Date.now() - 60 * 60_000).toISOString();
+        const createResponse = await request(app)
+          .post("/api/v1/bets")
+          .set(authHeader(userAccessToken))
+          .send({
+            title: "Expired Open Filter Test",
+            categoryId: testCategoryId,
+            closesAt: past,
+            odds: [{ title: "A" }, { title: "B" }],
+          })
+          .expect(201);
+
+        const expiredBetId = createResponse.body.data.bet.id;
+
+        const response = await request(app)
+          .get("/api/v1/bets")
+          .query({ status: "open", excludeExpired: "true" })
+          .expect(200);
+
+        const ids = response.body.data.map((bet: { id: number }) => bet.id);
+        expect(ids).not.toContain(expiredBetId);
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should return resolution queue bets",
+      async () => {
+        const past = new Date(Date.now() - 60 * 60_000).toISOString();
+        const createResponse = await request(app)
+          .post("/api/v1/bets")
+          .set(authHeader(userAccessToken))
+          .send({
+            title: "Resolution Queue Test",
+            categoryId: testCategoryId,
+            closesAt: past,
+            odds: [{ title: "A" }, { title: "B" }],
+          })
+          .expect(201);
+
+        const queuedBetId = createResponse.body.data.bet.id;
+
+        const response = await request(app)
+          .get("/api/v1/bets")
+          .query({ queue: "resolution" })
+          .expect(200);
+
+        const ids = response.body.data.map((bet: { id: number }) => bet.id);
+        expect(ids).toContain(queuedBetId);
       },
     );
 
@@ -577,6 +652,43 @@ describe("Bet Routes Integration Tests", () => {
 
     testIfDbAvailable(
       () => isDatabaseAvailable,
+      "should resolve an expired open bet by auto-closing first",
+      async () => {
+        const past = new Date(Date.now() - 60 * 60_000);
+        const bet = await prisma!.bet.create({
+          data: {
+            title: "Expired Open Resolve Bet",
+            categoryId: testCategoryId,
+            status: "open",
+            closesAt: past,
+            odds: {
+              create: [
+                { title: "Winner", value: 2.0 },
+                { title: "Loser", value: 3.0 },
+              ],
+            },
+          },
+          include: { odds: true },
+        });
+
+        const response = await request(app)
+          .patch(`/api/v1/bets/${bet.id}/resolve`)
+          .set(authHeader(adminAccessToken))
+          .send({ winningOddId: bet.odds[0].id })
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.bet.status).toBe("resolved");
+
+        const updatedBet = await prisma!.bet.findUnique({
+          where: { id: bet.id },
+        });
+        expect(updatedBet?.status).toBe("resolved");
+      },
+    );
+
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
       "should return 409 when trying to resolve an already resolved bet",
       async () => {
         const bet = await prisma!.bet.create({
@@ -849,6 +961,50 @@ describe("Bet Routes Integration Tests", () => {
 
         expect(votesOnA).toBe(2);
         expect(votesOnB).toBe(1);
+      },
+    );
+  });
+
+  describe("POST /api/v1/bets/close-batch", () => {
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should close multiple open bets",
+      async () => {
+        const betA = await prisma!.bet.create({
+          data: {
+            title: "Batch Close A",
+            categoryId: testCategoryId,
+            status: "open",
+            odds: {
+              create: [{ title: "Option 1", value: 2.0 }],
+            },
+          },
+        });
+
+        const betB = await prisma!.bet.create({
+          data: {
+            title: "Batch Close B",
+            categoryId: testCategoryId,
+            status: "open",
+            odds: {
+              create: [{ title: "Option 1", value: 2.0 }],
+            },
+          },
+        });
+
+        const response = await request(app)
+          .post("/api/v1/bets/close-batch")
+          .set(authHeader(adminAccessToken))
+          .send({ ids: [betA.id, betB.id] })
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.closed).toHaveLength(2);
+
+        const closedA = await prisma!.bet.findUnique({ where: { id: betA.id } });
+        const closedB = await prisma!.bet.findUnique({ where: { id: betB.id } });
+        expect(closedA?.status).toBe("closed");
+        expect(closedB?.status).toBe("closed");
       },
     );
   });
