@@ -24,6 +24,21 @@ export class BetService extends BaseService<Bet, CreateBetDto, UpdateBetDto> {
     return response.data;
   }
 
+  async closeBetsBatch(ids: number[]): Promise<
+    ApiResponse<{
+      closed: Bet[];
+      skipped: { id: number; message: string }[];
+    }>
+  > {
+    const response = await this.api.post<
+      ApiResponse<{
+        closed: Bet[];
+        skipped: { id: number; message: string }[];
+      }>
+    >("/close-batch", { ids });
+    return response.data;
+  }
+
   async resolveBet(
     id: number,
     winningOddId: number,

@@ -234,6 +234,29 @@ export class BetService extends BaseService<
     return this.update(id, { status: "closed" });
   }
 
+  async closeBetsBatch(ids: number[]): Promise<{
+    closed: BetWithOdds[];
+    skipped: { id: number; message: string }[];
+  }> {
+    const uniqueIds = [...new Set(ids)];
+    const closed: BetWithOdds[] = [];
+    const skipped: { id: number; message: string }[] = [];
+
+    for (const id of uniqueIds) {
+      try {
+        closed.push(await this.closeBet(id));
+      } catch (error) {
+        skipped.push({
+          id,
+          message:
+            error instanceof Error ? error.message : "Failed to close bet",
+        });
+      }
+    }
+
+    return { closed, skipped };
+  }
+
   async resolveBet(id: number, winningOddId: number): Promise<BetWithOdds> {
     this.validateId(id);
     this.validateId(winningOddId);

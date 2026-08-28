@@ -116,6 +116,12 @@ export function useCloseBet() {
   });
 }
 
+export function useCloseBetsBatch() {
+  return useMutation((ids: number[]) => betService.closeBetsBatch(ids), {
+    onSuccess: () => invalidateBetsQueries(),
+  });
+}
+
 export function useResolveBet() {
   return useMutation(
     ({ id, winningOddId }: { id: number; winningOddId: number }) =>

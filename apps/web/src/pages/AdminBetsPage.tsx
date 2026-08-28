@@ -26,22 +26,28 @@ import {
   useCategories,
   useDeleteBet,
   useCloseBet,
+  useCloseBetsBatch,
   BETS_LIST_PARAMS,
   CATEGORIES_LIST_PARAMS,
 } from "../hooks";
-import { useBetResolutionQueue } from "../hooks/useBetResolutionQueue";
+import { useBetAdminBatch } from "../hooks/useBetAdminBatch";
 import { Bet, BetStatus } from "../types/bet";
 import { Category } from "../types/category";
 import { unwrapList } from "../utils/apiData";
 import { formatScheduleDate } from "../utils/formatSchedule";
 import { sportsbookFieldClass } from "../components/ui/SportsbookModal";
-import { getDisplayBetStatus } from "../utils/betSchedule";
+import {
+  getDisplayBetStatus,
+  isBetClosable,
+  isBetInResolutionQueue,
+} from "../utils/betSchedule";
 
 const AdminBetsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingBet, setEditingBet] = useState<Bet | null>(null);
   const [deletingBet, setDeletingBet] = useState<Bet | null>(null);
   const [closingBet, setClosingBet] = useState<Bet | null>(null);
+  const [showBatchCloseConfirm, setShowBatchCloseConfirm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<BetStatus | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<number | "all">("all");
 
@@ -55,14 +61,13 @@ const AdminBetsPage: React.FC = () => {
 
   const deleteBetMutation = useDeleteBet();
   const closeBetMutation = useCloseBet();
+  const closeBetsBatchMutation = useCloseBetsBatch();
 
   const bets = useMemo(() => unwrapList<Bet>(betsResponse), [betsResponse]);
   const categories = useMemo(
     () => unwrapList<Category>(categoriesResponse),
     [categoriesResponse],
   );
-
-  const resolutionQueue = useBetResolutionQueue(bets);
 
   const filteredBets = useMemo(() => {
     return bets.filter((bet) => {
@@ -76,6 +81,8 @@ const AdminBetsPage: React.FC = () => {
       return true;
     });
   }, [bets, statusFilter, categoryFilter]);
+
+  const batch = useBetAdminBatch(bets, filteredBets);
 
   const handleDelete = async () => {
     if (!deletingBet) return;
@@ -93,6 +100,37 @@ const AdminBetsPage: React.FC = () => {
       setClosingBet(null);
       void refetch();
     }
+  };
+
+  const handleBatchClose = async () => {
+    const ids = batch.selectedClosableIds;
+    if (ids.length === 0) {
+      return;
+    }
+
+    const result = await closeBetsBatchMutation.mutateAsync(ids);
+    if (result === null) {
+      return;
+    }
+
+    const closedCount = result.closed?.length ?? 0;
+    const skippedCount = result.skipped?.length ?? 0;
+
+    setShowBatchCloseConfirm(false);
+    batch.clearSelection();
+
+    if (closedCount > 0) {
+      batch.setSuccessMessage(
+        skippedCount > 0
+          ? `${closedCount} aposta(s) fechada(s). ${skippedCount} não pôde(m) ser fechada(s).`
+          : `${closedCount} aposta(s) fechada(s) com sucesso.`,
+      );
+    } else if (skippedCount > 0) {
+      batch.clearSelectionError();
+      batch.setSuccessMessage(null);
+    }
+
+    void refetch();
   };
 
   if (loading) {
@@ -129,16 +167,16 @@ const AdminBetsPage: React.FC = () => {
         }}
       />
       <ResolveBetModal
-        isOpen={resolutionQueue.isQueueActive}
-        onClose={() => resolutionQueue.cancelQueue()}
-        bet={resolutionQueue.currentBet}
+        isOpen={batch.isQueueActive}
+        onClose={() => batch.cancelQueue()}
+        bet={batch.currentBet}
         progressLabel={
-          resolutionQueue.queueTotal > 1
-            ? `Resolvendo ${resolutionQueue.queuePosition} de ${resolutionQueue.queueTotal} — ${resolutionQueue.currentBet?.title ?? ""}`
+          batch.queueTotal > 1
+            ? `Resolvendo ${batch.queuePosition} de ${batch.queueTotal} — ${batch.currentBet?.title ?? ""}`
             : undefined
         }
         onBetResolved={() => {
-          resolutionQueue.advanceQueue();
+          batch.advanceQueue();
           void refetch();
         }}
       />
@@ -163,6 +201,17 @@ const AdminBetsPage: React.FC = () => {
         loading={closeBetMutation.loading}
         error={closeBetMutation.error}
       />
+      <ConfirmDialog
+        isOpen={showBatchCloseConfirm}
+        onClose={() => setShowBatchCloseConfirm(false)}
+        onConfirm={handleBatchClose}
+        title="Fechar apostas selecionadas"
+        description={`Fechar ${batch.selectedCloseCount} aposta(s) aberta(s)? Elas deixarão de aceitar votos.`}
+        confirmLabel="Fechar selecionadas"
+        variant="primary"
+        loading={closeBetsBatchMutation.loading}
+        error={closeBetsBatchMutation.error}
+      />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -181,11 +230,21 @@ const AdminBetsPage: React.FC = () => {
             Fila de resolução
           </Link>
           <Button
-            onClick={() => resolutionQueue.startSelectedQueue()}
-            disabled={resolutionQueue.selectedCount === 0}
+            type="button"
+            onClick={() => setShowBatchCloseConfirm(true)}
+            disabled={batch.selectedCloseCount === 0}
             variant="secondary"
           >
-            Resolver selecionadas ({resolutionQueue.selectedCount})
+            <Lock className="w-4 h-4 mr-2 inline" />
+            Fechar selecionadas ({batch.selectedCloseCount})
+          </Button>
+          <Button
+            type="button"
+            onClick={() => batch.startSelectedResolveQueue()}
+            disabled={batch.selectedResolveCount === 0}
+            variant="secondary"
+          >
+            Resolver selecionadas ({batch.selectedResolveCount})
           </Button>
           <Button
             onClick={() => setShowCreateModal(true)}
@@ -197,9 +256,21 @@ const AdminBetsPage: React.FC = () => {
         </div>
       </div>
 
-      {resolutionQueue.successMessage && (
+      <p className="text-sm text-sportsbook-muted">
+        Apostas abertas passam para Fechada automaticamente quando o
+        encerramento vence (job em background a cada 60s). Use Fechar
+        selecionadas para encerrar manualmente antes do prazo.
+      </p>
+
+      {batch.selectionError && (
+        <Alert variant="warning" title="Seleção inválida">
+          {batch.selectionError}
+        </Alert>
+      )}
+
+      {batch.successMessage && (
         <Alert variant="success" title="Sucesso">
-          {resolutionQueue.successMessage}
+          {batch.successMessage}
         </Alert>
       )}
 
@@ -247,9 +318,10 @@ const AdminBetsPage: React.FC = () => {
               <TableHead className="w-10">
                 <input
                   type="checkbox"
-                  aria-label="Selecionar apostas fechadas"
-                  checked={resolutionQueue.allEligibleSelected}
-                  onChange={() => resolutionQueue.toggleSelectAll()}
+                  aria-label="Selecionar apostas visíveis"
+                  checked={batch.allSelectableSelected}
+                  disabled={batch.selectableBets.length === 0}
+                  onChange={() => batch.toggleSelectAll()}
                 />
               </TableHead>
               <TableHead className="text-sportsbook-muted">Título</TableHead>
@@ -276,9 +348,9 @@ const AdminBetsPage: React.FC = () => {
               </TableRow>
             ) : (
               filteredBets.map((bet) => {
-                const displayStatus = getDisplayBetStatus(bet);
-                const canResolve = displayStatus === "closed";
-                const canClose = displayStatus === "open";
+                const canResolve = isBetInResolutionQueue(bet);
+                const canClose = isBetClosable(bet);
+                const canSelect = batch.canSelect(bet.id);
 
                 return (
                   <TableRow
@@ -287,12 +359,13 @@ const AdminBetsPage: React.FC = () => {
                     className="hover:[&_td]:text-neutral-900 hover:[&_td.text-sportsbook-odds]:text-green-700"
                   >
                     <TableCell>
-                      {canResolve ? (
+                      {canSelect ? (
                         <input
                           type="checkbox"
                           aria-label={`Selecionar ${bet.title}`}
-                          checked={resolutionQueue.isSelected(bet.id)}
-                          onChange={() => resolutionQueue.toggleSelection(bet.id)}
+                          checked={batch.isSelected(bet.id)}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={() => batch.toggleSelection(bet.id)}
                         />
                       ) : null}
                     </TableCell>
@@ -342,7 +415,7 @@ const AdminBetsPage: React.FC = () => {
                         {canResolve && (
                           <button
                             type="button"
-                            onClick={() => resolutionQueue.startQueue([bet.id])}
+                            onClick={() => batch.startResolveQueue([bet.id])}
                             className="p-1.5 rounded text-sportsbook-muted hover:text-sportsbook-odds hover:bg-sportsbook-raised transition-colors"
                             aria-label={`Resolver ${bet.title}`}
                           >

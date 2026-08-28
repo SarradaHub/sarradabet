@@ -69,3 +69,15 @@ export function isBetInResolutionQueue(
   const displayStatus = getDisplayBetStatus(bet, now);
   return displayStatus === "closed";
 }
+
+/** Open bets still accepting wagers — eligible for manual batch close. */
+export function isBetClosable(bet: BetSchedule, now = Date.now()): boolean {
+  return bet.status === "open" && getDisplayBetStatus(bet, now) === "open";
+}
+
+export function isBetSelectableForAdminBatch(
+  bet: BetSchedule,
+  now = Date.now(),
+): boolean {
+  return isBetClosable(bet, now) || isBetInResolutionQueue(bet, now);
+}

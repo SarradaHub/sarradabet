@@ -15,6 +15,7 @@ import {
   UpdateBetSchema,
   BetQuerySchema,
   ResolveBetSchema,
+  CloseBetsBatchSchema,
 } from "../core/validation/ValidationSchemas";
 import {
   ParamIdSchema,
@@ -50,6 +51,14 @@ router.post(
   authenticateUser,
   validateBody(CreateBetSchema),
   betController.create.bind(betController),
+);
+
+router.post(
+  "/close-batch",
+  authenticateUser,
+  requireUserRole(UserRole.ADMIN),
+  validateBody(CloseBetsBatchSchema),
+  betController.closeBetsBatch.bind(betController),
 );
 
 router.put(

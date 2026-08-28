@@ -208,6 +208,38 @@ describe("BetService", () => {
     });
   });
 
+  describe("closeBetsBatch", () => {
+    it("closes eligible bets and skips failures", async () => {
+      const openBet: any = betWithOddsFactory.build({
+        id: 1,
+        status: BetStatus.open,
+      });
+      const closedBet: any = betWithOddsFactory.build({
+        id: 2,
+        status: BetStatus.closed,
+      });
+      const closedResult: any = { ...openBet, status: BetStatus.closed };
+
+      mockRepository.findUnique.mockImplementation(({ id }: { id: number }) => {
+        if (id === 1) {
+          return Promise.resolve(openBet as any);
+        }
+        if (id === 2) {
+          return Promise.resolve(closedBet as any);
+        }
+        return Promise.resolve(null);
+      });
+      mockRepository.update.mockResolvedValue(closedResult as any);
+
+      const result = await betService.closeBetsBatch([1, 2]);
+
+      expect(result.closed).toHaveLength(1);
+      expect(result.skipped).toEqual([
+        { id: 2, message: "Only open bets can be closed" },
+      ]);
+    });
+  });
+
   describe("resolveBet", () => {
     it("should resolve bet successfully", async () => {
       const mockBet: any = betWithOddsFactory.build({

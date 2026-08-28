@@ -158,6 +158,29 @@ export class BetController extends BaseController<
     }
   }
 
+  async closeBetsBatch(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { ids } = req.body as { ids: number[] };
+      const result = await this.betService.closeBetsBatch(ids);
+
+      this.sendSuccess(
+        res,
+        {
+          closed: toBetListItems(result.closed),
+          skipped: result.skipped,
+        },
+        200,
+        "Batch close completed",
+      );
+    } catch (error) {
+      this.handleError(error as Error, res, next);
+    }
+  }
+
   async resolveBet(
     req: Request,
     res: Response,

@@ -965,6 +965,50 @@ describe("Bet Routes Integration Tests", () => {
     );
   });
 
+  describe("POST /api/v1/bets/close-batch", () => {
+    testIfDbAvailable(
+      () => isDatabaseAvailable,
+      "should close multiple open bets",
+      async () => {
+        const betA = await prisma!.bet.create({
+          data: {
+            title: "Batch Close A",
+            categoryId: testCategoryId,
+            status: "open",
+            odds: {
+              create: [{ title: "Option 1", value: 2.0 }],
+            },
+          },
+        });
+
+        const betB = await prisma!.bet.create({
+          data: {
+            title: "Batch Close B",
+            categoryId: testCategoryId,
+            status: "open",
+            odds: {
+              create: [{ title: "Option 1", value: 2.0 }],
+            },
+          },
+        });
+
+        const response = await request(app)
+          .post("/api/v1/bets/close-batch")
+          .set(authHeader(adminAccessToken))
+          .send({ ids: [betA.id, betB.id] })
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.closed).toHaveLength(2);
+
+        const closedA = await prisma!.bet.findUnique({ where: { id: betA.id } });
+        const closedB = await prisma!.bet.findUnique({ where: { id: betB.id } });
+        expect(closedA?.status).toBe("closed");
+        expect(closedB?.status).toBe("closed");
+      },
+    );
+  });
+
   describe("POST /api/v1/jobs/bet-status/run", () => {
     testIfDbAvailable(
       () => isDatabaseAvailable,

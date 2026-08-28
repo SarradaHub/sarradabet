@@ -87,6 +87,7 @@ const AdminClosedBetsPage: React.FC = () => {
             Ver todas as apostas
           </Link>
           <Button
+            type="button"
             onClick={() => queue.startSelectedQueue()}
             disabled={queue.selectedCount === 0}
             className="sb-brand-gradient text-black font-display font-semibold"
@@ -95,6 +96,12 @@ const AdminClosedBetsPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {queue.selectionError && (
+        <Alert variant="warning" title="Seleção inválida">
+          {queue.selectionError}
+        </Alert>
+      )}
 
       {queue.successMessage && (
         <Alert variant="success" title="Sucesso">
@@ -111,6 +118,7 @@ const AdminClosedBetsPage: React.FC = () => {
                   type="checkbox"
                   aria-label="Selecionar todas as apostas fechadas"
                   checked={queue.allEligibleSelected}
+                  disabled={queue.eligibleBets.length === 0}
                   onChange={() => queue.toggleSelectAll()}
                 />
               </TableHead>
@@ -136,13 +144,18 @@ const AdminClosedBetsPage: React.FC = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              bets.map((bet) => (
+              bets.map((bet) => {
+                const canSelect = queue.canSelect(bet.id);
+
+                return (
                 <TableRow key={bet.id} hoverable>
                   <TableCell>
                     <input
                       type="checkbox"
                       aria-label={`Selecionar ${bet.title}`}
-                      checked={queue.isSelected(bet.id)}
+                      checked={canSelect && queue.isSelected(bet.id)}
+                      disabled={!canSelect}
+                      onClick={(event) => event.stopPropagation()}
                       onChange={() => queue.toggleSelection(bet.id)}
                     />
                   </TableCell>
@@ -179,7 +192,8 @@ const AdminClosedBetsPage: React.FC = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

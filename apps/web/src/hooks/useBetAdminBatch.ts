@@ -1,8 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { Bet } from "../types/bet";
-import { getDisplayBetStatus, isBetInResolutionQueue } from "../utils/betSchedule";
+import {
+  getDisplayBetStatus,
+  isBetClosable,
+  isBetInResolutionQueue,
+  isBetSelectableForAdminBatch,
+} from "../utils/betSchedule";
 
-export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
+export function useBetAdminBatch(bets: Bet[], visibleBets?: Bet[]) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [queue, setQueue] = useState<Bet[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
@@ -11,19 +16,44 @@ export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
 
   const scopeBets = visibleBets ?? bets;
 
-  const eligibleBets = useMemo(
+  const closableBets = useMemo(
+    () => scopeBets.filter((bet) => isBetClosable(bet)),
+    [scopeBets],
+  );
+
+  const resolvableBets = useMemo(
     () => scopeBets.filter((bet) => isBetInResolutionQueue(bet)),
     [scopeBets],
   );
 
-  const eligibleIds = useMemo(
-    () => new Set(eligibleBets.map((bet) => bet.id)),
-    [eligibleBets],
+  const selectableBets = useMemo(
+    () => scopeBets.filter((bet) => isBetSelectableForAdminBatch(bet)),
+    [scopeBets],
   );
 
-  const selectedEligibleIds = useMemo(
-    () => selectedIds.filter((id) => eligibleIds.has(id)),
-    [selectedIds, eligibleIds],
+  const closableIds = useMemo(
+    () => new Set(closableBets.map((bet) => bet.id)),
+    [closableBets],
+  );
+
+  const resolvableIds = useMemo(
+    () => new Set(resolvableBets.map((bet) => bet.id)),
+    [resolvableBets],
+  );
+
+  const selectableIds = useMemo(
+    () => new Set(selectableBets.map((bet) => bet.id)),
+    [selectableBets],
+  );
+
+  const selectedClosableIds = useMemo(
+    () => selectedIds.filter((id) => closableIds.has(id)),
+    [selectedIds, closableIds],
+  );
+
+  const selectedResolvableIds = useMemo(
+    () => selectedIds.filter((id) => resolvableIds.has(id)),
+    [selectedIds, resolvableIds],
   );
 
   const currentBet = queue[queueIndex] ?? null;
@@ -31,7 +61,7 @@ export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
 
   const toggleSelection = useCallback(
     (betId: number) => {
-      if (!eligibleIds.has(betId)) {
+      if (!selectableIds.has(betId)) {
         return;
       }
 
@@ -42,29 +72,32 @@ export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
           : [...current, betId],
       );
     },
-    [eligibleIds],
+    [selectableIds],
   );
 
   const toggleSelectAll = useCallback(() => {
     setSelectionError(null);
     setSelectedIds((current) => {
-      const visibleEligibleIds = eligibleBets.map((bet) => bet.id);
+      const visibleSelectableIds = selectableBets.map((bet) => bet.id);
       const allVisibleSelected =
-        visibleEligibleIds.length > 0 &&
-        visibleEligibleIds.every((id) => current.includes(id));
+        visibleSelectableIds.length > 0 &&
+        visibleSelectableIds.every((id) => current.includes(id));
 
       if (allVisibleSelected) {
-        return current.filter((id) => !visibleEligibleIds.includes(id));
+        return current.filter((id) => !visibleSelectableIds.includes(id));
       }
 
-      const merged = new Set([...current, ...visibleEligibleIds]);
-      return [...merged];
+      return [...new Set([...current, ...visibleSelectableIds])];
     });
-  }, [eligibleBets]);
+  }, [selectableBets]);
 
-  const startQueue = useCallback(
+  const clearSelection = useCallback(() => {
+    setSelectedIds([]);
+  }, []);
+
+  const startResolveQueue = useCallback(
     (betIds: number[]) => {
-      const eligibleBetIds = betIds.filter((id) => eligibleIds.has(id));
+      const eligibleBetIds = betIds.filter((id) => resolvableIds.has(id));
       const ordered = bets.filter((bet) => eligibleBetIds.includes(bet.id));
 
       if (ordered.length === 0) {
@@ -79,12 +112,12 @@ export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
       setQueueIndex(0);
       setSuccessMessage(null);
     },
-    [bets, eligibleIds],
+    [bets, resolvableIds],
   );
 
-  const startSelectedQueue = useCallback(() => {
-    startQueue(selectedEligibleIds);
-  }, [selectedEligibleIds, startQueue]);
+  const startSelectedResolveQueue = useCallback(() => {
+    startResolveQueue(selectedResolvableIds);
+  }, [selectedResolvableIds, startResolveQueue]);
 
   const advanceQueue = useCallback(() => {
     setQueueIndex((current) => {
@@ -112,26 +145,30 @@ export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
   );
 
   const canSelect = useCallback(
-    (betId: number) => eligibleIds.has(betId),
-    [eligibleIds],
+    (betId: number) => selectableIds.has(betId),
+    [selectableIds],
   );
 
-  const allEligibleSelected =
-    eligibleBets.length > 0 &&
-    eligibleBets.every((bet) => selectedIds.includes(bet.id));
+  const allSelectableSelected =
+    selectableBets.length > 0 &&
+    selectableBets.every((bet) => selectedIds.includes(bet.id));
 
   return {
-    eligibleBets,
-    eligibleIds,
-    selectedIds: selectedEligibleIds,
-    selectedCount: selectedEligibleIds.length,
-    allEligibleSelected,
+    closableBets,
+    resolvableBets,
+    selectableBets,
+    selectedClosableIds,
+    selectedResolvableIds,
+    selectedCloseCount: selectedClosableIds.length,
+    selectedResolveCount: selectedResolvableIds.length,
+    allSelectableSelected,
     isSelected,
     canSelect,
     toggleSelection,
     toggleSelectAll,
-    startSelectedQueue,
-    startQueue,
+    clearSelection,
+    startSelectedResolveQueue,
+    startResolveQueue,
     currentBet,
     isQueueActive,
     queueTotal: queue.length,
@@ -139,9 +176,12 @@ export function useBetResolutionQueue(bets: Bet[], visibleBets?: Bet[]) {
     advanceQueue,
     cancelQueue,
     successMessage,
+    setSuccessMessage,
     selectionError,
     clearSuccessMessage: () => setSuccessMessage(null),
     clearSelectionError: () => setSelectionError(null),
     getDisplayBetStatus,
+    isBetClosable,
+    isBetInResolutionQueue,
   };
 }

@@ -202,6 +202,10 @@ export const ResolveBetSchema = z.object({
   winningOddId: IdSchema,
 });
 
+export const CloseBetsBatchSchema = z.object({
+  ids: z.array(IdSchema).min(1).max(100),
+});
+
 const BetStatusFilterSchema = z.enum([
   "scheduled",
   "open",
